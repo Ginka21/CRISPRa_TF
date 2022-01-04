@@ -1,4 +1,5 @@
-# 2121-12-27
+# 2021-12-27
+
 
 # Load packages and source code -------------------------------------------
 
@@ -7,7 +8,6 @@ library("RColorBrewer")
 project_dir   <- "~/R_projects/Screen"
 functions_dir <- file.path(project_dir, "1_R_functions")
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
-
 
 
 
