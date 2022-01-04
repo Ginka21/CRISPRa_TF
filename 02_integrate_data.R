@@ -3,7 +3,7 @@
 
 # Define folder path ------------------------------------------------------
 
-project_dir <- "~/R_projects/Screen"
+project_dir <- "~/R_projects/CRISPRa_4sg"
 input_dir   <- file.path(project_dir, "2_input")
 r_data_dir  <- file.path(project_dir, "3_R_objects")
 raw_dir     <- file.path(input_dir, "raw_data")

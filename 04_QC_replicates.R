@@ -3,11 +3,12 @@
 
 # Load packages and source code -------------------------------------------
 
-project_dir   <- "~/R_projects/Screen"
+library("RColorBrewer")
+
+project_dir   <- "~/R_projects/CRISPRa_4sg"
 functions_dir <- file.path(project_dir, "1_R_functions")
 source(file.path(functions_dir, "01_calculating_scores.R"))
 source(file.path(functions_dir, "02_labels_and_annotations.R"))
-library("RColorBrewer")
 
 
 # Define folder path ------------------------------------------------------

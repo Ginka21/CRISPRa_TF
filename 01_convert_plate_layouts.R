@@ -9,7 +9,7 @@ library("readxl")
 
 # Define folder paths -----------------------------------------------------
 
-project_dir <- "~/R_projects/Screen"
+project_dir <- "~/R_projects/CRISPRa_4sg"
 input_dir   <- file.path(project_dir, "2_input")
 r_data_dir  <- file.path(project_dir, "3_R_objects")
 output_dir  <- file.path(project_dir,"4_output")

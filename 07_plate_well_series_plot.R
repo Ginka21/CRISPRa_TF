@@ -5,7 +5,7 @@
 
 library("RColorBrewer")
 
-project_dir   <- "~/R_projects/Screen"
+project_dir   <- "~/R_projects/CRISPRa_4sg"
 functions_dir <- file.path(project_dir, "1_R_functions")
 source(file.path(functions_dir, "02_labels_and_annotations.R"))
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
