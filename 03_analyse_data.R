@@ -20,7 +20,7 @@ output_dir  <- file.path(project_dir,"4_output")
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "01_integrate_data.RData"))
+load(file.path(r_data_dir, "02_integrate_data.RData"))
 
 
 
