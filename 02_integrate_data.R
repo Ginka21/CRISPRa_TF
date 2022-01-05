@@ -67,9 +67,9 @@ lum_vec      <-as.numeric(lum_vec)
 
 GBA_df <- data.frame(
   layout_df,
-  "Luminescence"      = lum_vec,
-  "GBA_rep1_absolute" = GBA_dup1_vec,
-  "GBA_rep2_absolute" = GBA_dup2_vec
+  "CellTiterGlo_raw" = lum_vec,
+  "Raw_rep1" = GBA_dup1_vec,
+  "Raw_rep2" = GBA_dup2_vec
 )
 
 

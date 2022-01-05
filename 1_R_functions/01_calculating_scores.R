@@ -42,7 +42,15 @@ Calculate_Z_Prime <- function(sub_df, use_column) {
 
 
 
-Calculate_SSMD_var <- function(input_df, rep1_column, t_score = FALSE, log2FC = FALSE) {
+
+
+
+Calculate_SSMD_var <- function(input_df,
+                               rep1_column,
+                               t_score = FALSE,
+                               log2FC = FALSE,
+                               percent_activation = FALSE
+                               ) {
 
   rep2_column <- sub("_rep1", "_rep2", rep1_column, fixed = TRUE)
 
@@ -51,32 +59,50 @@ Calculate_SSMD_var <- function(input_df, rep1_column, t_score = FALSE, log2FC = 
 
   results_vec_list <- lapply(split_df_list, function(sub_df) {
     are_NT <- sub_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
+    are_pos <- sub_df[, "Target_flag"] %in% "Pos. control"
     num_NT <- sum(are_NT)
 
+    rep1_vec <- sub_df[are_NT, rep1_column]
+    rep2_vec <- sub_df[are_NT, rep2_column]
+
     if (log2FC) {
-      rep1_diff_vec <- log2(sub_df[, rep1_column] / median(sub_df[are_NT, rep1_column]))
-      rep2_diff_vec <- log2(sub_df[, rep2_column] / median(sub_df[are_NT, rep2_column]))
-    } else {
-      rep1_diff_vec <- sub_df[, rep1_column] - median(sub_df[are_NT, rep1_column])
-      rep2_diff_vec <- sub_df[, rep2_column] - median(sub_df[are_NT, rep2_column])
+      rep1_vec <- log2(rep1_vec)
+      rep2_vec <- log2(rep2_vec)
     }
+
+    rep1_diff_vec <- sub_df[, rep1_column] - median(rep1_vec[are_NT])
+    rep2_diff_vec <- sub_df[, rep2_column] - median(rep2_vec[are_NT])
+
+    if (percent_activation) {
+      rep1_diff_vec <- rep1_diff_vec / (median(rep1_diff_vec[are_pos]) - median_NT_rep1)
+      rep2_diff_vec <- rep2_diff_vec / (median(rep2_diff_vec[are_pos]) - median_NT_rep2)
+    }
+
+    var_vec <- mapply(function(x, y) var(x, y), rep1_diff_vec, rep2_diff_vec)
+    median_NT_var <- median(var_vec)
 
     results_vec <- vapply(seq_len(nrow(sub_df)), function(x) {
       delta_vec <- c(rep1_diff_vec[[x]], rep2_diff_vec[[x]])
       mean_diff <- mean(delta_vec)
       var_diff <- var(delta_vec)
-      var_diff_NT <- var(c(rep1_diff_vec[are_NT], rep2_diff_vec[are_NT]))
+      divisor <- var_diff + median_NT_var
       if (t_score) {
-        var_diff <- var_diff / 2
-        var_diff_NT <- var_diff_NT / num_NT
+        divisor <- divisor / 2
       }
-      return(mean_diff / sqrt(var_diff + var_diff_NT))
+      return(mean_diff / sqrt(divisor))
     }, numeric(1))
 
   })
 
   return(unlist(results_vec_list, use.names = FALSE))
 }
+
+
+
+
+
+
+
 
 
 Calculate_T_var <- function(input_df, rep1_column, log2FC = FALSE) {
