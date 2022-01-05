@@ -11,7 +11,7 @@ source(file.path(functions_dir, "01_calculating_scores.R"))
 
 # Define folder path ------------------------------------------------------
 
-project_dir <- "~/R_projects/Screen"
+project_dir <- "~/R_projects/CRISPRa_TF"
 input_dir   <- file.path(project_dir, "2_input")
 r_data_dir  <- file.path(project_dir, "3_R_objects")
 output_dir  <- file.path(project_dir,"4_output")
@@ -20,7 +20,7 @@ output_dir  <- file.path(project_dir,"4_output")
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "02_integrate_data.RData"))
+load(file.path(r_data_dir, "01_integrate_data.RData"))
 
 
 
@@ -103,6 +103,11 @@ GBA_df[, "SSMD_MM_paired_Glo"] <- Calculate_SSMD_var(GBA_df, "GBA_rep1_Glo_stand
 GBA_df[, "SSMD_log2"]          <- Calculate_SSMD_var(GBA_df, "GBA_rep1_absolute", log2FC = TRUE)
 GBA_df[, "SSMD_log2_Glo"]      <- Calculate_SSMD_var(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
 
+GBA_df[, "SSMD_test"]           <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_absolute")
+GBA_df[, "SSMD_test_Glo"]       <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_Glo_standardized")
+GBA_df[, "SSMD_log2_test"]      <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_absolute", log2FC = TRUE)
+GBA_df[, "SSMD_log2_Glo_test"]  <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
+GBA_df[, "SSMD_test_log2_diff"] <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_log2_diff")
 
 # Calculate T Score ----------------------------------------------------------
 

@@ -147,7 +147,13 @@ VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_MM_paired", show_only_gene
 VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2", show_only_genes = FALSE,
                  show_title = "Dual-Flashlight Plot (GBA norm, SSMD log FC)"
                  )
+VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_test_log2_diff", show_only_genes = TRUE,
+                 show_title = "Dual-Flashlight Plot (GBA normalized, SSMD new)"
+                 )
 
+VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2", show_only_genes = TRUE,
+                 show_title = "Dual-Flashlight Plot (GBA normalized, SSMD old)"
+                 )
 
 # Export volcano plots as PDF and PNG -------------------------------------
 
