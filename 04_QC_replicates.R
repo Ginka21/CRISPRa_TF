@@ -25,7 +25,7 @@ plate_numbers_vec <- as.integer(as.roman(GBA_df[, "Plate_number_384"]))
 split_df_list <- split(GBA_df, plate_numbers_vec)
 
 
-# Define Functions --------------------------------------------------------
+# Define functions --------------------------------------------------------
 
 ReplicateScatter <- function(input_df,
                              rep1_column,
@@ -121,7 +121,7 @@ for (i in seq_along(rep_columns)) {
 }
 
 
-# Calculate Z' Factor  for every plate ------------------------------------
+# Calculate Z' Factor for every plate ------------------------------------
 
 z_prime_vec_1 <- vapply(split_df_list,
                        Calculate_Z_Prime,
@@ -134,7 +134,5 @@ z_prime_vec_2 <- vapply(split_df_list,
                        use_column = "GBA_rep2_absolute",
                        numeric(1)
                        )
-
-
 
 
