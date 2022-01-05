@@ -31,7 +31,8 @@ VolcanoFlashPlot <- function(input_df,
                              fc_column,
                              y_column,
                              show_only_genes = FALSE,
-                             show_title = ""
+                             show_title = "",
+                             point_size = 0.6
                              ) {
 
    if (grepl("_rep", fc_column, fixed = TRUE)) {
@@ -83,7 +84,8 @@ VolcanoFlashPlot <- function(input_df,
    points(log_fc_vec[are_gene],
           y_value_vec[are_gene],
           pch = 16,
-          col = adjustcolor("black", alpha.f = 0.3)
+          col = adjustcolor("black", alpha.f = 0.3),
+          cex = point_size
           )
    if (!(show_only_genes)) {
 
@@ -93,13 +95,15 @@ VolcanoFlashPlot <- function(input_df,
       points(log_fc_vec[are_posctrl],
              y_value_vec[are_posctrl],
              pch = 16,
-             col = adjustcolor(pos_ctrl_color, alpha.f = 0.5)
+             col = adjustcolor(pos_ctrl_color, alpha.f = 0.5),
+             cex = point_size
              )
 
       points(log_fc_vec[are_NT],
              y_value_vec[are_NT],
              pch = 16,
-             col = adjustcolor(NT_ctrl_color, alpha.f = 0.5)
+             col = adjustcolor(NT_ctrl_color, alpha.f = 0.5),
+             cex = point_size
              )
 
       controls_labels <- list(

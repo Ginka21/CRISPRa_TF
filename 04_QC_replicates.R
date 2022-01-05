@@ -30,7 +30,8 @@ split_df_list <- split(GBA_df, plate_numbers_vec)
 ReplicateScatter <- function(input_df,
                              rep1_column,
                              rep2_column = NULL,
-                             show_title  = ""
+                             show_title  = "",
+                             point_size = 0.6
                              ) {
 
   if (is.null(rep2_column)) {
@@ -59,6 +60,7 @@ ReplicateScatter <- function(input_df,
        cex.main = 1.1,
        font.main = 1,
        pch  = 16,
+       cex  = point_size,
        col  = adjustcolor("black", alpha.f = 0.5),
        las  = 1,
        mgp  = c(2.9, 0.65, 0),
@@ -97,7 +99,7 @@ ReplicateScatter(GBA_df, "GBA_rep1_absolute")
 rep_columns <- grep("_rep", names(column_labels), value = TRUE, fixed = TRUE)
 
 
-pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots.pdf"),
+pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicate scatter plots.pdf"),
     width = 6, height = 5.1
     )
 for (use_column in rep_columns) {
@@ -113,7 +115,7 @@ for (i in seq_along(rep_columns)) {
                       sub("_rep1", "", use_column, fixed = TRUE),
                       ".png"
                       )
-  png(file = file.path(output_dir, "Figures", "Replicate scatter plots - PNGs", file_name),
+  png(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicate scatter plots - PNGs", file_name),
       width = 6, height = 5.1, units = "in", res = 600
       )
   ReplicateScatter(GBA_df, rep1_column = use_column, show_title = column_labels[[use_column]])

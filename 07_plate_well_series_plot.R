@@ -31,7 +31,8 @@ load(file.path(r_data_dir, "03_analyse_data.RData"))
 PlateWellPlot <- function(input_df,
                           use_column = "GBA_rep1_absolute",
                           show_title = "Plate-well series plot",
-                          y_axis_label = NULL
+                          y_axis_label = NULL,
+                          point_size = 0.6
                           ) {
 
    if (is.null(y_axis_label)) {
@@ -188,7 +189,8 @@ PlateWellPlot <- function(input_df,
    points(x_position_vec[are_gene],
           numeric_vec[are_gene],
           pch = 16,
-          col = adjustcolor("black", alpha.f = 0.3)
+          col = adjustcolor("black", alpha.f = 0.3),
+          cex = point_size
           )
 
    pos_ctrl_color <- brewer.pal(5, "Reds")[[4]]
@@ -197,13 +199,15 @@ PlateWellPlot <- function(input_df,
    points(x_position_vec[are_posctrl],
           numeric_vec[are_posctrl],
           pch = 16,
-          col = adjustcolor(pos_ctrl_color, alpha.f = 0.5)
+          col = adjustcolor(pos_ctrl_color, alpha.f = 0.5),
+          cex = point_size
           )
 
    points(x_position_vec[are_NT],
           numeric_vec[are_NT],
           pch = 16,
-          col = adjustcolor(NT_ctrl_color, alpha.f = 0.5)
+          col = adjustcolor(NT_ctrl_color, alpha.f = 0.5),
+          cex = point_size
           )
 
    controls_labels <- list(
