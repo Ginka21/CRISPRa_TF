@@ -90,4 +90,40 @@ Calculate_P_var <- function(input_df, rep1_column, log2FC = FALSE) {
 }
 
 
+Calculate_SSMD_var2 <- function(input_df, rep1_column, log2FC = FALSE) {
 
+  rep2_column <- sub("_rep1", "_rep2", rep1_column, fixed = TRUE)
+
+  plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
+  split_df_list <- split(input_df, plate_numbers_vec)
+
+  results_vec_list <- lapply(split_df_list, function(sub_df) {
+    are_NT <- sub_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
+
+    if (log2FC) {
+      rep1_diff_vec <- log2(sub_df[, rep1_column] / median(sub_df[are_NT, rep1_column]))
+      rep2_diff_vec <- log2(sub_df[, rep2_column] / median(sub_df[are_NT, rep2_column]))
+      NT1_diff_vec  <- log2(sub_df[are_NT, rep1_column] / median(sub_df[are_NT, rep1_column]))
+      NT2_diff_vec  <- log2(sub_df[are_NT, rep2_column] / median(sub_df[are_NT, rep2_column]))
+    } else {
+      rep1_diff_vec <- sub_df[, rep1_column] - median(sub_df[are_NT, rep1_column])
+      rep2_diff_vec <- sub_df[, rep2_column] - median(sub_df[are_NT, rep2_column])
+      NT1_diff_vec  <- sub_df[are_NT, rep1_column] - median(sub_df[are_NT, rep1_column])
+      NT2_diff_vec  <- sub_df[are_NT, rep2_column] - median(sub_df[are_NT, rep2_column])
+    }
+
+      results_vec  <- vapply(seq_len(nrow(sub_df)), function(x) {
+      delta_vec    <- c(rep1_diff_vec[[x]], rep2_diff_vec[[x]])
+      mean_diff    <- mean(delta_vec)
+      delta_NT_vec <- c(rep1_diff_vec[are_NT], rep2_diff_vec[are_NT])
+      mean_NT_diff <- mean(delta_NT_vec)
+      var_diff     <- var(delta_vec)
+      var_diff_NT  <- var(c(rep1_diff_vec[are_NT], rep2_diff_vec[are_NT]))
+
+      return((mean_diff - mean_NT_diff)/ sqrt(var_diff + var_diff_NT))
+    }, numeric(1))
+
+  })
+
+  return(unlist(results_vec_list, use.names = FALSE))
+}

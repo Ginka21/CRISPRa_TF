@@ -13,6 +13,9 @@ column_labels <- c(
   "GBA_rep1_Glo_standardized" = "GBA activity (standardized using CellTiterGlo)",
   "GBA_rep1_Glo_stand_log"    = "GBA activity (log2 of standardized using CellTiterGlo)",
 
+  "GBA_rep1_logFC"            = "GBA activity (log2 fold change)",
+  "GBA_rep1_Glo_logFC"        = "GBA activity (log2 fold change of Glo standardized values",
+
   "Luminescence"              = "Cell viability (CellTiterGlo values)",
   "Luminescence_normalized"   = "Cell viability (normalized to NT controls)",
 
