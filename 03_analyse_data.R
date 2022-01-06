@@ -25,132 +25,80 @@ load(file.path(r_data_dir, "02_integrate_data.RData"))
 
 
 # Normalize by non-targeting controls -------------------------------------
-##Follow the split-apply-combine strategy
 
-plate_numbers_vec <- as.integer(as.roman(GBA_df[, "Plate_number_384"]))
-split_df_list <- split(GBA_df, plate_numbers_vec)
+GBA_df[, "CellTiterGlo_foldNT"] <- NormPlates(GBA_df, "CellTiterGlo_raw", foldNT = TRUE)
 
-split_df_list <- lapply(split_df_list, function(x) {
+for (i in 1:2) {
+  ri <- paste0("_rep", i)
 
-  are_NT <- x[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-  are_pos <- x[, "Target_flag"] %in% "Pos. control"
+  GBA_df[, paste0("DeltaNT", ri)]             <- NormPlates(GBA_df, paste0("Raw", ri))
+  GBA_df[, paste0("FoldNT", ri)]              <- NormPlates(GBA_df, paste0("Raw", ri), foldNT = TRUE)
+  GBA_df[, paste0("PercActivation", ri)]      <- NormPlates(GBA_df, paste0("Raw", ri), percent_activation = TRUE)
+  GBA_df[, paste0("Raw_log2", ri)]            <- log2(GBA_df[, paste0("Raw", ri)])
+  GBA_df[, paste0("Log2FC", ri)]              <- NormPlates(GBA_df, paste0("Raw", ri), take_log2 = TRUE)
+  GBA_df[, paste0("PercActivation_log2", ri)] <- NormPlates(GBA_df, paste0("Raw", ri), percent_activation = TRUE, take_log2 = TRUE)
 
-  # Normalize fluorescent values
-  dup1_median_NT  <- median(x[are_NT, "Raw_rep1"])
-  dup2_median_NT  <- median(x[are_NT, "Raw_rep2"])
-  dup1_median_pos <- median(x[are_pos, "Raw_rep1"])
-  dup2_median_pos <- median(x[are_pos, "Raw_rep2"])
+  GBA_df[, paste0("Raw_Glo", ri)]                 <- GBA_df[, paste0("Raw", ri)] / GBA_df[, "CellTiterGlo_foldNT"]
+  GBA_df[, paste0("DeltaNT_Glo", ri)]             <- NormPlates(GBA_df, paste0("Raw_Glo", ri))
+  GBA_df[, paste0("FoldNT_Glo", ri)]              <- NormPlates(GBA_df, paste0("Raw_Glo", ri), foldNT = TRUE)
+  GBA_df[, paste0("PercActivation_Glo", ri)]      <- NormPlates(GBA_df, paste0("Raw_Glo", ri), percent_activation = TRUE)
+  GBA_df[, paste0("Raw_log2_Glo", ri)]            <- log2(GBA_df[, paste0("Raw_Glo", ri)])
+  GBA_df[, paste0("Log2FC_Glo", ri)]              <- NormPlates(GBA_df, paste0("Raw_Glo", ri), take_log2 = TRUE)
+  GBA_df[, paste0("PercActivation_log2_Glo", ri)] <- NormPlates(GBA_df, paste0("Raw_Glo", ri), percent_activation = TRUE, take_log2 = TRUE)
+}
 
-  x[, "FoldNT_rep1"]         <- x[, "Raw_rep1"] / dup1_median_NT
-  x[, "FoldNT_rep2"]         <- x[, "Raw_rep2"] / dup2_median_NT
-  x[, "DeltaNT_rep1"]        <- x[, "Raw_rep1"] - dup1_median_NT
-  x[, "DeltaNT_rep2"]        <- x[, "Raw_rep2"] - dup2_median_NT
-  x[, "PercActivation_rep1"] <- x[, "DeltaNT_rep1"] / (dup1_median_pos - dup1_median_NT)
-  x[, "PercActivation_rep2"] <- x[, "DeltaNT_rep2"] / (dup2_median_pos - dup2_median_NT)
+stripped_columns <- sub("_rep[12]", "", names(GBA_df))
+GBA_df <- GBA_df[, order(match(stripped_columns, stripped_columns))]
 
-
-  # # Log transform fluorescent values
-  x[, "Raw_log2_rep1"] <- log2(x[, "Raw_rep1"])
-  x[, "Raw_log2_rep2"] <- log2(x[, "Raw_rep2"])
-  dup1_NT_vec_log2 <- x[are_NT, "Raw_log2_rep1"]
-  dup2_NT_vec_log2 <- x[are_NT, "Raw_log2_rep2"]
-  x[, "Log2FC_rep1"] <- x[, "Raw_log2_rep1"] - median(dup1_NT_vec_log2)
-  x[, "Log2FC_rep2"] <- x[, "Raw_log2_rep2"] - median(dup2_NT_vec_log2)
-
-
-
-
-  # Normalize luminescent values
-  lum_NT_vec                 <- x[are_NT, "CellTiterGlo_raw"]
-  x[, "CellTiterGlo_foldNT"] <- x[, "CellTiterGlo_raw"] / median(lum_NT_vec)
-
-  # Standardized Fluorescence by Luminescence
-  x[, "Raw_Glo_rep1"] <- x[, "Raw_rep1"] /
-                                      x[, "CellTiterGlo_foldNT"]
-
-  x[, "Raw_Glo_rep2"] <- x[, "Raw_rep2"] /
-                                      x[, "CellTiterGlo_foldNT"]
-
-
-  # Log transform fluorescent values standardized by luminescence
-  x[, "Raw_log2_Glo_rep1"] <- log2(x[, ("Raw_Glo_rep1")])
-  x[, "Raw_log2_Glo_rep2"] <- log2(x[, ("Raw_Glo_rep2")])
-
-  # Normalize Glo standardized values
-  dup1_median_NT <- median(x[are_NT, "Raw_log2_Glo_rep1"])
-  dup2_median_NT <- median(x[are_NT, "Raw_log2_Glo_rep2"])
-  x[, "GBA_rep1_norm_Glo"] <- x[, "GBA_rep1_Glo_standardized"] / dup1_median_NT
-  x[, "GBA_rep2_norm_Glo"] <- x[, "GBA_rep2_Glo_standardized"] / dup2_median_NT
-  x[, "GBA_rep1_diff_Glo"] <- x[, "GBA_rep1_Glo_standardized"] - dup1_median_NT
-  x[, "GBA_rep2_diff_Glo"] <- x[, "GBA_rep2_Glo_standardized"] - dup2_median_NT
-
-  return(x)
-})
-
-GBA_df <- do.call(rbind.data.frame, c(split_df_list, make.row.names = FALSE))
-
-
-
-stopifnot(identical(Calculate_SSMD_var(GBA_df, "Raw_rep1"),
-                    Calculate_SSMD_var_old(GBA_df, "Raw_rep1")
-                    ))
-
-stopifnot(identical(Calculate_SSMD_var(GBA_df, "Raw_rep1", log2FC = TRUE),
-                    Calculate_SSMD_var_old(GBA_df, "Raw_rep1", log2FC = TRUE)
-                    ))
-
-
-
-
-# Calculate log-fold change -----------------------------------------------
-
-GBA_df[, "GBA_rep1_logFC"]     <- log2(GBA_df[, "GBA_rep1_normalized"])
-GBA_df[, "GBA_rep2_logFC"]     <- log2(GBA_df[, "GBA_rep2_normalized"])
-GBA_df[, "GBA_rep1_Glo_logFC"] <- log2(GBA_df[, "GBA_rep1_norm_Glo"])
-GBA_df[, "GBA_rep2_Glo_logFC"] <- log2(GBA_df[, "GBA_rep2_norm_Glo"])
 
 
 # Calculate SSMD ----------------------------------------------------------
 
-GBA_df[, "SSMD_MM_paired"]     <- Calculate_SSMD_var(GBA_df, "Raw_rep1")
-GBA_df[, "SSMD_MM_paired_Glo"] <- Calculate_SSMD_var(GBA_df, "GBA_rep1_Glo_standardized")
-GBA_df[, "SSMD_log2"]          <- Calculate_SSMD_var(GBA_df, "Raw_rep1", log2FC = TRUE)
-GBA_df[, "SSMD_log2_Glo"]      <- Calculate_SSMD_var(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
+GBA_df[, "SSMD_deltaNT"]      <- Calculate_SSMD_var(GBA_df, "Raw_rep1")
+GBA_df[, "SSMD_act"]          <- Calculate_SSMD_var(GBA_df, "Raw_rep1", percent_activation = TRUE)
+GBA_df[, "SSMD_log2"]         <- Calculate_SSMD_var(GBA_df, "Raw_rep1", take_log2 = TRUE)
+GBA_df[, "SSMD_act_log2"]     <- Calculate_SSMD_var(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
-GBA_df[, "SSMD_test"]           <- Calculate_SSMD_var2(GBA_df, "Raw_rep1")
-GBA_df[, "SSMD_test_Glo"]       <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_Glo_standardized")
-GBA_df[, "SSMD_log2_test"]      <- Calculate_SSMD_var2(GBA_df, "Raw_rep1", log2FC = TRUE)
-GBA_df[, "SSMD_log2_Glo_test"]  <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
-GBA_df[, "SSMD_test_log2_diff"] <- Calculate_SSMD_var2(GBA_df, "GBA_rep1_log2_diff")
+GBA_df[, "SSMD_deltaNT_Glo"]  <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1")
+GBA_df[, "SSMD_act_Glo"]      <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
+GBA_df[, "SSMD_log2_Glo"]     <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
+GBA_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
-# Calculate T Score ----------------------------------------------------------
-
-GBA_df[, "T_value"]         <- Calculate_T_var(GBA_df, "Raw_rep1")
-GBA_df[, "T_value_Glo"]     <- Calculate_T_var(GBA_df, "GBA_rep1_Glo_standardized")
-GBA_df[, "T_value_log"]     <- Calculate_T_var(GBA_df, "Raw_rep1", log2FC = TRUE)
-GBA_df[, "T_value_Glo_log"] <- Calculate_T_var(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
 
 
 # Calculate P value ----------------------------------------------------------
 
-GBA_df[, "P_value"]         <- Calculate_P_var(GBA_df, "Raw_rep1")
-GBA_df[, "P_value_Glo"]     <- Calculate_P_var(GBA_df, "GBA_rep1_Glo_standardized")
-GBA_df[, "P_value_log"]     <- Calculate_P_var(GBA_df, "Raw_rep1", log2FC = TRUE)
-GBA_df[, "P_value_Glo_log"] <- Calculate_P_var(GBA_df, "GBA_rep1_Glo_standardized", log2FC = TRUE)
+GBA_df[, "p_value_deltaNT"]      <- Calculate_P_var(GBA_df, "Raw_rep1")
+GBA_df[, "p_value_act"]          <- Calculate_P_var(GBA_df, "Raw_rep1", percent_activation = TRUE)
+GBA_df[, "p_value_log2"]         <- Calculate_P_var(GBA_df, "Raw_rep1", take_log2 = TRUE)
+GBA_df[, "p_value_act_log2"]     <- Calculate_P_var(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
+
+GBA_df[, "p_value_deltaNT_Glo"]  <- Calculate_P_var(GBA_df, "Raw_Glo_rep1")
+GBA_df[, "p_value_act_Glo"]      <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
+GBA_df[, "p_value_log2_Glo"]     <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
+GBA_df[, "p_value_act_log2_Glo"] <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
+
 
 
 
 # Calculate hit strength --------------------------------------------------
 
-GBA_df[, "Hit_strength"]     <- rowMeans(log2(GBA_df[, c("GBA_rep1_normalized", "GBA_rep2_normalized")])) *
-                                -log10(GBA_df[, "P_value_log"])
-GBA_df[, "Hit_strength_Glo"] <- rowMeans(log2((GBA_df[, c("GBA_rep1_norm_Glo", "GBA_rep2_norm_Glo")]))) *
-                                -log10(GBA_df[, "P_value_Glo_log"])
+meanFC <- rowMeans(GBA_df[, c("Log2FC_rep1", "Log2FC_rep2")])
+GBA_df[, "Hit_strength_deltaNT"]      <- meanFC * -log10(GBA_df[, "p_value_deltaNT"])
+GBA_df[, "Hit_strength_act"]          <- meanFC * -log10(GBA_df[, "p_value_act"])
+GBA_df[, "Hit_strength_log2"]         <- meanFC * -log10(GBA_df[, "p_value_log2"])
+GBA_df[, "Hit_strength_act_log2"]     <- meanFC * -log10(GBA_df[, "p_value_act_log2"])
+
+meanFC_Glo <- rowMeans(GBA_df[, c("Log2FC_Glo_rep1", "Log2FC_Glo_rep2")])
+GBA_df[, "Hit_strength_deltaNT_Glo"]  <- meanFC_Glo * -log10(GBA_df[, "p_value_deltaNT_Glo"])
+GBA_df[, "Hit_strength_act_Glo"]      <- meanFC_Glo * -log10(GBA_df[, "p_value_act_Glo"])
+GBA_df[, "Hit_strength_log2_Glo"]     <- meanFC_Glo * -log10(GBA_df[, "p_value_log2_Glo"])
+GBA_df[, "Hit_strength_act_log2_Glo"] <- meanFC_Glo * -log10(GBA_df[, "p_value_act_log2_Glo"])
 
 
 
 
-# Export Data -------------------------------------------------------------
+# Export data -------------------------------------------------------------
 
 write.csv(GBA_df,
           file = file.path(output_dir, "Tables", "GBA_complete.csv"),
@@ -162,3 +110,5 @@ write.csv(GBA_df,
 # Save data ---------------------------------------------------------------
 
 save(GBA_df, file = file.path(r_data_dir, "03_analyse_data.RData"))
+
+

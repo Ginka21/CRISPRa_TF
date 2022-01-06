@@ -29,7 +29,7 @@ load(file.path(r_data_dir, "03_analyse_data.RData"))
 # Define Functions --------------------------------------------------------
 
 PlateWellPlot <- function(input_df,
-                          use_column = "GBA_rep1_absolute",
+                          use_column = "Raw_rep1",
                           show_title = "Plate-well series plot",
                           y_axis_label = NULL,
                           point_size = 0.6
@@ -227,15 +227,16 @@ PlateWellPlot <- function(input_df,
 # Draw Example Plots ------------------------------------------------------
 
 PlateWellPlot(GBA_df)
-PlateWellPlot(GBA_df, "GBA_rep1_normalized")
-PlateWellPlot(GBA_df, "Luminescence")
+PlateWellPlot(GBA_df, "FoldNT_rep1")
+PlateWellPlot(GBA_df, "CellTiterGlo_raw")
 
-PlateWellPlot(GBA_df, "GBA_rep1_diff")
-PlateWellPlot(GBA_df, "GBA_rep1_log2")
+PlateWellPlot(GBA_df, "DeltaNT_rep1")
+PlateWellPlot(GBA_df, "Raw_log2_rep1")
 
-PlateWellPlot(GBA_df, "GBA_rep2_log2_diff")
+PlateWellPlot(GBA_df, "Log2FC_rep1")
 
-PlateWellPlot(GBA_df, "Hit_strength_Glo")
+PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
+
 
 
 # Export Plots as PDF and PNG ---------------------------------------------

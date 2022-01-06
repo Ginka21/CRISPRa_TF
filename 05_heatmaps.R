@@ -155,7 +155,7 @@ BreaksForColumn <- function(input_df,
    if (is.null(num_uniform_breaks) && use_diverging) {
       if (is.null(flatten_factor)) {
          if (grepl("SSMD", use_column, fixed = TRUE)) {
-            flatten_factor <- 0.005
+            flatten_factor <- 0.5
          } else {
             flatten_factor <- 1
          }
@@ -585,107 +585,107 @@ HeatmapForPlate <- function(input_df,
 
 # Draw example heatmaps ---------------------------------------------------
 
-AveragedHeatmap(GBA_df, "GBA_rep1_absolute")
-AveragedHeatmap(GBA_df, "GBA_rep1_absolute", both_replicates = FALSE)
-AveragedHeatmap(GBA_df, "GBA_rep1_absolute", both_replicates = FALSE, use_one_scale = FALSE)
-AveragedHeatmap(GBA_df, "GBA_rep2_absolute", both_replicates = FALSE)
-AveragedHeatmap(GBA_df, "GBA_rep2_absolute", both_replicates = FALSE, use_one_scale = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep1")
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = FALSE)
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute")
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute", use_one_scale = FALSE)
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute", use_one_scale = TRUE, weighting_for_controls = FALSE)
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute", use_one_scale = FALSE, weighting_for_controls = FALSE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1")
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE, weighting_for_controls = FALSE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = FALSE)
 
 
 absolute_custom_breaks <- c(0, 250, seq(500, 1000, by = 50), 1500, seq(2000, 2500, by = 250))
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute",
+HeatmapForPlate(GBA_df, 1, "Raw_rep1",
                 use_custom_breaks = absolute_custom_breaks
                 )
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute",
+HeatmapForPlate(GBA_df, 1, "Raw_rep1",
                 num_uniform_breaks = 50,
                 ColorFunction = rocket
                 )
 
 
-HeatmapForPlate(GBA_df, 10, "GBA_rep2_absolute")
+HeatmapForPlate(GBA_df, 10, "Raw_rep2")
 
 
-HeatmapForPlate(GBA_df, 2, "Luminescence")
-HeatmapForPlate(GBA_df, 2, "Luminescence", uniform_legend = FALSE)
+HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw")
+HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw", uniform_legend = FALSE)
 
 
-HeatmapForPlate(GBA_df, 2, "Luminescence_normalized")
+HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT")
 
-HeatmapForPlate(GBA_df, 2, "Luminescence_normalized",
+HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
                 weighting_for_controls = TRUE
                 )
 
 
-HeatmapForPlate(GBA_df, 2, "Luminescence_normalized",
+HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
                 num_uniform_breaks = 100
                 )
 
-HeatmapForPlate(GBA_df, 12, "Luminescence",
+HeatmapForPlate(GBA_df, 12, "CellTiterGlo_raw",
                 num_other_breaks = 100,
                 )
 
 
-HeatmapForPlate(GBA_df, 1, "SSMD_MM_paired")
+HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT")
 HeatmapForPlate(GBA_df, 1, "SSMD_log2")
 
-HeatmapForPlate(GBA_df, 1, "SSMD_MM_paired_Glo", uniform_legend = TRUE)
+HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT_Glo", uniform_legend = TRUE)
 
 
 
-HeatmapForPlate(GBA_df, 6, "SSMD_MM_paired")
+HeatmapForPlate(GBA_df, 6, "SSMD_deltaNT")
 
 
 
 HeatmapForPlate(GBA_df, 10, "SSMD_log2")
-HeatmapForPlate(GBA_df, 2, "P_value_log", num_uniform_breaks = 100,
+HeatmapForPlate(GBA_df, 2, "p_value_log2", num_uniform_breaks = 100,
                 use_subtext = expression(italic("p") * " value")
                 )
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute")
-HeatmapForPlate(GBA_df, 2, "GBA_rep2_absolute")
+HeatmapForPlate(GBA_df, 1, "Raw_rep1")
+HeatmapForPlate(GBA_df, 2, "Raw_rep2")
 
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_diff")
-HeatmapForPlate(GBA_df, 2, "GBA_rep2_diff")
+HeatmapForPlate(GBA_df, 1, "DeltaNT_rep1")
+HeatmapForPlate(GBA_df, 1, "DeltaNT_rep2")
 
 
-HeatmapForPlate(GBA_df, 10, "GBA_rep1_absolute")
-HeatmapForPlate(GBA_df, 10, "GBA_rep2_absolute")
-
-
-HeatmapForPlate(GBA_df, 1, "SSMD_log2", label_values = TRUE)
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute", label_values = TRUE)
-
-
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_normalized")
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_normalized", take_log2 = TRUE)
-
-
-HeatmapForPlate(GBA_df, 5, "Hit_strength")
-
-
-
-HeatmapForPlate(GBA_df, 10, "GBA_rep1_absolute", uniform_legend = TRUE)
-HeatmapForPlate(GBA_df, 10, "GBA_rep1_absolute", uniform_legend = FALSE)
-
-HeatmapForPlate(GBA_df, 10, "GBA_rep2_absolute")
+HeatmapForPlate(GBA_df, 10, "Raw_rep1")
+HeatmapForPlate(GBA_df, 10, "Raw_rep2")
 
 
 HeatmapForPlate(GBA_df, 1, "SSMD_log2", label_values = TRUE)
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_absolute", label_values = TRUE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", label_values = TRUE)
 
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_normalized")
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_normalized", take_log2 = TRUE)
+HeatmapForPlate(GBA_df, 1, "FoldNT_rep1")
+HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
 
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_log2")
-HeatmapForPlate(GBA_df, 1, "GBA_rep1_log2", weighting_for_controls = FALSE)
+
+HeatmapForPlate(GBA_df, 5, "Hit_strength_deltaNT")
+
+
+
+HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = TRUE)
+HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = FALSE)
+
+HeatmapForPlate(GBA_df, 10, "Raw_rep2")
+
+
+HeatmapForPlate(GBA_df, 1, "SSMD_log2", label_values = TRUE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", label_values = TRUE)
+
+
+HeatmapForPlate(GBA_df, 1, "FoldNT_rep1")
+HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
+
+HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1")
+HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 
 
@@ -709,6 +709,7 @@ for (label_cells in c(FALSE, TRUE)) {
       has_replicates <- !(is.null(GetRepNumber(current_column)))
 
       file_name <- paste0("Heatmaps - ", i, ") ", column_labels[[i]], ".pdf")
+      file_name <- gsub("%", "percent", file_name, fixed = TRUE)
       column_subtext <- column_labels[[i]]
 
       pdf(file = file.path(output_dir, "Figures", heatmaps_folder, file_name),
@@ -746,12 +747,14 @@ for (label_cells in c(FALSE, TRUE)) {
       column_subtext <- column_labels[[i]]
 
       folder_name <- paste0("Heatmap PNGs - ", i, ") ", column_labels[[i]])
+      folder_name <- gsub("%", "percent", folder_name, fixed = TRUE)
       folder_path <- file.path(output_dir, "Figures", heatmaps_folder, folder_name)
       dir.create(folder_path, showWarnings = FALSE)
 
-      file_name <- paste("Heatmap - ", column_labels[[i]],
-                         " -- well effect"
-                         )
+      file_name <- paste0("Heatmap - ", column_labels[[i]],
+                          " -- well effect"
+                          )
+      file_name <- gsub("%", "percent", file_name, fixed = TRUE)
 
       png(file = file.path(folder_path, file_name),
           width = heatmap_width, height = heatmap_height,
@@ -767,9 +770,10 @@ for (label_cells in c(FALSE, TRUE)) {
          if (has_replicates) {
             rep_columns <- BothRepColumns(current_column)
             for (j in 1:2) {
-               file_name <- paste("Heatmap - ", column_labels[[i]],
-                                  " - plate ", plate_number, " rep ", j
-                                  )
+               file_name <- paste0("Heatmap - ", column_labels[[i]],
+                                   " - plate ", plate_number, " rep ", j
+                                   )
+               file_name <- gsub("%", "percent", file_name, fixed = TRUE)
                png(file = file.path(folder_path, file_name),
                    width = heatmap_width, height = heatmap_height,
                    units = "in", res = 600
@@ -784,6 +788,7 @@ for (label_cells in c(FALSE, TRUE)) {
             file_name <- paste("Heatmap - ", column_labels[[i]],
                                " - plate ", plate_number
                                )
+            file_name <- gsub("%", "percent", file_name, fixed = TRUE)
             png(file = file.path(folder_path, file_name),
                 width = heatmap_width, height = heatmap_height,
                 units = "in", res = 600

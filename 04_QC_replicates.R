@@ -93,7 +93,8 @@ ReplicateScatter <- function(input_df,
 
 # Calculate correlation between replicates --------------------------------
 
-ReplicateScatter(GBA_df, "GBA_rep1_absolute")
+ReplicateScatter(GBA_df, "Raw_rep1")
+ReplicateScatter(GBA_df, "PercActivation_log2_Glo_rep1")
 
 
 rep_columns <- grep("_rep", names(column_labels), value = TRUE, fixed = TRUE)
@@ -127,13 +128,13 @@ for (i in seq_along(rep_columns)) {
 
 z_prime_vec_1 <- vapply(split_df_list,
                        Calculate_Z_Prime,
-                       use_column = "GBA_rep1_absolute",
+                       use_column = "Raw_rep1",
                        numeric(1)
                        )
 
 z_prime_vec_2 <- vapply(split_df_list,
                        Calculate_Z_Prime,
-                       use_column = "GBA_rep2_absolute",
+                       use_column = "Raw_rep2",
                        numeric(1)
                        )
 

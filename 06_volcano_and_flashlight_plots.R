@@ -28,32 +28,36 @@ load(file.path(r_data_dir, "03_analyse_data.RData"))
 # Define Functions --------------------------------------------------------
 
 VolcanoFlashPlot <- function(input_df,
-                             fc_column,
+                             log_fc_column,
                              y_column,
                              show_only_genes = FALSE,
                              show_title = "",
                              point_size = 0.6
                              ) {
 
-   if (grepl("_rep", fc_column, fixed = TRUE)) {
-      rep2_column <- sub("_rep1", "_rep2", fc_column, fixed = TRUE)
-      fc_vec <- rowMeans(input_df[, c(fc_column, rep2_column)])
+   if (grepl("_rep", log_fc_column, fixed = TRUE)) {
+      rep2_column <- sub("_rep1", "_rep2", log_fc_column, fixed = TRUE)
+      log_fc_vec <- rowMeans(input_df[, c(log_fc_column, rep2_column)])
    } else {
-      fc_vec <- input_df[, fc_column]
+      log_fc_vec <- input_df[, log_fc_column]
    }
-   log_fc_vec <- log2(fc_vec)
-
    y_value_vec <- input_df[, y_column]
-   if(grepl("SSMD_", y_column, fixed = TRUE)){
+
+   if(grepl("PercActivation", log_fc_column, fixed = TRUE)){
+      x_label <- "% activation"
+      log_fc_vec <- log_fc_vec * 100
+   } else {
+      x_label <-"log2 fold change"
+   }
+   if(grepl("SSMD", y_column, fixed = TRUE)){
       y_label <- "SSMD"
    } else {
       y_value_vec <- -log10(y_value_vec)
-      y_label <-"-log10 P value"
+      y_label <-"-log10 p value"
    }
    are_NT      <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
    are_posctrl <- input_df[, "Target_flag"] %in% "Pos. control"
    are_gene    <- !(is.na(input_df[, "Entrez_ID"]))
-
 
    if (show_only_genes) {
       are_valid <- are_gene
@@ -71,7 +75,7 @@ VolcanoFlashPlot <- function(input_df,
    plot(1,
         xlim = range(log_fc_vec[are_valid]),
         ylim = range(c(0, y_value_vec[are_valid])),
-        xlab = "log FC",
+        xlab = x_label,
         ylab = y_label,
         las  = 1,
         mgp  = c(2.8, 0.7, 0),
@@ -126,263 +130,179 @@ VolcanoFlashPlot <- function(input_df,
 
 
 
+# Define pairs of metrics -------------------------------------------------
+
+pairs_list <- list(
+
+   "deltaNT" = c(
+      "x_var" = "Log2FC_rep1",
+      "y_var" = "p_value_deltaNT",
+      "title" = "Volcano plot (p values from untransformed data)"
+   ),
+   "activation" = c(
+      "x_var" = "Log2FC_rep1",
+      "y_var" = "p_value_act",
+      "title" = "Volcano plot (p values from % activation)"
+   ),
+   "log2" = c(
+      "x_var" = "Log2FC_rep1",
+      "y_var" = "p_value_log2",
+      "title" = "Volcano plot (p values from log2-transformed data)"
+   ),
+   "act_log2" = c(
+      "x_var" = "Log2FC_rep1",
+      "y_var" = "p_value_act_log2",
+      "title" = "Volcano plot (p values from % activation, log2 data)"
+   ),
+
+
+   "deltaNT_Glo" = c(
+      "x_var" = "Log2FC_Glo_rep1",
+      "y_var" = "p_value_deltaNT_Glo",
+      "title" = "Volcano plot (untransformed data, CellTitreGlo-norm.)"
+   ),
+   "activation_Glo" = c(
+      "x_var" = "Log2FC_Glo_rep1",
+      "y_var" = "p_value_act_Glo",
+      "title" = "Volcano plot (% activation, CellTitreGlo-norm.)"
+   ),
+   "log2_Glo" = c(
+      "x_var" = "Log2FC_Glo_rep1",
+      "y_var" = "p_value_log2_Glo",
+      "title" = "Volcano plot (log2, CellTitreGlo-normalized)"
+   ),
+   "act_log2_Glo" = c(
+      "x_var" = "Log2FC_Glo_rep1",
+      "y_var" = "p_value_act_log2_Glo",
+      "title" = "Volcano plot (% activation, log2, CellTitreGlo-norm.)"
+   )
+
+
+)
+
+
 # Plot Data ---------------------------------------------------------------
 
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value",
-                 show_title = "Volcano Plot (p values from absolute deviations)"
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_deltaNT",
+                 show_title = "Volcano plot (p values from untransformed data)"
                  )
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value_log",
-                 show_title = "Volcano Plot (p values from log fold change)"
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_act",
+                 show_title = "Volcano plot (p values from % activation)"
                  )
-VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo",
-                 show_title = "Volcano Plot (standardized using CellTiterGlo)"
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_log2",
+                 show_title = "Volcano plot (p values from log2-transformed data)"
                  )
-VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo_log",
-                 show_title = "Volcano Plot (log FC, using CellTiterGlo)"
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_act_log2",
+                 show_title = "Volcano plot (p values from % activation, log2 data)"
+                 )
+
+VolcanoFlashPlot(GBA_df, "Log2FC_Glo_rep1", "p_value_deltaNT_Glo",
+                 show_title = "Volcano plot (untransformed, CellTitreGlo-norm.)"
+                 )
+VolcanoFlashPlot(GBA_df, "Log2FC_Glo_rep1", "p_value_act_Glo",
+                 show_title = "Volcano plot (% activation, CellTitreGlo-norm.)"
+                 )
+VolcanoFlashPlot(GBA_df, "Log2FC_Glo_rep1", "p_value_log2_Glo",
+                 show_title = "Volcano plot (log2, CellTitreGlo-normalized)"
+                 )
+VolcanoFlashPlot(GBA_df, "Log2FC_Glo_rep1", "p_value_act_log2_Glo",
+                 show_title = "Volcano plot (% activation, log2, CellTitreGlo-norm.)"
                  )
 
 
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value", show_only_genes = TRUE)
-
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_MM_paired", show_only_genes = TRUE,
-                 show_title = "Dual-Flashlight Plot (GBA norm, SSMD from abs values)"
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "SSMD_deltaNT",
+                 show_title = "Volcano Plot (SSMD from untransformed data)"
                  )
 
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2", show_only_genes = FALSE,
-                 show_title = "Dual-Flashlight Plot (GBA norm, SSMD log FC)"
-                 )
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_test_log2_diff", show_only_genes = TRUE,
-                 show_title = "Dual-Flashlight Plot (GBA normalized, SSMD new)"
+VolcanoFlashPlot(GBA_df, "PercActivation_rep1", "SSMD_deltaNT",
+                 show_title = "Volcano Plot (SSMD from untransformed data)"
                  )
 
-VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2", show_only_genes = TRUE,
-                 show_title = "Dual-Flashlight Plot (GBA normalized, SSMD old)"
-                 )
+
+
+
+
+
+
 
 # Export volcano plots as PDF and PNG -------------------------------------
 
 base_width <- 5.5
 base_height <- 5.1
-use_dpi <- 600
 
+plot_types <- c("Volcano", "Dual flashlight (logFC)", "Dual flashlight (% activation)")
 
-for (only_genes in c(FALSE, TRUE)) {
+for (use_device in c("none", "pdf", "png")) {
 
-   if (only_genes){
-      file_name <- "Volcano plots - genes only.pdf"
-      use_width <- base_width
-   } else {
-      file_name <- "Volcano plots - with controls.pdf"
-      use_width <- base_width + 0.8
-   }
-   pdf(file = file.path(output_dir, "Figures", "Volcano_plots", file_name),
-       width = use_width, height = base_height
-       )
+   for (plot_type in plot_types) {
 
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value",
-               show_title = "Volcano Plot (p values from absolute deviations)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value_log",
-               show_title = "Volcano Plot (p values from log fold change)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo",
-               show_title = "Volcano Plot (standardized using CellTiterGlo)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo_log",
-               show_title = "Volcano Plot (log FC, using CellTiterGlo)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-}
+      if (plot_type == "Volcano") {
+         folder_name <- "Volcano_plots"
+         PNG_prefix <- "Volcano plot"
+         x_sub <- "Log2FC"
+         y_sub <- "p_value"
+         title_prefix <- "Volcano plot"
+      } else if (plot_type == "Dual flashlight (logFC)") {
+         folder_name <- "Dual_flashlight_plots_logFC"
+         PNG_prefix <- "Dual flashlight (logFC)"
+         x_sub <- "Log2FC"
+         y_sub <- "SSMD"
+         title_prefix <- "Dual flashlight plot"
+      } else if (plot_type == "Dual flashlight (% activation)") {
+         folder_name <- "Dual_flashlight_plots_percent_activation"
+         PNG_prefix <- "Dual flashlight (% activation)"
+         x_sub <- "PercActivation"
+         y_sub <- "SSMD"
+         title_prefix <- "Dual flashlight plot"
+      }
 
+      for (only_genes in c(FALSE, TRUE)) {
 
+         file_name <- folder_name
 
+         if (only_genes) {
+            PDF_name <- paste0(file_name, " - genes only.pdf")
+            use_width <- base_width
+         } else {
+            PDF_name <- paste0(file_name, " - with controls.pdf")
+            use_width <- base_width + 0.8
+         }
+         if (use_device == "pdf") {
+            pdf(file = file.path(output_dir, "Figures", folder_name, PDF_name),
+                width = use_width, height = base_height
+                )
+         }
+         for (i in seq_along(pairs_list)) {
+            plot_title <- sub("Volcano plot", title_prefix, pairs_list[[i]][["title"]])
+            if (use_device == "png") {
+               PNG_name <- paste0(i, ") ", gsub("%", "percent", plot_title, fixed = TRUE))
+               if (only_genes) {
+                  PNG_name <- paste0(PNG_name, " - genes only.png")
+               } else {
+                  PNG_name <- paste0(PNG_name, " - with controls.png")
+               }
+               png(file = file.path(output_dir, "Figures", folder_name, "PNGs", PNG_name),
+                   width = use_width, height = base_height, units = "in", res = 600
+                   )
+            }
+            VolcanoFlashPlot(GBA_df,
+                             sub("Log2FC", x_sub, pairs_list[[i]][["x_var"]], fixed = TRUE),
+                             sub("p_value", y_sub, pairs_list[[i]][["y_var"]], fixed = TRUE),
+                             show_title = plot_title,
+                             show_only_genes = only_genes
+                             )
+            if (use_device == "png") {
+               dev.off()
+            }
+         }
 
-for (only_genes in c(FALSE, TRUE)) {
-
-   if (only_genes){
-      file_postfix <- " - genes only.png"
-      use_width <- base_width
-   } else {
-      file_postfix <- " - with controls.png"
-      use_width <- base_width + 0.8
-   }
-
-
-   png(file = file.path(output_dir, "Figures", "Volcano_plots", "PNGs",
-                        paste0("Volcano Plot - 1) p values from absolute deviations",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value",
-               show_title = "Volcano Plot (p values from absolute deviations)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Volcano_plots", "PNGs",
-                        paste0("Volcano Plot - 2) p values from log fold change",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "P_value_log",
-               show_title = "Volcano Plot (p values from log fold change)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Volcano_plots", "PNGs",
-                        paste0("Volcano Plot - 3) standardized using CellTiterGlo",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo",
-               show_title = "Volcano Plot (standardized using CellTiterGlo)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Volcano_plots", "PNGs",
-                        paste0("Volcano Plot - 4) log FC, using CellTiterGlo",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "P_value_Glo_log",
-               show_title = "Volcano Plot (log FC, using CellTiterGlo)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-}
-
-
-
-# Export dual-flashlight plots as PDF and PNG -----------------------------
-
-
-base_width <- 5.5
-base_height <- 5.1
-use_dpi <- 600
-
-
-for (only_genes in c(FALSE, TRUE)) {
-
-   if (only_genes){
-      file_name <- "Dual-flashlight plots - genes only.pdf"
-      use_width <- base_width
-   } else {
-      file_name <- "Dual-flashlight plots - with controls.pdf"
-      use_width <- base_width + 0.8
-   }
-   pdf(file = file.path(output_dir, "Figures", "Dual_flashlight_plots", file_name),
-       width = use_width, height = base_height
-       )
-
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_MM_paired",
-               show_title = "Dual-flashlight Plot (Normalized data, SSMD MM)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2",
-               show_title = "Dual-flashlight Plot  (Normalized data, SSMD MM log2)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "SSMD_MM_paired_Glo",
-               show_title = "Dual-flashlight Plot (normalized using CellTiterGlo)",
-               show_only_genes = only_genes
-               )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "SSMD_log2_Glo",
-               show_title = "Dual-flashlight Plot (normalized using CellTiterGlo, log2SSMD)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-}
-
-
-
-
-for (only_genes in c(FALSE, TRUE)) {
-
-   if (only_genes){
-      file_postfix <- " - genes only.png"
-      use_width <- base_width
-   } else {
-      file_postfix <- " - with controls.png"
-      use_width <- base_width + 0.8
+         if (use_device == "pdf") {
+            dev.off()
+         }
+      }
    }
 
-
-   png(file = file.path(output_dir, "Figures", "Dual_flashlight_plots", "PNGs",
-                        paste0("Dual flashlight Plot - 1) SSMD MM paired",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_MM_paired",
-               show_title = "Dual-flashlight Plot (Normalized data, SSMD MM)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Dual_flashlight_plots", "PNGs",
-                        paste0("Dual-flashlight Plot - 2) Normalized data, SSMD MM log2",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_normalized", "SSMD_log2",
-               show_title = "Dual-flashlight Plot (Normalized data, SSMD MM log2)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Dual_flashlight_plots", "PNGs",
-                        paste0("Dual-flashlight Plot - 3) Glo normalized data, SSMD MM",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "SSMD_MM_paired_Glo",
-               show_title = "Dual-flashlight Plot (Glo normalized data, SSMD MM)",
-               show_only_genes = only_genes
-               )
-   dev.off()
-
-
-   png(file = file.path(output_dir, "Figures", "Dual_flashlight_plots", "PNGs",
-                        paste0("Dual-flashlight Plot - 4) log FC, using CellTiterGlo",
-                               file_postfix
-                               )
-                        ),
-       width = use_width, height = base_height, units = "in", res = use_dpi
-       )
-   VolcanoFlashPlot(GBA_df, "GBA_rep1_norm_Glo", "SSMD_log2_Glo",
-               show_title = "Dual-flashlight Plot (Glo normalized, log2 SSMD)",
-               show_only_genes = only_genes
-               )
-   dev.off()
 }
-
-
-
-
 
 
 
