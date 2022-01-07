@@ -29,6 +29,26 @@ StripExpression <- function(my_expression) {
   return(literal_string)
 }
 
+Darken <- function(color, factor = 1.4) {
+  # from https://gist.github.com/Jfortin1/72ef064469d1703c6b30
+  col <- col2rgb(color)
+  col <- col / factor
+  col <- rgb(t(col), maxColorValue = 255)
+  return(col)
+}
+
+
+palify_cache_101 <- list()
+Palify <- function(myhex, fraction_pale = 0.5) {
+  if (myhex %in% names(palify_cache_101)) {
+    color_vec <- palify_cache_101[[myhex]]
+  } else {
+    color_vec <- colorRampPalette(c(myhex, "#FFFFFF"))(101)
+    palify_cache_101[[myhex]] <- color_vec
+    assign("palify_cache_101", palify_cache_101, envir = globalenv())
+  }
+  color_vec[[round(fraction_pale * 100) + 1]]
+}
 
 
 DrawSideLegend <- function(labels_list,
@@ -85,3 +105,4 @@ DrawSideLegend <- function(labels_list,
 
   return(invisible(NULL))
 }
+

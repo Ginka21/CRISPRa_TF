@@ -31,23 +31,33 @@ Calculate_Z_Prime <- function(sub_df, use_column) {
 
   # Calculate Z' factor
   ## Means and Standard Deviation of controls
-  NT_vec <- sub_df[are_NT, use_column]
-  posctrl_vec <- sub_df[are_posctrl, use_column]
-  mean_NT <- mean(NT_vec)
+  NT_vec       <- sub_df[are_NT, use_column]
+  posctrl_vec  <- sub_df[are_posctrl, use_column]
+  mean_NT      <- mean(NT_vec)
   mean_posctrl <- mean(posctrl_vec)
-  sd_NT <- sd(NT_vec)
-  sd_posctrl <- sd(posctrl_vec)
+  sd_NT        <- sd(NT_vec)
+  sd_posctrl   <- sd(posctrl_vec)
 
-  z_prime <- (1 - (3 * (sd_NT + sd_posctrl)) / (mean_posctrl - mean_NT))
+  z_prime      <- (1 - (3 * (sd_NT + sd_posctrl)) / (mean_posctrl - mean_NT))
   return(z_prime)
 }
 
+Calculate_SSMD_ctrls <- function(sub_df, use_column) {
+  are_NT <- sub_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
+  are_posctrl <- sub_df[, "Target_flag"] %in% c("Pos. control")
 
 
+  ## Means and Variance of controls
+  NT_vec       <- sub_df[are_NT, use_column]
+  posctrl_vec  <- sub_df[are_posctrl, use_column]
+  mean_NT      <- mean(NT_vec)
+  mean_posctrl <- mean(posctrl_vec)
+  var_NT       <- var(NT_vec)
+  var_posctrl  <- var(posctrl_vec)
 
-
-
-
+  SSMD_ctrl    <- (mean_posctrl - mean_NT) / (sqrt(var_posctrl + var_NT))
+  return(SSMD_ctrl)
+}
 
 NormPlates <- function(input_df,
                        use_column,
@@ -292,3 +302,5 @@ Calculate_P_var <- function(input_df, rep1_column, ...) {
 #
 #   return(unlist(results_vec_list, use.names = FALSE))
 # }
+
+
