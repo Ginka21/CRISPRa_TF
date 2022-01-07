@@ -113,6 +113,12 @@ PlateWellPlot <- function(input_df,
         type = "n",
         ann = FALSE
         )
+   if (y_limits[[1]] != 0) {
+      abline(h = 0, col = "gray75", lty = "dotted")
+   }
+   if (grepl("PercActivation|FoldNT|p_value", use_column)) {
+      abline(h = 1, col = "gray75", lty = "dotted")
+   }
    box()
    title(show_title, cex.main = 1.1)
    axis(2, las = 1, mgp = use_mgp)
@@ -236,6 +242,7 @@ PlateWellPlot(GBA_df, "Raw_log2_rep1")
 PlateWellPlot(GBA_df, "Log2FC_rep1")
 
 PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
+
 
 
 

@@ -64,7 +64,7 @@ dup2_indices <- seq(from = 2, to = 24, by = 2)
 GBA_dup1_vec <- unlist(GBA_signal_vec_list[dup1_indices], use.names = FALSE)
 GBA_dup2_vec <- unlist(GBA_signal_vec_list[dup2_indices], use.names = FALSE)
 lum_vec      <- unlist(lum_signal_vec_list, use.names = FALSE)
-lum_vec      <-as.numeric(lum_vec)
+lum_vec      <- as.numeric(lum_vec)
 
 GBA_df <- data.frame(
   layout_df,
@@ -78,3 +78,4 @@ GBA_df <- data.frame(
 # Save data ---------------------------------------------------------------
 
 save(GBA_df, file = file.path(r_data_dir, "02_integrate_data.RData"))
+
