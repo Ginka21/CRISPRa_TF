@@ -6,7 +6,7 @@
 library("RColorBrewer")
 
 project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_functions")
+functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
 
 
@@ -43,20 +43,20 @@ VolcanoFlashPlot <- function(input_df,
    }
    y_value_vec <- input_df[, y_column]
 
-   if(grepl("PercActivation", log_fc_column, fixed = TRUE)){
+   if (grepl("PercActivation", log_fc_column, fixed = TRUE)) {
       x_label <- "% activation"
       log_fc_vec <- log_fc_vec * 100
    } else {
-      x_label <-"log2 fold change"
+      x_label <- "log2 fold change"
    }
-   if(grepl("SSMD", y_column, fixed = TRUE)){
+   if (grepl("SSMD", y_column, fixed = TRUE)) {
       y_label <- "SSMD"
    } else {
       y_value_vec <- -log10(y_value_vec)
-      y_label <-"-log10 p value"
+      y_label <- "-log10 p value"
    }
-   are_NT      <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-   are_posctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+   are_NT      <- input_df[, "Is_NT_ctrl"]
+   are_posctrl <- input_df[, "Is_pos_ctrl"]
    are_gene    <- !(is.na(input_df[, "Entrez_ID"]))
 
    if (show_only_genes) {

@@ -6,7 +6,7 @@
 library("RColorBrewer")
 
 project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_functions")
+functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
 source(file.path(functions_dir, "01_calculating_scores.R"))
 source(file.path(functions_dir, "02_labels_and_annotations.R"))
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
@@ -27,7 +27,6 @@ split_df_list <- split(GBA_df, plate_numbers_vec)
 
 
 # Define functions --------------------------------------------------------
-
 
 ScatterPlot <- function(x_vec,
                         y_vec,
@@ -143,8 +142,6 @@ ReplicateScatter <- function(input_df,
                              ...
                              ) {
 
-
-
   if (is.null(rep2_column)) {
     rep2_column <- sub("rep1", "rep2", rep1_column, fixed = TRUE)
   }
@@ -153,8 +150,8 @@ ReplicateScatter <- function(input_df,
   corr_gene <- cor.test(input_df[are_gene, rep1_column],
                         input_df[are_gene, rep2_column]
                         )[["estimate"]][[1]]
-  are_NT      <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-  are_posctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+  are_NT      <- input_df[, "Is_NT_ctrl"]
+  are_posctrl <- input_df[, "Is_pos_ctrl"]
   are_valid <- are_NT | are_posctrl | are_gene
 
   if (same_scale) {

@@ -500,11 +500,18 @@ add_df <- use_4sg_df[matches_vec, use_columns]
 columns_96wp <- grep("_96", names(integrated_df), value = TRUE, fixed = TRUE)
 first_columns <- setdiff(names(integrated_df), c("Target_ID_stripped", columns_96wp))
 
-export_df <- data.frame(integrated_df[, first_columns],
+layout_df <- data.frame(integrated_df[, first_columns],
                         use_4sg_df[matches_vec, use_columns],
                         integrated_df[, columns_96wp],
                         stringsAsFactors = FALSE
                         )
+
+
+
+# Define positive and negative controls -----------------------------------
+
+layout_df[, "Is_NT_ctrl"]  <- layout_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
+layout_df[, "Is_pos_ctrl"] <- layout_df[, "Target_flag"] %in% "Pos. control"
 
 
 
@@ -519,10 +526,9 @@ layouts_384_mat_list <- lapply(split(integrated_df, plates_fac), function(x) {
 
 
 
-
 # Export data -------------------------------------------------------------
 
-write.csv(export_df,
+write.csv(layout_df,
           file      = file.path(output_dir, "Plate_layout", "CRISPRa TF - all plates.csv"),
           row.names = FALSE,
           na        = ""
@@ -545,7 +551,6 @@ for (i in seq_along(layouts_384_mat_list)) {
 
 # Save data ---------------------------------------------------------------
 
-layout_df <- export_df
 save(layout_df, file = file.path(r_data_dir, "01_convert_plate_layouts.RData"))
 
 

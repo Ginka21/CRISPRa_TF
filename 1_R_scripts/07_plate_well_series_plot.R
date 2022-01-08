@@ -6,7 +6,7 @@
 library("RColorBrewer")
 
 project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_functions")
+functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
 source(file.path(functions_dir, "02_labels_and_annotations.R"))
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
 
@@ -45,8 +45,8 @@ PlateWellPlot <- function(input_df,
       }
    }
 
-   are_NT      <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-   are_posctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+   are_NT      <- input_df[, "Is_NT_ctrl"]
+   are_posctrl <- input_df[, "Is_pos_ctrl"]
    are_gene    <- !(is.na(input_df[, "Entrez_ID"]))
    are_valid   <- are_NT | are_posctrl | are_gene
 

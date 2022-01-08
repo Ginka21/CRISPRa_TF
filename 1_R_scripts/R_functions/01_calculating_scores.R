@@ -71,8 +71,8 @@ NormPlates <- function(input_df,
   }
 
   plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
-  are_NT <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-  are_pos <- input_df[, "Target_flag"] %in% "Pos. control"
+  are_NT <- input_df[, "Is_NT_ctrl"]
+  are_pos <- input_df[, "Is_pos_ctrl"]
   numeric_vec <- input_df[, use_column]
   if (take_log2) {
     numeric_vec <- log2(numeric_vec)
