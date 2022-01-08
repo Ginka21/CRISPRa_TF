@@ -82,27 +82,13 @@ PlateWellPlot <- function(input_df,
    use_margin <- c(7, 4.6, 3.8, 7.5)
    old_mar <- par(mar = use_margin)
    use_mgp <- c(3, 0.65, 0)
+   use_tcl <- -0.45
 
    x_limits <- range(x_position_vec)
    x_limits <- x_limits + (diff(x_limits) * 0.04 * c(-1, 1))
 
    valid_vec <- numeric_vec[are_valid]
-
-   # If the minimum and maximum are closer together than the distance
-   # from the minimum to zero, then the y axis should not include zero
-   far_from_zero <- diff(range(valid_vec)) < min(valid_vec)
-   if (far_from_zero) {
-      y_limits <- range(valid_vec)
-   } else {
-      y_limits <- range(c(0, valid_vec))
-   }
-   y_space <- diff(y_limits) * 0.04
-   y_limits <- y_limits + (y_space * c(-1, 1))
-
-   # If the minimum value is not negative or close to zero, the y range should stop at zero
-   if (!(far_from_zero) && (min(valid_vec) >= y_space)) {
-      y_limits[[1]] <- 0
-   }
+   y_limits <- DataAxisLimits(valid_vec)
 
    plot(1,
         xlim = x_limits,
@@ -121,8 +107,8 @@ PlateWellPlot <- function(input_df,
    }
    box()
    title(show_title, cex.main = 1.1)
-   axis(2, las = 1, mgp = use_mgp)
-   axis(1, mgp = use_mgp, cex.axis = par("cex"))
+   axis(2, las = 1, mgp = use_mgp, tcl = use_tcl)
+   axis(1, mgp = use_mgp, cex.axis = par("cex"), tcl = use_tcl)
    mtext(y_axis_label, side = 2, line = 3)
    label_x_pos <- par("usr")[[1]] + diff(grconvertX(c(0, 0.2), from = "lines", to = "user"))
    mtext("Well #:",
@@ -162,11 +148,10 @@ PlateWellPlot <- function(input_df,
         xpd    = NA
         )
 
-
    if (has_replicates) {
 
-      rep_x_starts   <- tapply(x_position_vec, plate_reps_vec,    function(x) x[[1]]) - 0.5
-      rep_x_ends   <- tapply(x_position_vec, plate_reps_vec,    function(x) x[[length(x)]]) + 0.5
+      rep_x_starts <- tapply(x_position_vec, plate_reps_vec, function(x) x[[1]]) - 0.5
+      rep_x_ends   <- tapply(x_position_vec, plate_reps_vec, function(x) x[[length(x)]]) + 0.5
 
       ## Draw the replicate number indicator bar
       rep_y_gap <- diff(grconvertY(c(0, 1.8), from = "lines", to = "user"))
@@ -246,7 +231,7 @@ PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
 
 
 
-# Export Plots as PDF and PNG ---------------------------------------------
+# Export plots as PDF and PNG ---------------------------------------------
 
 plot_width <- 7
 plot_height <- 5.5

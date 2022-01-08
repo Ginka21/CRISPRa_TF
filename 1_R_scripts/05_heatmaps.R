@@ -216,6 +216,7 @@ BreaksForColumn <- function(input_df,
                    other_to_pos_breaks[2:(length(other_to_pos_breaks) - 1)],
                    pos_breaks
                    )
+   all_breaks <- sort(unique(all_breaks))
 
    return(list(breaks = all_breaks, type = "weighted by controls"))
 }
@@ -557,6 +558,9 @@ HeatmapForPlate <- function(input_df,
    if (use_one_scale) {
       breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2, ...)
    } else {
+      for (column_name in BothRepColumns(use_column)) {
+         input_df[, column_name] <- input_df[, use_column]
+      }
       breaks_list <- BreaksForColumn(input_df[are_this_plate, ], use_column,
                                      take_log2 = take_log2, ...
                                      )
@@ -585,6 +589,15 @@ HeatmapForPlate <- function(input_df,
 
 # Draw example heatmaps ---------------------------------------------------
 
+HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
+                use_one_scale = FALSE
+                )
+
+HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
+                use_one_scale = TRUE
+                )
+
+
 AveragedHeatmap(GBA_df, "Raw_rep1")
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE)
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = FALSE)
@@ -595,6 +608,7 @@ HeatmapForPlate(GBA_df, 1, "Raw_rep1")
 HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE)
 HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE, weighting_for_controls = FALSE)
 HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = FALSE)
+
 
 
 absolute_custom_breaks <- c(0, 250, seq(500, 1000, by = 50), 1500, seq(2000, 2500, by = 250))
@@ -748,7 +762,7 @@ for (label_cells in c(FALSE, TRUE)) {
 
       folder_name <- paste0("Heatmap PNGs - ", i, ") ", column_labels[[i]])
       folder_name <- gsub("%", "percent", folder_name, fixed = TRUE)
-      folder_path <- file.path(output_dir, "Figures", heatmaps_folder, folder_name)
+      folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", folder_name)
       dir.create(folder_path, showWarnings = FALSE)
 
       file_name <- paste0("Heatmap - ", column_labels[[i]],

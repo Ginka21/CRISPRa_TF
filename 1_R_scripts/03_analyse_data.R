@@ -54,29 +54,29 @@ GBA_df <- GBA_df[, order(match(stripped_columns, stripped_columns))]
 
 # Calculate SSMD ----------------------------------------------------------
 
-GBA_df[, "SSMD_deltaNT"]      <- Calculate_SSMD_var(GBA_df, "Raw_rep1")
-GBA_df[, "SSMD_act"]          <- Calculate_SSMD_var(GBA_df, "Raw_rep1", percent_activation = TRUE)
-GBA_df[, "SSMD_log2"]         <- Calculate_SSMD_var(GBA_df, "Raw_rep1", take_log2 = TRUE)
-GBA_df[, "SSMD_act_log2"]     <- Calculate_SSMD_var(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
+GBA_df[, "SSMD_deltaNT"]      <- Calculate_SSMD(GBA_df, "Raw_rep1")
+GBA_df[, "SSMD_act"]          <- Calculate_SSMD(GBA_df, "Raw_rep1", percent_activation = TRUE)
+GBA_df[, "SSMD_log2"]         <- Calculate_SSMD(GBA_df, "Raw_rep1", take_log2 = TRUE)
+GBA_df[, "SSMD_act_log2"]     <- Calculate_SSMD(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
-GBA_df[, "SSMD_deltaNT_Glo"]  <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1")
-GBA_df[, "SSMD_act_Glo"]      <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
-GBA_df[, "SSMD_log2_Glo"]     <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
-GBA_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
+GBA_df[, "SSMD_deltaNT_Glo"]  <- Calculate_SSMD(GBA_df, "Raw_Glo_rep1")
+GBA_df[, "SSMD_act_Glo"]      <- Calculate_SSMD(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
+GBA_df[, "SSMD_log2_Glo"]     <- Calculate_SSMD(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
+GBA_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
 
 
 # Calculate P value ----------------------------------------------------------
 
-GBA_df[, "p_value_deltaNT"]      <- Calculate_P_var(GBA_df, "Raw_rep1")
-GBA_df[, "p_value_act"]          <- Calculate_P_var(GBA_df, "Raw_rep1", percent_activation = TRUE)
-GBA_df[, "p_value_log2"]         <- Calculate_P_var(GBA_df, "Raw_rep1", take_log2 = TRUE)
-GBA_df[, "p_value_act_log2"]     <- Calculate_P_var(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
+GBA_df[, "p_value_deltaNT"]      <- Calculate_P(GBA_df, "Raw_rep1")
+GBA_df[, "p_value_act"]          <- Calculate_P(GBA_df, "Raw_rep1", percent_activation = TRUE)
+GBA_df[, "p_value_log2"]         <- Calculate_P(GBA_df, "Raw_rep1", take_log2 = TRUE)
+GBA_df[, "p_value_act_log2"]     <- Calculate_P(GBA_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
-GBA_df[, "p_value_deltaNT_Glo"]  <- Calculate_P_var(GBA_df, "Raw_Glo_rep1")
-GBA_df[, "p_value_act_Glo"]      <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
-GBA_df[, "p_value_log2_Glo"]     <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
-GBA_df[, "p_value_act_log2_Glo"] <- Calculate_P_var(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
+GBA_df[, "p_value_deltaNT_Glo"]  <- Calculate_P(GBA_df, "Raw_Glo_rep1")
+GBA_df[, "p_value_act_Glo"]      <- Calculate_P(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
+GBA_df[, "p_value_log2_Glo"]     <- Calculate_P(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
+GBA_df[, "p_value_act_log2_Glo"] <- Calculate_P(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
 
 
 

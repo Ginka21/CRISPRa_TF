@@ -53,8 +53,10 @@ Palify <- function(myhex, fraction_pale = 0.5) {
 
 DrawSideLegend <- function(labels_list,
                            use_colors,
+                           border_colors = NULL,
                            use_pch = 16,
-                           use_point_size = 1.2
+                           use_point_size = 1.2,
+                           lines_x_start = 0.75
                            ) {
 
   ## Perform checks
@@ -81,8 +83,8 @@ DrawSideLegend <- function(labels_list,
   y_sequence <- start_y - cumsum(gaps_vec)
   y_pos <- grconvertY(y = y_sequence, from = "npc", to = "user")
 
-  x_text  <- 1 + diff(grconvertX(c(0, 0.75), from = "lines", to = "npc"))
-  x_point <- 1 + diff(grconvertX(c(0, 0.9), from = "lines", to = "npc"))
+  x_text  <- 1 + diff(grconvertX(c(0, lines_x_start), from = "lines", to = "npc"))
+  x_point <- 1 + diff(grconvertX(c(0, lines_x_start + 0.15), from = "lines", to = "npc"))
 
   ## Draw the legend
   text(x      = grconvertX(x = x_text, from = "npc", to = "user"),
@@ -99,10 +101,39 @@ DrawSideLegend <- function(labels_list,
          y   = tapply(y_pos, groups_vec, mean),
          cex = use_point_size,
          pch = use_pch,
-         col = use_colors,
+         col = if (!(is.null(border_colors))) border_colors else use_colors,
+         bg  = use_colors,
          xpd = NA
          )
 
   return(invisible(NULL))
 }
+
+
+DataAxisLimits <- function(data_vec, space_fraction = 0.04) {
+
+   # If the minimum and maximum are closer together than the distance
+   # from the minimum to zero, then the y axis should not include zero
+   far_from_zero <- diff(range(data_vec)) < min(data_vec)
+   if (far_from_zero) {
+      use_limits <- range(data_vec)
+   } else {
+      use_limits <- range(c(0, data_vec))
+   }
+   use_space <- diff(use_limits) * space_fraction
+   use_limits <- use_limits + (use_space * c(-1, 1))
+
+   # If the minimum value is not negative or close to zero, the y range should stop at zero
+   if (!(far_from_zero) && (min(data_vec) >= use_space)) {
+      use_limits[[1]] <- 0
+   }
+   return(use_limits)
+}
+
+
+
+
+
+
+
 
