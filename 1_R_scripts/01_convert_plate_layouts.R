@@ -422,6 +422,9 @@ integrated_df[integrated_df[, "Target_ID_stripped"] %in% "Sox11", "Target_ID_str
 integrated_df[grepl("REST", integrated_df[, "Target_ID"], ignore.case = TRUE), ]
 integrated_df[integrated_df[, "Target_ID_stripped"] %in% "REST", "Target_ID_stripped"] <- "REST_2"
 
+integrated_df[grepl("NFE2L2", integrated_df[, "Target_ID"], ignore.case = TRUE), ]
+integrated_df[integrated_df[, "Target_ID_stripped"] %in% "NFE2L2", "Target_ID_stripped"] <- "NFE2L2_1"
+
 
 
 

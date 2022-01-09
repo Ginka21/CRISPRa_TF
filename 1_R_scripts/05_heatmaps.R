@@ -11,6 +11,7 @@ project_dir   <- "~/R_projects/CRISPRa_TF"
 functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
 source(file.path(functions_dir, "01_calculating_scores.R"))
 source(file.path(functions_dir, "02_labels_and_annotations.R"))
+source(file.path(functions_dir, "03_plotting_helper_functions.R"))
 
 
 
@@ -258,6 +259,140 @@ PrettyRound <- function(numeric_vec) {
 # }
 
 
+
+PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
+
+   if (is.numeric(plate_number)) {
+      plate_number <- as.character(as.roman(plate_number))
+   }
+   if (is.null(main_title)) {
+      main_title <- paste0("Plate ", plate_number)
+   }
+
+   are_this_plate <- input_df[, "Plate_number_384"] == plate_number
+   are_NT  <- input_df[, "Is_NT_ctrl"][are_this_plate]
+   are_pos <- input_df[, "Is_pos_ctrl"][are_this_plate]
+   are_gene <- !(is.na(input_df[, "Entrez_ID"][are_this_plate]))
+   are_mCherry <- input_df[, "Target_flag"][are_this_plate] %in% "mCherry"
+   type_colors <- c(
+      "Empty"         = "gray95",
+      "Untransfected" = "gray80",
+      "Gene"          = brewer.pal(5, "Blues")[[3]],
+      "NT"            = brewer.pal(5, "Blues")[[5]],
+      "Pos"           = brewer.pal(5, "Reds")[[4]],
+      "mCherry"       = brewer.pal(5, "Reds")[[2]]
+   )
+   labels_list <- list(
+      "Empty"         = c("Empty", "well"),
+      "Untransfected" = c("No", "virus"),
+      "Gene"          = c("TF",
+                          "gene"
+                          ),
+      "NT"            = c("NT",
+                          "control"
+                          ),
+      "Pos"           = c("Pos.",
+                          "control"
+                          ),
+      "mCherry"       = "mCherry"
+   )
+
+   color_vec <- rep(type_colors[["Untransfected"]], 384)
+   color_vec[are_NT]   <- type_colors[["NT"]]
+   color_vec[are_pos]  <- type_colors[["Pos"]]
+   color_vec[are_gene] <- type_colors[["Gene"]]
+
+   if (any(are_mCherry)) {
+      color_vec[are_mCherry] <- type_colors[["mCherry"]]
+   } else {
+      type_colors <- type_colors[names(type_colors) != "mCherry"]
+      labels_list <- labels_list[names(labels_list) != "mCherry"]
+   }
+
+   color_mat <- matrix(color_vec, nrow = 16, ncol = 24, byrow = TRUE)
+   color_mat[, c(1, 24)] <- type_colors[["Empty"]]
+
+   ## Plot heatmap
+   old_mai <- par(mai = c(1.3, 0.7, 1.1, 0.7))
+   cimage(zcol = InvertTranspose(color_mat),
+          xlab    = "",
+          ylab    = "",
+          xlabels = rep("", ncol(color_mat)),
+          ylabels = rep("", nrow(color_mat)),
+          tcl     = 0,
+          mgp     = c(3, 0.3, 0),
+          bty     = "n",
+          axes    = FALSE
+          )
+   horizontal_lines <- seq(from = 0.5, to = nrow(color_mat) + 0.5, by = 1)
+   vertical_lines   <- seq(from = 0.5, to = ncol(color_mat) + 0.5, by = 1)
+   grid_color <- "gray50"
+   use_lwd <- 0.8
+   segments(x0 = 0.5, x1 = ncol(color_mat) + 0.5, y0 = horizontal_lines,
+            col = grid_color, lwd = use_lwd, xpd = NA
+            )
+   segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(color_mat) + 0.5,
+            col = grid_color, lwd = use_lwd, xpd = NA
+            )
+
+   ## Annotate plot
+   text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
+        y      = seq_len(nrow(color_mat)),
+        labels = rev(LETTERS[seq_len(nrow(color_mat))]),
+        cex    = par("cex") * 0.8,
+        col    = "black",
+        xpd    = NA
+        )
+   text(x      = seq_len(ncol(color_mat)),
+        y      = par("usr")[[4]] + diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
+        labels = seq_len(ncol(color_mat)),
+        cex    = par("cex") * 0.8,
+        col    = "black",
+        xpd    = NA
+        )
+
+   ## Draw the legend
+
+   start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 1.5), from = "lines", to = "user"))
+
+   x_space <- diff(grconvertX(c(0, 2.8), from = "lines", to = "user"))
+   x_positions <- seq(0, x_space * length(type_colors), length.out = length(type_colors))
+   x_positions <- x_positions - (mean(x_positions) - grconvertX(0.5, from = "npc", to = "user"))
+   rect(xleft   = x_positions - 0.5,
+        xright  = x_positions + 0.5,
+        ybottom = start_y - 1,
+        ytop    = start_y,
+        col     = type_colors,
+        border  = grid_color,
+        xpd     = NA
+        )
+
+   text(x      = x_positions,
+        y      = start_y - 1 - diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
+        labels = sapply(labels_list, function(x) VerticalAdjust(x[[1]])),
+        cex    = 0.8,
+        xpd    = NA,
+        )
+   second_lines <- sapply(labels_list, function(x) {
+      if (length(x) == 2) {
+         VerticalAdjust(x[[2]])
+      } else {
+         NA
+      }})
+   text(x      = x_positions,
+        y      = start_y - 1 - diff(grconvertY(c(0, 1.65), from = "lines", to = "user")),
+        labels = second_lines,
+        cex    = 0.8,
+        xpd    = NA,
+        )
+
+   title(main_title, line = 2.9)
+
+   par(old_mai)
+   return(invisible(NULL))
+}
+
+
 HeatMap384 <- function(numeric_vec,
                        use_breaks,
                        ColorFunction  = NULL,
@@ -331,13 +466,13 @@ HeatMap384 <- function(numeric_vec,
           )
    horizontal_lines <- seq(from = 0.5, to = nrow(use_mat) + 0.5, by = 1)
    vertical_lines   <- seq(from = 0.5, to = ncol(use_mat) + 0.5, by = 1)
-   use_color <- "white"
+   grid_color <- "white"
    use_lwd <- 0.2
    segments(x0 = 0.5, x1 = ncol(use_mat) + 0.5, y0 = horizontal_lines,
-            col = use_color, lwd = use_lwd
+            col = grid_color, lwd = use_lwd, xpd = NA
             )
    segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(use_mat) + 0.5,
-            col = use_color, lwd = use_lwd
+            col = grid_color, lwd = use_lwd, xpd = NA
             )
 
    ## Plot heatmap legend
@@ -390,8 +525,6 @@ HeatMap384 <- function(numeric_vec,
       legend_text_positions <- (step_left_vec + (step_width / 2))[use_indices]
    }
 
-   assign("delete_legend_text_positions", legend_text_positions, envir = globalenv())
-   assign("delete_legend_text_value", legend_text_values, envir = globalenv())
    text(x      = legend_text_positions,
         y      = start_y - diff(grconvertY(c(0, 1.0), from = "lines", to = "user")),
         labels = legend_text_vec,
@@ -413,6 +546,7 @@ HeatMap384 <- function(numeric_vec,
             col = border_grey,
             xpd = NA
             )
+
    ## Annotate plot
    text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
         y      = seq_len(nrow(use_mat)),
@@ -589,6 +723,8 @@ HeatmapForPlate <- function(input_df,
 
 # Draw example heatmaps ---------------------------------------------------
 
+PlateSchematic(GBA_df, 12)
+
 HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
                 use_one_scale = FALSE
                 )
@@ -709,113 +845,160 @@ heatmap_width <- 8
 heatmap_height <- 6.5
 
 
+pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", "Heatmap schematic.pdf"),
+    width = heatmap_width, height = heatmap_height
+    )
+for (plate_number in 1:12) {
+  PlateSchematic(GBA_df, plate_number)
+}
+dev.off()
+
+
+for (plate_number in 1:12) {
+  file_name <- paste0("Heatmap schematic - plate", plate_number, ".png")
+  png(file = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
+      width = heatmap_width, height = heatmap_height, units = "in", res = 600
+      )
+  PlateSchematic(GBA_df, plate_number)
+  dev.off()
+}
+
+
 for (label_cells in c(FALSE, TRUE)) {
 
-   if (label_cells) {
-      heatmaps_folder <- "Heatmaps (labelled)"
-   } else {
-      heatmaps_folder <- "Heatmaps"
-   }
-
-   for (i in seq_along(column_labels)) {
-
-      current_column <- names(column_labels)[[i]]
-      has_replicates <- !(is.null(GetRepNumber(current_column)))
-
-      file_name <- paste0("Heatmaps - ", i, ") ", column_labels[[i]], ".pdf")
-      file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-      column_subtext <- column_labels[[i]]
-
-      pdf(file = file.path(output_dir, "Figures", heatmaps_folder, file_name),
-          width = heatmap_width, height = heatmap_height
-          )
-      AveragedHeatmap(GBA_df, current_column,
-                      main_title = "Mean of all plates and replicates (well effect)",
-                      use_subtext = column_subtext,
-                      label_values = label_cells
-                      )
-      for (plate_number in 1:12) {
-         if (has_replicates) {
-            rep_columns <- BothRepColumns(current_column)
-            for (rep_column in rep_columns) {
-               HeatmapForPlate(GBA_df, plate_number, rep_column,
-                               use_subtext = column_subtext,
-                               label_values = label_cells
-                               )
-            }
+   for (scaled_per_plate in c(FALSE, TRUE)) {
+      if (scaled_per_plate) {
+         sub_folder_prefix <- "Scaled per plate"
+      } else {
+         sub_folder_prefix <- "Scaled across plates"
+      }
+      for (condense_controls in c(TRUE, FALSE)) {
+         if (condense_controls) {
+            sub_folder <- paste0(sub_folder_prefix, " - controls condensed")
          } else {
-            HeatmapForPlate(GBA_df, plate_number, current_column,
-                            use_subtext = column_subtext,
-                            label_values = label_cells
-                            )
+            sub_folder <- paste0(sub_folder_prefix, " - uniform")
          }
 
-      }
-      dev.off()
-   }
-
-   for (i in seq_along(column_labels)) {
-
-      current_column <- names(column_labels)[[i]]
-      has_replicates <- !(is.null(GetRepNumber(current_column)))
-      column_subtext <- column_labels[[i]]
-
-      folder_name <- paste0("Heatmap PNGs - ", i, ") ", column_labels[[i]])
-      folder_name <- gsub("%", "percent", folder_name, fixed = TRUE)
-      folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", folder_name)
-      dir.create(folder_path, showWarnings = FALSE)
-
-      file_name <- paste0("Heatmap - ", column_labels[[i]],
-                          " -- well effect"
-                          )
-      file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-
-      png(file = file.path(folder_path, file_name),
-          width = heatmap_width, height = heatmap_height,
-          units = "in", res = 600
-          )
-      AveragedHeatmap(GBA_df, current_column,
-                      main_title = "Mean of all plates and replicates (well effect)",
-                      use_subtext = column_subtext,
-                      label_values = label_cells
-                      )
-      dev.off()
-      for (plate_number in 1:12) {
-         if (has_replicates) {
-            rep_columns <- BothRepColumns(current_column)
-            for (j in 1:2) {
-               file_name <- paste0("Heatmap - ", column_labels[[i]],
-                                   " - plate ", plate_number, " rep ", j
-                                   )
-               file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-               png(file = file.path(folder_path, file_name),
-                   width = heatmap_width, height = heatmap_height,
-                   units = "in", res = 600
-                   )
-               HeatmapForPlate(GBA_df, plate_number, rep_columns[[j]],
-                               use_subtext = column_subtext,
-                               label_values = label_cells
-                               )
-               dev.off()
-            }
+         if (label_cells) {
+            heatmaps_folder <- "Heatmaps (labelled)"
          } else {
-            file_name <- paste("Heatmap - ", column_labels[[i]],
-                               " - plate ", plate_number
-                               )
+            heatmaps_folder <- "Heatmaps"
+         }
+
+         for (i in seq_along(column_labels)) {
+
+            current_column <- names(column_labels)[[i]]
+            has_replicates <- !(is.null(GetRepNumber(current_column)))
+
+            file_name <- paste0("Heatmaps - ", i, ") ", column_labels[[i]], ".pdf")
             file_name <- gsub("%", "percent", file_name, fixed = TRUE)
+            column_subtext <- column_labels[[i]]
+
+            pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
+                width = heatmap_width, height = heatmap_height
+                )
+            AveragedHeatmap(GBA_df, current_column,
+                            main_title = "Mean of all plates and replicates (well effect)",
+                            use_subtext = column_subtext,
+                            label_values = label_cells,
+                            use_one_scale = !(scaled_per_plate),
+                            weighting_for_controls = condense_controls
+                            )
+            for (plate_number in 1:12) {
+               if (has_replicates) {
+                  rep_columns <- BothRepColumns(current_column)
+                  for (rep_column in rep_columns) {
+                     HeatmapForPlate(GBA_df, plate_number, rep_column,
+                                     use_subtext = column_subtext,
+                                     label_values = label_cells,
+                                     use_one_scale = !(scaled_per_plate),
+                                     weighting_for_controls = condense_controls
+                                     )
+                  }
+               } else {
+                  HeatmapForPlate(GBA_df, plate_number, current_column,
+                                  use_subtext = column_subtext,
+                                  label_values = label_cells,
+                                  use_one_scale = !(scaled_per_plate),
+                                  weighting_for_controls = condense_controls
+                                  )
+               }
+
+            }
+            dev.off()
+         }
+
+         for (i in seq_along(column_labels)) {
+
+            current_column <- names(column_labels)[[i]]
+            has_replicates <- !(is.null(GetRepNumber(current_column)))
+            column_subtext <- column_labels[[i]]
+
+            folder_name <- paste0("Heatmap PNGs - ", i, ") ", column_labels[[i]])
+            folder_name <- gsub("%", "percent", folder_name, fixed = TRUE)
+            folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
+            dir.create(folder_path, showWarnings = FALSE)
+
+            file_name <- paste0("Heatmap - ", column_labels[[i]],
+                                " -- well effect"
+                                )
+            file_name <- gsub("%", "percent", file_name, fixed = TRUE)
+
             png(file = file.path(folder_path, file_name),
                 width = heatmap_width, height = heatmap_height,
                 units = "in", res = 600
                 )
-            HeatmapForPlate(GBA_df, plate_number, current_column,
+            AveragedHeatmap(GBA_df, current_column,
+                            main_title = "Mean of all plates and replicates (well effect)",
                             use_subtext = column_subtext,
-                            label_values = label_cells
+                            label_values = label_cells,
+                            use_one_scale = !(scaled_per_plate),
+                            weighting_for_controls = condense_controls
                             )
             dev.off()
+            for (plate_number in 1:12) {
+               if (has_replicates) {
+                  rep_columns <- BothRepColumns(current_column)
+                  for (j in 1:2) {
+                     file_name <- paste0("Heatmap - ", column_labels[[i]],
+                                         " - plate ", plate_number, " rep ", j
+                                         )
+                     file_name <- gsub("%", "percent", file_name, fixed = TRUE)
+                     png(file = file.path(folder_path, file_name),
+                         width = heatmap_width, height = heatmap_height,
+                         units = "in", res = 600
+                         )
+                     HeatmapForPlate(GBA_df, plate_number, rep_columns[[j]],
+                                     use_subtext = column_subtext,
+                                     label_values = label_cells,
+                                     use_one_scale = !(scaled_per_plate),
+                                     weighting_for_controls = condense_controls
+                                     )
+                     dev.off()
+                  }
+               } else {
+                  file_name <- paste("Heatmap - ", column_labels[[i]],
+                                     " - plate ", plate_number
+                                     )
+                  file_name <- gsub("%", "percent", file_name, fixed = TRUE)
+                  png(file = file.path(folder_path, file_name),
+                      width = heatmap_width, height = heatmap_height,
+                      units = "in", res = 600
+                      )
+                  HeatmapForPlate(GBA_df, plate_number, current_column,
+                                  use_subtext = column_subtext,
+                                  label_values = label_cells,
+                                  use_one_scale = !(scaled_per_plate),
+                                  weighting_for_controls = condense_controls
+                                  )
+                  dev.off()
+               }
+            }
          }
+
+
       }
    }
-
 }
 
 
