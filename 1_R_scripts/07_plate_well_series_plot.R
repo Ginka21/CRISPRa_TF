@@ -30,9 +30,10 @@ load(file.path(r_data_dir, "03_analyse_data.RData"))
 
 PlateWellPlot <- function(input_df,
                           use_column = "Raw_rep1",
-                          show_title = "Plate-well series plot",
+                          show_title = NULL,
                           y_axis_label = NULL,
-                          point_size = 0.6
+                          point_size = 0.6,
+                          order_by_column = FALSE
                           ) {
 
    if (is.null(y_axis_label)) {
@@ -42,6 +43,24 @@ PlateWellPlot <- function(input_df,
          y_axis_label <- column_labels[[use_column]]
       } else {
          y_axis_label <- use_column
+      }
+   }
+
+   if (order_by_column) {
+      columns_vec <- rep(1:24, times = 16)
+      long_columns_vec <- columns_vec[input_df[, "Well_number_384"]]
+      new_order <- order(match(input_df[, "Plate_number_384"], input_df[, "Plate_number_384"]),
+                         long_columns_vec
+                         )
+      input_df <- input_df[new_order, ]
+      row.names(input_df) <- NULL
+   }
+   if (is.null(show_title)) {
+      show_title <- "Plate-well series"
+      if (order_by_column) {
+         show_title <- paste0(show_title, ", ordered by column")
+      } else {
+         show_title <- paste0(show_title, ", ordered by row")
       }
    }
 
@@ -218,6 +237,9 @@ PlateWellPlot <- function(input_df,
 # Draw Example Plots ------------------------------------------------------
 
 PlateWellPlot(GBA_df)
+PlateWellPlot(GBA_df, order_by_column = TRUE)
+
+
 PlateWellPlot(GBA_df, "FoldNT_rep1")
 PlateWellPlot(GBA_df, "CellTiterGlo_raw")
 
