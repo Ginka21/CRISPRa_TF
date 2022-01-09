@@ -28,6 +28,12 @@ load(file.path(r_data_dir, "02_integrate_data.RData"))
 
 GBA_df[, "CellTiterGlo_foldNT"] <- NormPlates(GBA_df, "CellTiterGlo_raw", foldNT = TRUE)
 
+are_after <- seq_len(ncol(GBA_df)) > which(names(GBA_df) == "CellTiterGlo_raw")
+use_columns <- unique(c(names(GBA_df)[!(are_after)], "CellTiterGlo_foldNT",
+                        names(GBA_df)[are_after]
+                        ))
+GBA_df <- GBA_df[, use_columns]
+
 for (i in 1:2) {
   ri <- paste0("_rep", i)
 
@@ -98,10 +104,62 @@ GBA_df[, "Hit_strength_act_log2_Glo"] <- meanFC_Glo * -log10(GBA_df[, "p_value_a
 
 
 
+# Define hits -------------------------------------------------------------
+
+are_gene <- !(is.na(GBA_df[, "Entrez_ID"]))
+mean_logfc <- rowMeans(GBA_df[, c("Log2FC_rep1", "Log2FC_rep2")])
+meet_criteria <- (GBA_df[, "p_value_log2"] < 0.05) &
+                 (abs(mean_logfc) > log2(1.25))
+stopifnot(!(any(meet_criteria & GBA_df[, "Is_NT_ctrl"])))
+
+table(meet_criteria[are_gene])
+
+
+
+# Prepare hit list --------------------------------------------------------
+
+reordered_df <- GBA_df
+
+reordered_df[, "Passes_cutoffs"]         <- meet_criteria
+reordered_df[, "Mean_logFC"]             <- mean_logfc
+reordered_df[, "p_value_log2_used"]      <- GBA_df[, "p_value_log2"]
+reordered_df[, "Hit_strength_log2_used"] <- GBA_df[, "Hit_strength_log2"]
+
+
+are_after <- seq_len(ncol(GBA_df)) > which(names(GBA_df) == "Is_pos_ctrl")
+use_columns <- unique(c(names(GBA_df)[!(are_after)],
+                        "Passes_cutoffs", "Mean_logFC", "p_value_log2_used",
+                        "Hit_strength_log2_used",
+                        names(GBA_df)[are_after]
+                        ))
+
+new_order <- order(meet_criteria,
+                   abs(GBA_df[, "Hit_strength_log2"]),
+                   decreasing = TRUE
+                   )
+reordered_df <- reordered_df[new_order, use_columns]
+row.names(reordered_df) <- NULL
+
+are_hit <- (!(is.na(reordered_df[, "Entrez_ID"]))) & reordered_df[, "Passes_cutoffs"]
+hits_df <- reordered_df[are_hit, ]
+row.names(hits_df) <- NULL
+
+
+
 # Export data -------------------------------------------------------------
 
 write.csv(GBA_df,
           file = file.path(output_dir, "Tables", "GBA_complete.csv"),
+          row.names = FALSE, quote = FALSE
+          )
+
+write.csv(reordered_df,
+          file = file.path(output_dir, "Tables", "GBA_reordered.csv"),
+          row.names = FALSE, quote = FALSE
+          )
+
+write.csv(hits_df,
+          file = file.path(output_dir, "Tables", "GBA_hits.csv"),
           row.names = FALSE, quote = FALSE
           )
 
