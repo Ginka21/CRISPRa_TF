@@ -334,7 +334,7 @@ GetQualityMetric <- function(input_df, UseFunction) {
 PlotZPrimes <- function(input_df) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_Z_Prime)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
-                     y_limits_include = c(0, 1), y_axis_label = "Z' factor"
+                     y_limits_include = c(0, 1, -0.2), y_axis_label = "Z' factor"
                      )
 }
 
@@ -342,6 +342,7 @@ PlotZPrimes <- function(input_df) {
 PlotSSMDControls <- function(input_df) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
+                     y_limits_include = c(0, 7),
                      y_axis_label = "SSMD (pos./neg. controls)",
                      quality_ranges = list(c(5, 7), c(3, 5), c(-Inf, 3))
                      )
