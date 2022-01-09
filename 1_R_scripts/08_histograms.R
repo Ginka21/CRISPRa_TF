@@ -43,6 +43,7 @@ PlotHistResults <- function(hist_results, fill_color, border_color) {
         )
 }
 
+
 ThreeHistograms <- function(input_df, use_column, x_axis_label = NULL) {
 
    if (is.null(x_axis_label)) {
@@ -85,15 +86,12 @@ ThreeHistograms <- function(input_df, use_column, x_axis_label = NULL) {
                      length.out = 70
                      )
 
-   # Plot First distribution
-   hist_results <- hist(numeric_vec[are_gene],
-                        breaks = use_breaks,
-                        plot = FALSE
-                        )
-   count_max <- max(hist_results[["counts"]])
-   y_limits <- c(count_max * -0.03, count_max * 1.03)
+   gene_hist <- hist(numeric_vec[are_gene], breaks = use_breaks, plot = FALSE)
+   NT_hist   <- hist(numeric_vec[are_NT],   breaks = use_breaks, plot = FALSE)
+   pos_hist  <- hist(numeric_vec[are_pos],  breaks = use_breaks, plot = FALSE)
 
-   assign("delete_hist_results", hist_results, envir = globalenv())
+   count_max <- max(c(gene_hist[["counts"]], NT_hist[["counts"]], pos_hist[["counts"]]))
+   y_limits <- c(count_max * -0.03, count_max * 1.03)
 
    use_mgp <- c(2.7, 0.65, 0)
 
@@ -113,13 +111,15 @@ ThreeHistograms <- function(input_df, use_column, x_axis_label = NULL) {
    axis(1, mgp = use_mgp, tcl = use_tcl)
    axis(2, las = 2, mgp = use_mgp, tcl = use_tcl)
 
-   PlotHistResults(hist_results, fill_colors[[1]], border_colors[[1]])
-
-   hist_results <- hist(numeric_vec[are_NT], breaks = use_breaks, plot = FALSE)
-   PlotHistResults(hist_results, fill_colors[[2]], border_colors[[2]])
-
-   hist_results <- hist(numeric_vec[are_pos], breaks = use_breaks, plot = FALSE)
-   PlotHistResults(hist_results, fill_colors[[3]], border_colors[[3]])
+   if (grepl("p_?val", use_column, ignore.case = TRUE)) {
+      PlotHistResults(pos_hist,  fill_colors[[3]], border_colors[[3]])
+      PlotHistResults(gene_hist, fill_colors[[1]], border_colors[[1]])
+      PlotHistResults(NT_hist,   fill_colors[[2]], border_colors[[2]])
+   } else {
+      PlotHistResults(gene_hist, fill_colors[[1]], border_colors[[1]])
+      PlotHistResults(NT_hist,   fill_colors[[2]], border_colors[[2]])
+      PlotHistResults(pos_hist,  fill_colors[[3]], border_colors[[3]])
+   }
 
    box(bty = "l")
 
@@ -157,11 +157,10 @@ ThreeHistograms(GBA_df, "p_value_deltaNT")
 
 
 
-
 # Export plots as PDF and PNG ---------------------------------------------
 
-plot_width <- 5.5
-plot_height <- 4
+plot_width <- 7
+plot_height <- 5
 
 pdf(file = file.path(output_dir, "Figures", "Histograms", "Histograms.pdf"),
     width = plot_width, height = plot_height
