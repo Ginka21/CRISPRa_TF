@@ -47,13 +47,13 @@ VolcanoFlashPlot <- function(input_df,
       x_label <- "% activation"
       log_fc_vec <- log_fc_vec * 100
    } else {
-      x_label <- "log2 fold change"
+      x_label <- expression("log"["2"] ~ "fold change")
    }
    if (grepl("SSMD", y_column, fixed = TRUE)) {
       y_label <- "SSMD"
    } else {
       y_value_vec <- -log10(y_value_vec)
-      y_label <- "-log10 p value"
+      y_label <- expression("" - "log"["10"] ~ plain("p") ~ "value")
    }
    are_NT      <- input_df[, "Is_NT_ctrl"]
    are_posctrl <- input_df[, "Is_pos_ctrl"]
@@ -80,10 +80,12 @@ VolcanoFlashPlot <- function(input_df,
         las  = 1,
         mgp  = c(2.8, 0.7, 0),
         tcl  = -0.45,
-        type = "n"
+        type = "n",
+        bty  = "n"
         )
    abline(h = 0, lty = "dotted", col = "grey70")
    abline(v = 0, lty = "dotted", col = "grey70")
+   box()
 
    points(log_fc_vec[are_gene],
           y_value_vec[are_gene],
@@ -274,6 +276,9 @@ for (use_device in c("none", "pdf", "png")) {
          }
          for (i in seq_along(pairs_list)) {
             plot_title <- sub("Volcano plot", title_prefix, pairs_list[[i]][["title"]])
+            if (plot_type != "Volcano") {
+               plot_title <- sub("p values", "SSMD", plot_title, fixed = TRUE)
+            }
             if (use_device == "png") {
                PNG_name <- paste0(i, ") ", gsub("%", "percent", plot_title, fixed = TRUE))
                if (only_genes) {
