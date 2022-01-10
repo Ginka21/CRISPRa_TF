@@ -258,29 +258,64 @@ PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
 plot_width <- 7
 plot_height <- 5.5
 
-pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots.pdf"),
+pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, by row.pdf"),
     width = plot_width, height = plot_height
     )
 for (use_column in names(column_labels)) {
-  PlateWellPlot(GBA_df, use_column, show_title = column_labels[[use_column]], y_axis_label = "")
+  PlateWellPlot(GBA_df,
+                use_column,
+                show_title = paste0(column_labels[[use_column]], ", ordered by row"),
+                y_axis_label = "",
+                order_by_column = TRUE)
 }
 dev.off()
 
+pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, by column.pdf"),
+    width = plot_width, height = plot_height
+    )
+for (use_column in names(column_labels)) {
+  PlateWellPlot(GBA_df,
+                use_column,
+                show_title = paste0(column_labels[[use_column]], ", ordered by column"),
+                y_axis_label = "",
+                order_by_column = FALSE)
+}
+dev.off()
 
+# pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots.pdf"),
+#     width = plot_width, height = plot_height
+#     )
+# for (use_column in names(column_labels)) {
+#   PlateWellPlot(GBA_df, use_column, show_title = column_labels[[use_column]], y_axis_label = "")
+# }
+# dev.off()
 
 for (i in seq_along(column_labels)) {
   use_column <- names(column_labels)[[i]]
   file_name <- paste0("Plate well series plot - ", i,  ") ",
                       sub("_rep1", "", use_column, fixed = TRUE),
+                      "- ordered by column",
                       ".png"
                       )
-  png(file = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", file_name),
+  png(file = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "ordered by column", file_name),
       width = plot_width, height = plot_height, units = "in", res = 600
       )
-  PlateWellPlot(GBA_df, use_column)
+  PlateWellPlot(GBA_df, use_column, order_by_column = TRUE)
   dev.off()
 }
 
-
+for (i in seq_along(column_labels)) {
+  use_column <- names(column_labels)[[i]]
+  file_name <- paste0("Plate well series plot - ", i,  ") ",
+                      sub("_rep1", "", use_column, fixed = TRUE),
+                       "- ordered by row",
+                      ".png"
+                      )
+  png(file = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "ordered by row", file_name),
+      width = plot_width, height = plot_height, units = "in", res = 600
+      )
+  PlateWellPlot(GBA_df, use_column, order_by_column = FALSE)
+  dev.off()
+}
 
 
