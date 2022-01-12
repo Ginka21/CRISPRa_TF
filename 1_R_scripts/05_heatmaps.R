@@ -17,9 +17,9 @@ source(file.path(functions_dir, "03_plotting_helper_functions.R"))
 
 # Define folder path ------------------------------------------------------
 
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects")
-output_dir  <- file.path(project_dir,"4_output")
+input_dir  <- file.path(project_dir, "2_input")
+r_data_dir <- file.path(project_dir, "3_R_objects")
+output_dir <- file.path(project_dir,"4_output")
 
 
 
@@ -42,18 +42,17 @@ parula <- colorRampPalette(c("#352A87", "#0F5CDD", "#1481D6", "#06A4CA",
                              ))
 
 
-
 MakeBreaks <- function(numeric_vec, num_breaks, trim = TRUE) {
-   if (trim) {
-      use_range <- quantile(numeric_vec, probs = c(0.02, 0.98), na.rm = TRUE)
-   } else {
-      use_range <- range(numeric_vec, na.rm = TRUE)
-   }
-   breaks_vec <- seq(from       = use_range[[1]],
-                     to         = use_range[[2]],
-                     length.out = num_breaks
-                     )
-   return(breaks_vec)
+  if (trim) {
+    use_range <- quantile(numeric_vec, probs = c(0.02, 0.98), na.rm = TRUE)
+  } else {
+    use_range <- range(numeric_vec, na.rm = TRUE)
+  }
+  breaks_vec <- seq(from       = use_range[[1]],
+                    to         = use_range[[2]],
+                    length.out = num_breaks
+                    )
+  return(breaks_vec)
 }
 
 
@@ -79,28 +78,28 @@ SigmoidalBreakPoints <- function(numeric_vec, use_for_log = 5, symm = TRUE) {
 
 
 GetRepNumber <- function(column_name) {
-   if (grepl("_rep", column_name)) {
-      column_name_splits <- strsplit(column_name, "_", fixed = TRUE)[[1]]
-      rep_string <- grep("^rep", column_name_splits, value = TRUE)
-      rep_number <- as.integer(sub("rep", "", rep_string, fixed = TRUE))
-      stopifnot(rep_number %in% 1:2)
-   } else {
-      rep_number <- NULL
-   }
-   return(rep_number)
+  if (grepl("_rep", column_name)) {
+    column_name_splits <- strsplit(column_name, "_", fixed = TRUE)[[1]]
+    rep_string <- grep("^rep", column_name_splits, value = TRUE)
+    rep_number <- as.integer(sub("rep", "", rep_string, fixed = TRUE))
+    stopifnot(rep_number %in% 1:2)
+  } else {
+    rep_number <- NULL
+  }
+  return(rep_number)
 }
 
 
 BothRepColumns <- function(column_name) {
-   rep_number <- GetRepNumber(column_name)
-   if (rep_number == 1) {
-      rep1_column <- column_name
-      rep2_column <- sub("rep1", "rep2", column_name, fixed = TRUE)
-   } else if (rep_number == 2) {
-      rep1_column <- sub("rep2", "rep1", column_name, fixed = TRUE)
-      rep2_column <- column_name
-   }
-   return(c(rep1_column, rep2_column))
+  rep_number <- GetRepNumber(column_name)
+  if (rep_number == 1) {
+    rep1_column <- column_name
+    rep2_column <- sub("rep1", "rep2", column_name, fixed = TRUE)
+  } else if (rep_number == 2) {
+    rep1_column <- sub("rep2", "rep1", column_name, fixed = TRUE)
+    rep2_column <- column_name
+  }
+  return(c(rep1_column, rep2_column))
 }
 
 
@@ -116,140 +115,152 @@ BreaksForColumn <- function(input_df,
                             num_uniform_breaks        = NULL,
                             flatten_factor            = NULL,
                             weighting_for_controls    = NULL,
-                            take_log2                 = FALSE
+                            take_log2                 = FALSE,
+                            use_vector                = NULL
                             ) {
 
 
-   if (!(is.null(use_custom_breaks))) {
-      return(list(breaks = use_custom_breaks, type = "custom"))
-   }
+  if (!(is.null(use_custom_breaks))) {
+    return(list(breaks = use_custom_breaks, type = "custom"))
+  }
 
-   mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
-   are_empty <- input_df[, "Well_number_384"] %in% c(mat_384[, c(1, 24)])
-   are_pos_ctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+  if (is.null(use_vector)) {
+    mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
+    are_empty <- input_df[, "Well_number_384"] %in% c(mat_384[, c(1, 24)])
+    are_pos_ctrl <- input_df[, "Is_pos_ctrl"]
 
-   rep_number <- GetRepNumber(use_column)
+    rep_number <- GetRepNumber(use_column)
 
-   if (is.null(rep_number)) {
+    if (is.null(rep_number)) {
       all_vec <- input_df[, use_column]
-   } else {
+    } else {
       rep_columns <- BothRepColumns(use_column)
       all_vec <- c(input_df[, rep_columns[[1]]], input_df[, rep_columns[[2]]])
       are_empty <- rep(are_empty, 2)
       are_pos_ctrl <- rep(are_pos_ctrl, 2)
-   }
+    }
 
-   if (IsPValue(use_column)) {
-      all_vec <- -log10(all_vec)
-   } else if (take_log2) {
-      all_vec <- log2(all_vec)
-   }
+  } else {
+    all_vec <- use_vector
+    weighting_for_controls <- FALSE
+  }
 
-   use_diverging <- any(all_vec < 0)
-   if (use_diverging) {
-      most_extreme_value <- abs(range(all_vec))
-      limits_vec <- c(-most_extreme_value, most_extreme_value)
-   } else {
-      limits_vec <- range(all_vec)
-   }
+  if (IsPValue(use_column)) {
+    all_vec <- -log10(all_vec)
+  } else if (take_log2) {
+    all_vec <- log2(all_vec)
+  }
 
-   if (is.null(num_uniform_breaks) && use_diverging) {
-      if (is.null(flatten_factor)) {
-         if (grepl("SSMD", use_column, fixed = TRUE)) {
-            flatten_factor <- 0.5
-         } else {
-            flatten_factor <- 1
-         }
+  use_diverging <- any(all_vec < 0)
+  if (use_diverging) {
+    most_extreme_value <- abs(range(all_vec))
+    limits_vec <- c(-most_extreme_value, most_extreme_value)
+  } else {
+    limits_vec <- range(all_vec)
+  }
+
+  if (is.null(num_uniform_breaks) && use_diverging) {
+    if (is.null(flatten_factor)) {
+      if (grepl("SSMD", use_column, fixed = TRUE)) {
+        flatten_factor <- 0.5
+      } else {
+        flatten_factor <- 1
       }
-      sigmoidal_breaks <- SigmoidalBreakPoints(limits_vec, use_for_log = flatten_factor)
-      return(list(breaks = sigmoidal_breaks, type = "sigmoidal"))
-   }
+    }
+    sigmoidal_breaks <- SigmoidalBreakPoints(limits_vec, use_for_log = flatten_factor)
+    return(list(breaks = sigmoidal_breaks, type = "sigmoidal"))
+  }
 
-   if (is.null(weighting_for_controls)) {
-      weighting_for_controls <- NeedsWeighting(use_column)
-   }
-   if (!(weighting_for_controls)) {
-      num_uniform_breaks <- 100
-   }
+  if (is.null(weighting_for_controls)) {
+    weighting_for_controls <- NeedsWeighting(use_column)
+  }
+  if (!(weighting_for_controls)) {
+    num_uniform_breaks <- 100
+  }
 
-   if (!(is.null(num_uniform_breaks))) {
-      uniform_breaks <- MakeBreaks(limits_vec, trim = FALSE, num_breaks = num_uniform_breaks)
-      return(list(breaks = uniform_breaks, type = "uniform"))
-   }
+  if (!(is.null(num_uniform_breaks))) {
+    uniform_breaks <- MakeBreaks(limits_vec, trim = FALSE, num_breaks = num_uniform_breaks)
+    return(list(breaks = uniform_breaks, type = "uniform"))
+  }
 
+  if (any(all_vec < 0)) {
+    most_extreme_value <- abs(range(all_vec))
+    limits_vec <- c(-most_extreme_value, most_extreme_value)
+    uniform_breaks <- SigmoidalBreakPoints(1:1000, use_for_log = 0.5)
+    return(uniform_breaks)
+  }
 
-   if (any(all_vec < 0)) {
-      most_extreme_value <- abs(range(all_vec))
-      limits_vec <- c(-most_extreme_value, most_extreme_value)
-      uniform_breaks <- SigmoidalBreakPoints(1:1000, use_for_log = 0.5)
-      return(uniform_breaks)
-   }
+  if (!(is.null(use_vector))) {
+    stop(paste0("If 'use_vector' is specified, then 'weighting_for_controls' ",
+                "must not be TRUE. Please check your input parameters."
+                ))
+  }
 
+  empty_vec <- all_vec[are_empty]
+  pos_vec   <- all_vec[are_pos_ctrl]
+  other_vec <- all_vec[!(are_empty | are_pos_ctrl)]
 
-   empty_vec <- all_vec[are_empty]
-   pos_vec   <- all_vec[are_pos_ctrl]
-   other_vec <- all_vec[!(are_empty | are_pos_ctrl)]
+  # stopifnot(max(empty_vec) < min(other_vec))
+  # stopifnot(max(other_vec) < min(pos_vec))
 
-   # stopifnot(max(empty_vec) < min(other_vec))
-   # stopifnot(max(other_vec) < min(pos_vec))
+  empty_breaks <- MakeBreaks(empty_vec, num_empty_breaks)
+  empty_breaks <- c(min(all_vec), empty_breaks)
 
-   empty_breaks <- MakeBreaks(empty_vec, num_empty_breaks)
-   empty_breaks <- c(min(all_vec), empty_breaks)
+  other_breaks <- MakeBreaks(other_vec, num_other_breaks)
 
-   other_breaks <- MakeBreaks(other_vec, num_other_breaks)
+  pos_breaks <- MakeBreaks(pos_vec, num_pos_breaks)
+  pos_breaks <- c(pos_breaks, max(all_vec))
 
-   pos_breaks <- MakeBreaks(pos_vec, num_pos_breaks)
-   pos_breaks <- c(pos_breaks, max(all_vec))
+  empty_to_other_breaks <- MakeBreaks(c(max(empty_breaks), min(other_breaks)),
+                                      num_breaks = num_empty_to_other_breaks,
+                                      trim = FALSE
+                                      )
 
-   empty_to_other_breaks <- MakeBreaks(c(max(empty_breaks), min(other_breaks)),
-                                       num_breaks = num_empty_to_other_breaks,
-                                       trim = FALSE
-                                       )
+  other_to_pos_breaks   <- MakeBreaks(c(max(other_breaks), min(pos_breaks)),
+                                      num_breaks = num_other_to_pos_breaks,
+                                      trim = FALSE
+                                      )
 
-   other_to_pos_breaks   <- MakeBreaks(c(max(other_breaks), min(pos_breaks)),
-                                       num_breaks = num_other_to_pos_breaks,
-                                       trim = FALSE
-                                       )
+  all_breaks <- c(empty_breaks,
+                  empty_to_other_breaks[2:(length(empty_to_other_breaks) - 1)],
+                  other_breaks,
+                  other_to_pos_breaks[2:(length(other_to_pos_breaks) - 1)],
+                  pos_breaks
+                  )
+  all_breaks <- sort(unique(all_breaks))
 
-   all_breaks <- c(empty_breaks,
-                   empty_to_other_breaks[2:(length(empty_to_other_breaks) - 1)],
-                   other_breaks,
-                   other_to_pos_breaks[2:(length(other_to_pos_breaks) - 1)],
-                   pos_breaks
-                   )
-   all_breaks <- sort(unique(all_breaks))
-
-   return(list(breaks = all_breaks, type = "weighted by controls"))
+  return(list(breaks = all_breaks, type = "weighted by controls"))
 }
 
 
 IsPValue <- function(column_name) {
-   grepl("p_val", column_name, ignore.case = TRUE)
+  grepl("p_val", column_name, ignore.case = TRUE)
 }
 
+
 NeedsWeighting <- function(column_name) {
-   grepl("_rep|Hit_strength", column_name)
+  grepl("_rep|Hit_strength", column_name)
 }
 
 
 PrettyRound <- function(numeric_vec) {
-   old_scipen <- options("scipen" = 2)
-   results_vec <- ifelse(abs(numeric_vec) > 100,
-                         round(numeric_vec),
-                         ifelse(abs(numeric_vec) > 10,
-                                round(numeric_vec, digits = 1),
-                                ifelse(abs(numeric_vec) > 1,
-                                       round(numeric_vec, digits = 2),
-                                       ifelse(abs(numeric_vec) > 0.01,
-                                              signif(numeric_vec, digits = 2),
-                                              signif(numeric_vec, digits = 1)
-                                              )
-                                       )
-                                )
-                         )
-   results_vec <- as.character(results_vec)
-   options(old_scipen)
-   return(results_vec)
+  old_scipen <- options("scipen" = 2)
+  results_vec <- ifelse(abs(numeric_vec) > 100,
+                        round(numeric_vec),
+                        ifelse(abs(numeric_vec) > 10,
+                               round(numeric_vec, digits = 1),
+                               ifelse(abs(numeric_vec) > 1,
+                                      round(numeric_vec, digits = 2),
+                                      ifelse(abs(numeric_vec) > 0.01,
+                                             signif(numeric_vec, digits = 2),
+                                             signif(numeric_vec, digits = 1)
+                                             )
+                                      )
+                               )
+                        )
+  results_vec <- as.character(results_vec)
+  options(old_scipen)
+  return(results_vec)
 }
 
 
@@ -262,135 +273,134 @@ PrettyRound <- function(numeric_vec) {
 
 PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
 
-   if (is.numeric(plate_number)) {
-      plate_number <- as.character(as.roman(plate_number))
-   }
-   if (is.null(main_title)) {
-      main_title <- paste0("Plate ", plate_number)
-   }
+  if (is.numeric(plate_number)) {
+    plate_number <- as.character(as.roman(plate_number))
+  }
+  if (is.null(main_title)) {
+    main_title <- paste0("Plate ", plate_number)
+  }
 
-   are_this_plate <- input_df[, "Plate_number_384"] == plate_number
-   are_NT  <- input_df[, "Is_NT_ctrl"][are_this_plate]
-   are_pos <- input_df[, "Is_pos_ctrl"][are_this_plate]
-   are_gene <- !(is.na(input_df[, "Entrez_ID"][are_this_plate]))
-   are_mCherry <- input_df[, "Target_flag"][are_this_plate] %in% "mCherry"
-   type_colors <- c(
-      "Empty"         = "gray95",
-      "Untransfected" = "gray80",
-      "Gene"          = brewer.pal(5, "Blues")[[3]],
-      "NT"            = brewer.pal(5, "Blues")[[5]],
-      "Pos"           = brewer.pal(5, "Reds")[[4]],
-      "mCherry"       = brewer.pal(5, "Reds")[[2]]
-   )
-   labels_list <- list(
-      "Empty"         = c("Empty", "well"),
-      "Untransfected" = c("No", "virus"),
-      "Gene"          = c("TF",
-                          "gene"
-                          ),
-      "NT"            = c("NT",
-                          "control"
-                          ),
-      "Pos"           = c("Pos.",
-                          "control"
-                          ),
-      "mCherry"       = "mCherry"
-   )
+  are_this_plate <- input_df[, "Plate_number_384"] == plate_number
+  are_NT  <- input_df[, "Is_NT_ctrl"][are_this_plate]
+  are_pos <- input_df[, "Is_pos_ctrl"][are_this_plate]
+  are_gene <- !(is.na(input_df[, "Entrez_ID"][are_this_plate]))
+  are_mCherry <- input_df[, "Target_flag"][are_this_plate] %in% "mCherry"
+  type_colors <- c(
+    "Empty"         = "gray95",
+    "Untransfected" = "gray80",
+    "Gene"          = brewer.pal(5, "Blues")[[3]],
+    "NT"            = brewer.pal(5, "Blues")[[5]],
+    "Pos"           = brewer.pal(5, "Reds")[[4]],
+    "mCherry"       = brewer.pal(5, "Reds")[[2]]
+  )
+  labels_list <- list(
+    "Empty"         = c("Empty", "well"),
+    "Untransfected" = c("No", "virus"),
+    "Gene"          = c("TF",
+                        "gene"
+                        ),
+    "NT"            = c("NT",
+                        "control"
+                        ),
+    "Pos"           = c("Pos.",
+                        "control"
+                        ),
+    "mCherry"       = "mCherry"
+  )
 
-   color_vec <- rep(type_colors[["Untransfected"]], 384)
-   color_vec[are_NT]   <- type_colors[["NT"]]
-   color_vec[are_pos]  <- type_colors[["Pos"]]
-   color_vec[are_gene] <- type_colors[["Gene"]]
+  color_vec <- rep(type_colors[["Untransfected"]], 384)
+  color_vec[are_NT]   <- type_colors[["NT"]]
+  color_vec[are_pos]  <- type_colors[["Pos"]]
+  color_vec[are_gene] <- type_colors[["Gene"]]
 
-   if (any(are_mCherry)) {
-      color_vec[are_mCherry] <- type_colors[["mCherry"]]
-   } else {
-      type_colors <- type_colors[names(type_colors) != "mCherry"]
-      labels_list <- labels_list[names(labels_list) != "mCherry"]
-   }
+  if (any(are_mCherry)) {
+    color_vec[are_mCherry] <- type_colors[["mCherry"]]
+  } else {
+    type_colors <- type_colors[names(type_colors) != "mCherry"]
+    labels_list <- labels_list[names(labels_list) != "mCherry"]
+  }
 
-   color_mat <- matrix(color_vec, nrow = 16, ncol = 24, byrow = TRUE)
-   color_mat[, c(1, 24)] <- type_colors[["Empty"]]
+  color_mat <- matrix(color_vec, nrow = 16, ncol = 24, byrow = TRUE)
+  color_mat[, c(1, 24)] <- type_colors[["Empty"]]
 
-   ## Plot heatmap
-   old_mai <- par(mai = c(1.3, 0.7, 1.1, 0.7))
-   cimage(zcol = InvertTranspose(color_mat),
-          xlab    = "",
-          ylab    = "",
-          xlabels = rep("", ncol(color_mat)),
-          ylabels = rep("", nrow(color_mat)),
-          tcl     = 0,
-          mgp     = c(3, 0.3, 0),
-          bty     = "n",
-          axes    = FALSE
-          )
-   horizontal_lines <- seq(from = 0.5, to = nrow(color_mat) + 0.5, by = 1)
-   vertical_lines   <- seq(from = 0.5, to = ncol(color_mat) + 0.5, by = 1)
-   grid_color <- "gray50"
-   use_lwd <- 0.8
-   segments(x0 = 0.5, x1 = ncol(color_mat) + 0.5, y0 = horizontal_lines,
-            col = grid_color, lwd = use_lwd, xpd = NA
-            )
-   segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(color_mat) + 0.5,
-            col = grid_color, lwd = use_lwd, xpd = NA
-            )
+  ## Plot heatmap
+  old_mai <- par(mai = c(1.3, 0.7, 1.1, 0.7))
+  cimage(zcol = InvertTranspose(color_mat),
+         xlab    = "",
+         ylab    = "",
+         xlabels = rep("", ncol(color_mat)),
+         ylabels = rep("", nrow(color_mat)),
+         tcl     = 0,
+         mgp     = c(3, 0.3, 0),
+         bty     = "n",
+         axes    = FALSE
+         )
+  horizontal_lines <- seq(from = 0.5, to = nrow(color_mat) + 0.5, by = 1)
+  vertical_lines   <- seq(from = 0.5, to = ncol(color_mat) + 0.5, by = 1)
+  grid_color <- "gray50"
+  use_lwd <- 0.8
+  segments(x0 = 0.5, x1 = ncol(color_mat) + 0.5, y0 = horizontal_lines,
+           col = grid_color, lwd = use_lwd, xpd = NA
+           )
+  segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(color_mat) + 0.5,
+           col = grid_color, lwd = use_lwd, xpd = NA
+           )
 
-   ## Annotate plot
-   text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
-        y      = seq_len(nrow(color_mat)),
-        labels = rev(LETTERS[seq_len(nrow(color_mat))]),
-        cex    = par("cex") * 0.8,
-        col    = "black",
-        xpd    = NA
-        )
-   text(x      = seq_len(ncol(color_mat)),
-        y      = par("usr")[[4]] + diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
-        labels = seq_len(ncol(color_mat)),
-        cex    = par("cex") * 0.8,
-        col    = "black",
-        xpd    = NA
-        )
+  ## Annotate plot
+  text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
+       y      = seq_len(nrow(color_mat)),
+       labels = rev(LETTERS[seq_len(nrow(color_mat))]),
+       cex    = par("cex") * 0.8,
+       col    = "black",
+       xpd    = NA
+       )
+  text(x      = seq_len(ncol(color_mat)),
+       y      = par("usr")[[4]] + diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
+       labels = seq_len(ncol(color_mat)),
+       cex    = par("cex") * 0.8,
+       col    = "black",
+       xpd    = NA
+       )
 
-   ## Draw the legend
+  ## Draw the legend
+  start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 1.5), from = "lines", to = "user"))
 
-   start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 1.5), from = "lines", to = "user"))
+  x_space <- diff(grconvertX(c(0, 2.8), from = "lines", to = "user"))
+  x_positions <- seq(0, x_space * length(type_colors), length.out = length(type_colors))
+  x_positions <- x_positions - (mean(x_positions) - grconvertX(0.5, from = "npc", to = "user"))
+  rect(xleft   = x_positions - 0.5,
+       xright  = x_positions + 0.5,
+       ybottom = start_y - 1,
+       ytop    = start_y,
+       col     = type_colors,
+       border  = grid_color,
+       xpd     = NA
+       )
 
-   x_space <- diff(grconvertX(c(0, 2.8), from = "lines", to = "user"))
-   x_positions <- seq(0, x_space * length(type_colors), length.out = length(type_colors))
-   x_positions <- x_positions - (mean(x_positions) - grconvertX(0.5, from = "npc", to = "user"))
-   rect(xleft   = x_positions - 0.5,
-        xright  = x_positions + 0.5,
-        ybottom = start_y - 1,
-        ytop    = start_y,
-        col     = type_colors,
-        border  = grid_color,
-        xpd     = NA
-        )
+  text(x      = x_positions,
+       y      = start_y - 1 - diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
+       labels = sapply(labels_list, function(x) VerticalAdjust(x[[1]])),
+       cex    = 0.8,
+       xpd    = NA
+       )
+  second_lines <- sapply(labels_list, function(x) {
+    if (length(x) == 2) {
+      VerticalAdjust(x[[2]])
+    } else {
+      NA
+    }})
+  text(x      = x_positions,
+       y      = start_y - 1 - diff(grconvertY(c(0, 1.65), from = "lines", to = "user")),
+       labels = second_lines,
+       cex    = 0.8,
+       xpd    = NA
+       )
+  title(main_title, line = 2.9)
 
-   text(x      = x_positions,
-        y      = start_y - 1 - diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
-        labels = sapply(labels_list, function(x) VerticalAdjust(x[[1]])),
-        cex    = 0.8,
-        xpd    = NA,
-        )
-   second_lines <- sapply(labels_list, function(x) {
-      if (length(x) == 2) {
-         VerticalAdjust(x[[2]])
-      } else {
-         NA
-      }})
-   text(x      = x_positions,
-        y      = start_y - 1 - diff(grconvertY(c(0, 1.65), from = "lines", to = "user")),
-        labels = second_lines,
-        cex    = 0.8,
-        xpd    = NA,
-        )
-
-   title(main_title, line = 2.9)
-
-   par(old_mai)
-   return(invisible(NULL))
+  par(old_mai)
+  return(invisible(NULL))
 }
+
 
 
 HeatMap384 <- function(numeric_vec,
@@ -404,245 +414,277 @@ HeatMap384 <- function(numeric_vec,
                        uniform_legend = FALSE
                        ) {
 
-   assign("delete_numeric_vec", numeric_vec, envir = globalenv())
-   assign("delete_use_breaks", use_breaks, envir = globalenv())
+  stopifnot(length(numeric_vec) == 384)
 
-   if (is.null(ColorFunction)) {
-      if (any(use_breaks < 0)) {
-         ColorFunction <- colorRampPalette(rev(brewer.pal(11, "RdBu")))
-      } else {
-         ColorFunction <- cividis
-      }
-   }
+  ## Prepare data for plotting
+  if (use_minuslog10) {
+    final_vec <- -log10(numeric_vec)
+  } else if (take_log2) {
+    final_vec <- log2(numeric_vec)
+  } else {
+    final_vec <- numeric_vec
+  }
+  use_mat <- matrix(final_vec, nrow = 16, ncol = 24, byrow = TRUE)
 
-   stopifnot(length(numeric_vec) == 384)
+  ## Create a matrix of colors for the heatmap
+  if (is.null(ColorFunction)) {
+    if (any(use_breaks < 0)) {
+      ColorFunction <- colorRampPalette(rev(brewer.pal(11, "RdBu")))
+    } else {
+      ColorFunction <- cividis
+    }
+  }
+  use_mat <- matrix(final_vec, nrow = 16, ncol = 24, byrow = TRUE)
+  use_cmap <- makecmap(use_mat, breaks = use_breaks, colFn = ColorFunction,
+                       include.lowest = TRUE
+                       )
+  color_mat <- cmap(use_mat, map = use_cmap)
 
-   if (use_minuslog10) {
-      final_vec <- -log10(numeric_vec)
-   } else if (take_log2) {
-      final_vec <- log2(numeric_vec)
-   } else {
-      final_vec <- numeric_vec
-   }
-   use_mat <- matrix(final_vec, nrow = 16, ncol = 24, byrow = TRUE)
-
-   ## Create a matrix of colors for the heatmap
-   use_mat <- matrix(final_vec, nrow = 16, ncol = 24, byrow = TRUE)
-   use_cmap <- makecmap(use_mat, breaks = use_breaks, colFn = ColorFunction,
-                        include.lowest = TRUE
-                        )
-   color_mat <- cmap(use_mat, map = use_cmap)
-
-
-   ## Create a vector of colors for the legend
-   if (uniform_legend) {
-      num_steps <- 200
-      legend_colors_seq <- seq(from       = min(use_breaks),
-                               to         = max(use_breaks),
-                               length.out = num_steps
-                               )
-      legend_colors_vec <- cmap(legend_colors_seq, map = use_cmap)
-   } else {
-      breaks_mat <- cbind(use_breaks[seq_len(length(use_breaks) - 1)],
-                          use_breaks[seq_len(length(use_breaks) - 1) + 1L]
-                          )
-      legend_values_vec <- rowMeans(breaks_mat)
-      legend_colors_vec <- use_cmap[["colors"]]
-      num_steps <- length(legend_values_vec)
-      stopifnot(length(legend_colors_vec) == num_steps)
-   }
-
-   ## Plot heatmap
-   old_mai <- par(mai = c(1.3, 0.7, 1.1, 0.7))
-   cimage(zcol = InvertTranspose(color_mat),
-          xlab    = "",
-          ylab    = "",
-          xlabels = rep("", ncol(color_mat)),
-          ylabels = rep("", nrow(color_mat)),
-          tcl     = 0,
-          mgp     = c(3, 0.3, 0),
-          bty     = "n",
-          axes    = FALSE
-          )
-   horizontal_lines <- seq(from = 0.5, to = nrow(use_mat) + 0.5, by = 1)
-   vertical_lines   <- seq(from = 0.5, to = ncol(use_mat) + 0.5, by = 1)
-   grid_color <- "white"
-   use_lwd <- 0.2
-   segments(x0 = 0.5, x1 = ncol(use_mat) + 0.5, y0 = horizontal_lines,
-            col = grid_color, lwd = use_lwd, xpd = NA
-            )
-   segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(use_mat) + 0.5,
-            col = grid_color, lwd = use_lwd, xpd = NA
-            )
-
-   ## Plot heatmap legend
-
-   step_width <- (par("usr")[[2]] - par("usr")[[1]]) / num_steps
-   start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 2), from = "lines", to = "user"))
-   legend_height <- diff(grconvertX(c(0, 0.8), from = "lines", to = "user"))
-   step_left_vec <- seq(from = par("usr")[[1]],
-                        to   = par("usr")[[2]] - step_width,
-                        by   = step_width
-                        )
-   rect(xleft    = step_left_vec,
-        xright   = step_left_vec + step_width,
-        ybottom  = start_y,
-        ytop     = start_y + legend_height,
-        col      = legend_colors_vec,
-        border   = NA,
-        xpd      = NA
-        )
-   if (uniform_legend) {
-      assign("delete_legend_colors_sea", legend_colors_seq, envir = globalenv())
-      legend_text_values <- pretty(legend_colors_seq, n = 10)
-      assign("delete_legend_text_values_1", legend_colors_seq, envir = globalenv())
-      use_tolerance <- diff(range(legend_colors_seq)) * 0.003
-      are_within_limits <- (legend_text_values >= (min(legend_colors_seq) - use_tolerance)) &
-                           (legend_text_values <= (max(legend_colors_seq) + use_tolerance))
-      assign("delete_are_within_limits", are_within_limits, envir = globalenv())
-
-      legend_text_values <- legend_text_values[are_within_limits]
-      assign("delete_legend_text_values_1", legend_text_values, envir = globalenv())
-
-      legend_text_vec <- format(legend_text_values, trim = TRUE)
-      assign("delete_legend_text_vec", legend_text_vec, envir = globalenv())
-
-      legend_text_range <- c(par("usr")[[1]] + (step_width / 2),
-                             par("usr")[[2]] - (step_width / 2)
+  ## Create a vector of colors for the legend
+  if (uniform_legend) {
+    num_steps <- 200
+    legend_colors_seq <- seq(from       = min(use_breaks),
+                             to         = max(use_breaks),
+                             length.out = num_steps
                              )
-      assign("delete_legend_text_range", legend_text_range, envir = globalenv())
-      legend_text_positions <- scales::rescale(legend_text_values,
-                                               from = range(use_breaks),
-                                               to   = legend_text_range
-                                               )
-   } else {
-      use_indices <- seq(from = 1,
-                         to = num_steps,
-                         by = round((num_steps / 10) - 1)
-                         )
-      legend_text_values <- legend_values_vec[use_indices]
-      legend_text_vec <- PrettyRound(legend_text_values)
-      legend_text_positions <- (step_left_vec + (step_width / 2))[use_indices]
-   }
+    legend_colors_vec <- cmap(legend_colors_seq, map = use_cmap)
+  } else {
+    breaks_mat <- cbind(use_breaks[seq_len(length(use_breaks) - 1)],
+                        use_breaks[seq_len(length(use_breaks) - 1) + 1L]
+                        )
+    legend_values_vec <- rowMeans(breaks_mat)
+    legend_colors_vec <- use_cmap[["colors"]]
+    num_steps <- length(legend_values_vec)
+    stopifnot(length(legend_colors_vec) == num_steps)
+  }
 
-   text(x      = legend_text_positions,
-        y      = start_y - diff(grconvertY(c(0, 1.0), from = "lines", to = "user")),
-        labels = legend_text_vec,
-        adj    = c(0.5, 0),
-        cex    = 0.8,
-        xpd    = NA
-        )
-   border_grey <- "black"
-   rect(xleft = par("usr")[[1]],
-        xright = par("usr")[[2]],
-        ybottom = start_y,
-        ytop = start_y + legend_height,
-        border = border_grey,
-        xpd = NA
-        )
-   segments(x0 = legend_text_positions,
-            y0 = start_y,
-            y1 = start_y - diff(grconvertY(c(0, 0.3), from = "lines", to = "user")),
-            col = border_grey,
-            xpd = NA
-            )
-
-   ## Annotate plot
-   text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
-        y      = seq_len(nrow(use_mat)),
-        labels = rev(LETTERS[seq_len(nrow(use_mat))]),
-        cex    = par("cex") * 0.8,
-        col    = "black",
-        xpd    = NA
-        )
-   text(x      = seq_len(ncol(use_mat)),
-        y      = par("usr")[[4]] + diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
-        labels = seq_len(ncol(use_mat)),
-        cex    = par("cex") * 0.8,
-        col    = "black",
-        xpd    = NA
-        )
-
-   title(main_title, line = 2.9)
-   mtext(use_subtext, side = 1, line = 4.2)
-
-
-   ## Show values
-   if (label_values) {
-      x_positions <- rep(1:24, times = 16)
-      y_positions <- rep(16:1, each = 24)
-      use_dark_text <- colMeans(col2rgb(as.character(t(color_mat))) / 255) > 0.5
-      text(x      = x_positions,
-           y      = y_positions,
-           labels = PrettyRound(numeric_vec),
-           col    = ifelse(use_dark_text, "gray25", "gray75"),
-           cex    = 0.4,
-           font   = 2,
-           xpd    = NA
+  ## Plot heatmap
+  old_mai <- par(mai = c(1.3, 0.7, 1.1, 0.7))
+  cimage(zcol = InvertTranspose(color_mat),
+         xlab    = "",
+         ylab    = "",
+         xlabels = rep("", ncol(color_mat)),
+         ylabels = rep("", nrow(color_mat)),
+         tcl     = 0,
+         mgp     = c(3, 0.3, 0),
+         bty     = "n",
+         axes    = FALSE
+         )
+  horizontal_lines <- seq(from = 0.5, to = nrow(use_mat) + 0.5, by = 1)
+  vertical_lines   <- seq(from = 0.5, to = ncol(use_mat) + 0.5, by = 1)
+  grid_color <- "white"
+  use_lwd <- 0.2
+  segments(x0 = 0.5, x1 = ncol(use_mat) + 0.5, y0 = horizontal_lines,
+           col = grid_color, lwd = use_lwd, xpd = NA
            )
-   }
+  segments(x0 = vertical_lines, y0 = 0.5, y1 = nrow(use_mat) + 0.5,
+           col = grid_color, lwd = use_lwd, xpd = NA
+           )
 
-   par(old_mai)
-   return(invisible(NULL))
+  ## Plot heatmap legend
+  step_width <- (par("usr")[[2]] - par("usr")[[1]]) / num_steps
+  start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 2), from = "lines", to = "user"))
+  legend_height <- diff(grconvertX(c(0, 0.8), from = "lines", to = "user"))
+  step_left_vec <- seq(from = par("usr")[[1]],
+                       to   = par("usr")[[2]] - step_width,
+                       by   = step_width
+                       )
+  rect(xleft    = step_left_vec,
+       xright   = step_left_vec + step_width,
+       ybottom  = start_y,
+       ytop     = start_y + legend_height,
+       col      = legend_colors_vec,
+       border   = NA,
+       xpd      = NA
+       )
+  ## Prepare the axis labels for the heatmap legend
+  if (uniform_legend) {
+    legend_text_values <- pretty(legend_colors_seq, n = 10)
+    use_tolerance <- diff(range(legend_colors_seq)) * 0.003
+    are_within_limits <- (legend_text_values >= (min(legend_colors_seq) - use_tolerance)) &
+                         (legend_text_values <= (max(legend_colors_seq) + use_tolerance))
+
+    legend_text_values <- legend_text_values[are_within_limits]
+    legend_text_vec <- format(legend_text_values, trim = TRUE)
+
+    legend_text_range <- c(par("usr")[[1]] + (step_width / 2),
+                           par("usr")[[2]] - (step_width / 2)
+                           )
+    legend_text_positions <- scales::rescale(legend_text_values,
+                                             from = range(use_breaks),
+                                             to   = legend_text_range
+                                             )
+  } else {
+    use_indices <- seq(from = 1,
+                       to = num_steps,
+                       by = round((num_steps / 10) - 1)
+                       )
+    legend_text_values <- legend_values_vec[use_indices]
+    legend_text_vec <- PrettyRound(legend_text_values)
+    legend_text_positions <- (step_left_vec + (step_width / 2))[use_indices]
+  }
+  ## Draw the axis labels and tick marks for the heatmap legend
+  text(x      = legend_text_positions,
+       y      = start_y - diff(grconvertY(c(0, 1.0), from = "lines", to = "user")),
+       labels = legend_text_vec,
+       adj    = c(0.5, 0),
+       cex    = 0.8,
+       xpd    = NA
+       )
+  segments(x0  = legend_text_positions,
+           y0  = start_y,
+           y1  = start_y - diff(grconvertY(c(0, 0.3), from = "lines", to = "user")),
+           xpd = NA
+           )
+  ## Draw a box around the heatmap legend
+  rect(xleft   = par("usr")[[1]],
+       xright  = par("usr")[[2]],
+       ybottom = start_y,
+       ytop    = start_y + legend_height,
+       xpd     = NA
+       )
+
+  ## Annotate the plot with row and column labels, title and subtext
+  text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
+       y      = seq_len(nrow(use_mat)),
+       labels = rev(LETTERS[seq_len(nrow(use_mat))]),
+       cex    = par("cex") * 0.8,
+       col    = "black",
+       xpd    = NA
+       )
+  text(x      = seq_len(ncol(use_mat)),
+       y      = par("usr")[[4]] + diff(grconvertY(c(0, 0.8), from = "lines", to = "user")),
+       labels = seq_len(ncol(use_mat)),
+       cex    = par("cex") * 0.8,
+       col    = "black",
+       xpd    = NA
+       )
+  title(main_title, line = 2.9)
+  if (is.expression(use_subtext)) {
+    use_subtext <- VerticalAdjust(use_subtext)
+  } else {
+    if (use_minuslog10) {
+      use_subtext <- sub("p value", "-log10 p value", use_subtext, fixed = TRUE)
+    }
+    use_subtext <- FormatPlotMath(use_subtext)
+  }
+  mtext(use_subtext, side = 1, line = 4.2)
+
+  ## Label wells with their numerical values
+  if (label_values) {
+    x_positions <- rep(1:24, times = 16)
+    y_positions <- rep(16:1, each = 24)
+    use_dark_text <- colMeans(col2rgb(as.character(t(color_mat))) / 255) > 0.5
+    text(x      = x_positions,
+         y      = y_positions,
+         labels = PrettyRound(numeric_vec),
+         col    = ifelse(use_dark_text, "gray25", "gray75"),
+         cex    = 0.4,
+         font   = 2,
+         xpd    = NA
+         )
+  }
+  par(old_mai)
+  return(invisible(NULL))
 }
 
 
 
 AveragedHeatmap <- function(input_df,
                             use_column,
-                            both_replicates = TRUE,
-                            main_title      = "",
-                            use_subtext     = "",
-                            ColorFunction   = NULL,
-                            label_values    = FALSE,
-                            take_log2       = FALSE,
-                            uniform_legend  = NULL,
-                            use_one_scale   = TRUE,
+                            both_replicates        = TRUE,
+                            main_title             = "",
+                            use_subtext            = "",
+                            ColorFunction          = NULL,
+                            label_values           = FALSE,
+                            take_log2              = FALSE,
+                            uniform_legend         = NULL,
+                            use_one_scale          = TRUE,
+                            weighting_for_controls = NULL,
                             ...
                             ) {
 
-   plates_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
-   rep_number <- GetRepNumber(use_column)
-   if (both_replicates && (!(is.null(rep_number)))) {
-      rep_columns <- BothRepColumns(use_column)
-      vec_list <- c(split(input_df[, rep_columns[[1]]], plates_vec),
-                    split(input_df[, rep_columns[[2]]], plates_vec)
-                    )
-   } else {
-      vec_list <- split(input_df[, use_column], plates_vec)
-   }
-   all_mat <- do.call(cbind, vec_list)
-   mean_vec <- rowMeans(all_mat)
+  ## Calculate mean values for display in the heatmap
+  plates_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
+  has_replicates <- grepl("_rep", use_column, fixed = TRUE)
+  if (has_replicates) {
+    rep_columns <- BothRepColumns(use_column)
+  }
+  if (both_replicates && has_replicates) {
+    vec_list <- c(split(input_df[, rep_columns[[1]]], plates_vec),
+                  split(input_df[, rep_columns[[2]]], plates_vec)
+                  )
+  } else {
+    vec_list <- split(input_df[, use_column], plates_vec)
+  }
+  all_mat <- do.call(cbind, vec_list)
+  mean_vec <- rowMeans(all_mat)
 
-   if (!(use_one_scale) && both_replicates) {
-      warning("The 'use_one_scale' parameter has no effect if 'both_replicates' is TRUE!")
-   }
-
-   if (use_one_scale || both_replicates) {
-      breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2, ...)
-   } else {
-      for (column_name in BothRepColumns(use_column)) {
-         input_df[, column_name] <- input_df[, use_column]
+  ## Compute breakpoints for the color scale
+  if (use_one_scale) {
+    breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2,
+                                   weighting_for_controls = weighting_for_controls,
+                                   ...
+                                   )
+  } else {
+    mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
+    are_empty <- input_df[, "Well_number_384"] %in% c(mat_384[, c(1, 24)])
+    are_pos_ctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+    empty_layouts <- unique(split(are_empty, plates_vec))
+    pos_layouts <- unique(split(are_pos_ctrl, plates_vec))
+    if ((length(empty_layouts) == 1) && (length(pos_layouts) == 1)) {
+      ## If positive controls and empty wells show exactly the same distribution
+      ## on all plates, then we can respect the 'weighting_for_controls'
+      ## parameter. Otherwise, it must be ignored.
+      are_first_plate <- plates_vec == plates_vec[[1]]
+      include_columns <- c("Well_number_384", "Is_pos_ctrl", use_column)
+      if (has_replicates) {
+        include_columns <- union(include_columns, rep_columns)
       }
-      breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2, ...)
-   }
+      submit_df <- input_df[are_first_plate, include_columns]
+      submit_df[, use_column] <- mean_vec
+      if (has_replicates) {
+        for (column_name in rep_columns) {
+          input_df[, column_name] <- input_df[, use_column]
+        }
+      }
+      breaks_list <- BreaksForColumn(submit_df, use_column,
+                                     take_log2 = take_log2,
+                                     weighting_for_controls = weighting_for_controls,
+                                     ...
+                                     )
+    } else {
+      if (isTRUE(weighting_for_controls)) {
+        message("If 'use_one_scale' is FALSE (i.e. values are to scaled to ",
+                "the plate average only),", "\n",
+                "then 'weighting_for_controls' is ",
+                "ignored. The parameter is not applicable due to", "\n",
+                "the different distribution of controls across plates."
+                )
+      }
+      breaks_list <- BreaksForColumn(NULL, use_column,
+                                     use_vector = mean_vec,
+                                     take_log2 = take_log2,
+                                     weighting_for_controls = weighting_for_controls,
+                                     ...
+                                     )
+    }
+  }
 
-   uniform_legend <- breaks_list[["type"]] == "uniform"
+  uniform_legend <- breaks_list[["type"]] == "uniform"
+  HeatMap384(numeric_vec    = mean_vec,
+             use_breaks     = breaks_list[["breaks"]],
+             ColorFunction  = ColorFunction,
+             main_title     = main_title,
+             use_subtext    = use_subtext,
+             label_values   = label_values,
+             use_minuslog10 = IsPValue(use_column),
+             take_log2      = take_log2,
+             uniform_legend = uniform_legend
+             )
 
-   HeatMap384(numeric_vec    = mean_vec,
-              use_breaks     = breaks_list[["breaks"]],
-              ColorFunction  = ColorFunction,
-              main_title     = main_title,
-              use_subtext    = use_subtext,
-              label_values   = label_values,
-              use_minuslog10 = IsPValue(use_column),
-              take_log2      = take_log2,
-              uniform_legend = uniform_legend
-              )
-
-   return(invisible(NULL))
+  return(invisible(NULL))
 }
-
 
 
 
@@ -660,61 +702,71 @@ HeatmapForPlate <- function(input_df,
                             ...
                             ) {
 
-   has_replicates <- grepl("_rep", use_column, fixed = TRUE)
+  has_replicates <- grepl("_rep", use_column, fixed = TRUE)
 
-   if (is.numeric(plate_number)) {
-      plate_number <- as.character(as.roman(plate_number))
-   }
-   are_this_plate <- input_df[, "Plate_number_384"] == plate_number
+  if (is.numeric(plate_number)) {
+    plate_number <- as.character(as.roman(plate_number))
+  }
+  are_this_plate <- input_df[, "Plate_number_384"] == plate_number
 
-   if (is.null(main_title)) {
-      main_title <- paste0("Plate ", plate_number)
-      if (has_replicates) {
-         rep_number <- GetRepNumber(use_column)
-         main_title <- paste0(main_title, ", replicate ", rep_number)
-      }
-   }
+  if (is.null(main_title)) {
+    main_title <- paste0("Plate ", plate_number)
+    if (has_replicates) {
+      rep_number <- GetRepNumber(use_column)
+      main_title <- paste0(main_title, ", replicate ", rep_number)
+    }
+  }
 
-   if (is.null(show_z_prime)) {
-      show_z_prime <- has_replicates
-   }
+  if (is.null(show_z_prime)) {
+    show_z_prime <- has_replicates
+  }
 
-   if (show_z_prime) {
-      z_prime <- Calculate_Z_Prime(input_df[are_this_plate, ], use_column)
-      z_prime_text <- paste0("Z' = ", formatC(z_prime, digits = 2, format = "f"))
-      if (is.null(use_subtext) || (nchar(use_subtext) == 0)) {
-         use_subtext <- z_prime_text
+  if (show_z_prime) {
+    z_prime <- Calculate_Z_Prime(input_df[are_this_plate, ], use_column)
+    z_prime_text <- paste0("Z' = ", formatC(z_prime, digits = 2, format = "f"))
+    if (is.null(use_subtext) || (nchar(use_subtext) == 0)) {
+      use_subtext <- z_prime_text
+    } else {
+      if (is.expression(use_subtext)) {
+        z_prime_text <- as.expression(bquote(.(z_prime_text)))
+        use_subtext <- ConcatenateExpressions(list(use_subtext, z_prime_text), my_sep = ", ")
       } else {
-         use_subtext <- paste0(use_subtext, ", ", z_prime_text)
+        use_subtext <- paste0(use_subtext, ", ", z_prime_text)
       }
-   }
+    }
+  }
 
-   if (use_one_scale) {
-      breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2, ...)
-   } else {
-      for (column_name in BothRepColumns(use_column)) {
-         input_df[, column_name] <- input_df[, use_column]
+  if (use_one_scale) {
+    breaks_list <- BreaksForColumn(input_df, use_column, take_log2 = take_log2, ...)
+  } else {
+    include_columns <- c("Well_number_384", "Is_pos_ctrl", use_column)
+    if (has_replicates) {
+      rep_columns <- BothRepColumns(use_column)
+      include_columns <- union(include_columns, rep_columns)
+      for (column_name in rep_columns) {
+        input_df[, column_name] <- input_df[, use_column]
       }
-      breaks_list <- BreaksForColumn(input_df[are_this_plate, ], use_column,
-                                     take_log2 = take_log2, ...
-                                     )
-   }
-   if (is.null(uniform_legend)) {
-      uniform_legend <- breaks_list[["type"]] == "uniform"
-   }
+    }
+    breaks_list <- BreaksForColumn(input_df[are_this_plate, include_columns],
+                                   use_column, take_log2 = take_log2, ...
+                                   )
+  }
+  if (is.null(uniform_legend)) {
+    uniform_legend <- breaks_list[["type"]] == "uniform"
+  }
 
-   HeatMap384(numeric_vec    = input_df[are_this_plate, use_column],
-              use_breaks     = breaks_list[["breaks"]],
-              ColorFunction  = ColorFunction,
-              main_title     = main_title,
-              use_subtext    = use_subtext,
-              label_values   = label_values,
-              use_minuslog10 = IsPValue(use_column),
-              take_log2      = take_log2,
-              uniform_legend = uniform_legend
-              )
+  HeatMap384(numeric_vec    = input_df[are_this_plate, use_column],
+             use_breaks     = breaks_list[["breaks"]],
+             ColorFunction  = ColorFunction,
+             main_title     = main_title,
+             use_subtext    = use_subtext,
+             label_values   = label_values,
+             use_minuslog10 = IsPValue(use_column),
+             take_log2      = take_log2,
+             uniform_legend = uniform_legend
+             )
 
-   return(invisible(NULL))
+  return(invisible(NULL))
 }
 
 
@@ -723,26 +775,34 @@ HeatmapForPlate <- function(input_df,
 
 # Draw example heatmaps ---------------------------------------------------
 
-PlateSchematic(GBA_df, 12)
+HeatmapForPlate(GBA_df, 10, "Raw_rep1")
+HeatmapForPlate(GBA_df, 10, "Raw_rep2")
+
 
 HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
                 use_one_scale = FALSE
                 )
-
 HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
                 use_one_scale = TRUE
                 )
 
+HeatmapForPlate(GBA_df, 12, "p_value_log2",
+                use_subtext = long_column_labels[["p_value_log2"]]
+                )
 
-AveragedHeatmap(GBA_df, "Raw_rep1")
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE)
+
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = TRUE)
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = TRUE)
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = FALSE)
-AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE)
 AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = FALSE)
+AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE, weighting_for_controls = FALSE)
 
-HeatmapForPlate(GBA_df, 1, "Raw_rep1")
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE)
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE, weighting_for_controls = FALSE)
+
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE,  weighting_for_controls = TRUE) # default
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = TRUE)
+HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE,  weighting_for_controls = FALSE)
 HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = FALSE)
 
 
@@ -753,12 +813,16 @@ HeatmapForPlate(GBA_df, 1, "Raw_rep1",
                 use_custom_breaks = absolute_custom_breaks
                 )
 HeatmapForPlate(GBA_df, 1, "Raw_rep1",
-                num_uniform_breaks = 50,
-                ColorFunction = rocket
+                ColorFunction = magma
                 )
 
 
-HeatmapForPlate(GBA_df, 10, "Raw_rep2")
+HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1",
+                weighting_for_controls = FALSE,
+                use_one_scale = FALSE,
+                use_subtext = long_column_labels[["Raw_log2_rep1"]]
+                )
+
 
 
 HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw")
@@ -766,30 +830,27 @@ HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw", uniform_legend = FALSE)
 
 
 HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT")
-
 HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
                 weighting_for_controls = TRUE
                 )
-
 
 HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
                 num_uniform_breaks = 100
                 )
 
 HeatmapForPlate(GBA_df, 12, "CellTiterGlo_raw",
-                num_other_breaks = 100,
+                weighting_for_controls = TRUE
+                )
+HeatmapForPlate(GBA_df, 12, "CellTiterGlo_raw",
+                weighting_for_controls = TRUE,
+                num_other_breaks = 200
                 )
 
 
 HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT")
 HeatmapForPlate(GBA_df, 1, "SSMD_log2")
-
 HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT_Glo", uniform_legend = TRUE)
-
-
-
 HeatmapForPlate(GBA_df, 6, "SSMD_deltaNT")
-
 
 
 HeatmapForPlate(GBA_df, 10, "SSMD_log2")
@@ -820,7 +881,6 @@ HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
 HeatmapForPlate(GBA_df, 5, "Hit_strength_deltaNT")
 
 
-
 HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = TRUE)
 HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = FALSE)
 
@@ -839,12 +899,14 @@ HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 
 
+
 # Export heatmaps as PDF or PNG files -------------------------------------
 
 heatmap_width <- 8
 heatmap_height <- 6.5
 
 
+message("Exporting plate schematics...")
 pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", "Heatmap schematic.pdf"),
     width = heatmap_width, height = heatmap_height
     )
@@ -856,7 +918,7 @@ dev.off()
 
 for (plate_number in 1:12) {
   file_name <- paste0("Heatmap schematic - plate", plate_number, ".png")
-  png(file = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
+  png(filename = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
       width = heatmap_width, height = heatmap_height, units = "in", res = 600
       )
   PlateSchematic(GBA_df, plate_number)
@@ -864,145 +926,148 @@ for (plate_number in 1:12) {
 }
 
 
+plate_average_text <- "Mean of all plates and replicates (well effect)"
+
 for (label_cells in c(FALSE, TRUE)) {
 
-   for (scaled_per_plate in c(FALSE, TRUE)) {
-      if (scaled_per_plate) {
-         sub_folder_prefix <- "Scaled per plate"
+  if (label_cells) {
+    heatmaps_folder <- "Heatmaps (labelled)"
+    message("Exporting heatmaps with labels showing numerical values... ")
+  } else {
+    heatmaps_folder <- "Heatmaps"
+    message("Exporting heatmaps without well labels... ")
+  }
+
+  for (scaled_per_plate in c(FALSE, TRUE)) {
+    if (scaled_per_plate) {
+      sub_folder_prefix <- "Scaled per plate"
+      message("... Exporting heatmaps that are scaled per plate... ")
+    } else {
+      sub_folder_prefix <- "Scaled across plates"
+      message("... Exporting heatmaps that share the same color scale across plates... ")
+    }
+    for (condense_controls in c(TRUE, FALSE)) {
+      if (condense_controls) {
+        sub_folder <- paste0(sub_folder_prefix, " - controls condensed")
+        message("... Exporting heatmaps where the scale is 'squeezed' for empty wells and positive controls... ")
       } else {
-         sub_folder_prefix <- "Scaled across plates"
+        sub_folder <- paste0(sub_folder_prefix, " - uniform")
+        message("... Exporting heatmaps using a uniform/linear color scale... ")
       }
-      for (condense_controls in c(TRUE, FALSE)) {
-         if (condense_controls) {
-            sub_folder <- paste0(sub_folder_prefix, " - controls condensed")
-         } else {
-            sub_folder <- paste0(sub_folder_prefix, " - uniform")
-         }
 
-         if (label_cells) {
-            heatmaps_folder <- "Heatmaps (labelled)"
-         } else {
-            heatmaps_folder <- "Heatmaps"
-         }
+      message("... Exporting PDF files... ")
+      for (i in seq_along(column_file_names)) {
 
-         for (i in seq_along(column_labels)) {
+        current_column <- names(column_file_names)[[i]]
+        message("...... for the metric:  ", current_column)
+        has_replicates <- !(is.null(GetRepNumber(current_column)))
 
-            current_column <- names(column_labels)[[i]]
-            has_replicates <- !(is.null(GetRepNumber(current_column)))
+        file_name <- paste0("Heatmaps - ", i, ") ", column_file_names[[i]], ".pdf")
+        column_subtext <- long_column_labels[[i]]
 
-            file_name <- paste0("Heatmaps - ", i, ") ", column_labels[[i]], ".pdf")
-            file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-            column_subtext <- column_labels[[i]]
-
-            pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
-                width = heatmap_width, height = heatmap_height
-                )
-            AveragedHeatmap(GBA_df, current_column,
-                            main_title = "Mean of all plates and replicates (well effect)",
-                            use_subtext = column_subtext,
-                            label_values = label_cells,
-                            use_one_scale = !(scaled_per_plate),
+        pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
+            width = heatmap_width, height = heatmap_height
+            )
+        AveragedHeatmap(GBA_df, current_column,
+                        main_title             = plate_average_text,
+                        use_subtext            = column_subtext,
+                        label_values           = label_cells,
+                        use_one_scale          = !(scaled_per_plate),
+                        weighting_for_controls = condense_controls
+                        )
+        for (plate_number in 1:12) {
+          if (has_replicates) {
+            rep_columns <- BothRepColumns(current_column)
+            for (rep_column in rep_columns) {
+              HeatmapForPlate(GBA_df, plate_number, rep_column,
+                              use_subtext            = column_subtext,
+                              label_values           = label_cells,
+                              use_one_scale          = !(scaled_per_plate),
+                              weighting_for_controls = condense_controls
+                              )
+            }
+          } else {
+            HeatmapForPlate(GBA_df, plate_number, current_column,
+                            use_subtext            = column_subtext,
+                            label_values           = label_cells,
+                            use_one_scale          = !(scaled_per_plate),
                             weighting_for_controls = condense_controls
                             )
-            for (plate_number in 1:12) {
-               if (has_replicates) {
-                  rep_columns <- BothRepColumns(current_column)
-                  for (rep_column in rep_columns) {
-                     HeatmapForPlate(GBA_df, plate_number, rep_column,
-                                     use_subtext = column_subtext,
-                                     label_values = label_cells,
-                                     use_one_scale = !(scaled_per_plate),
-                                     weighting_for_controls = condense_controls
-                                     )
-                  }
-               } else {
-                  HeatmapForPlate(GBA_df, plate_number, current_column,
-                                  use_subtext = column_subtext,
-                                  label_values = label_cells,
-                                  use_one_scale = !(scaled_per_plate),
-                                  weighting_for_controls = condense_controls
+          }
+
+        }
+        dev.off()
+      }
+
+      message("... Exporting PNG files... ")
+      for (i in seq_along(column_file_names)) {
+
+        current_column <- names(column_file_names)[[i]]
+        message("...... for the metric:  ", current_column)
+
+        has_replicates <- !(is.null(GetRepNumber(current_column)))
+        column_subtext <- long_column_labels[[i]]
+
+        folder_name <- paste0(i, ") ", column_file_names[[i]])
+        folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
+        dir.create(folder_path, showWarnings = FALSE)
+
+        file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                            " -- well effect.png"
+                            )
+
+        png(filename = file.path(folder_path, file_name),
+            width = heatmap_width, height = heatmap_height,
+            units = "in", res = 600
+            )
+        AveragedHeatmap(GBA_df, current_column,
+                        main_title             = plate_average_text,
+                        use_subtext            = column_subtext,
+                        label_values           = label_cells,
+                        use_one_scale          = !(scaled_per_plate),
+                        weighting_for_controls = condense_controls
+                        )
+        dev.off()
+        for (plate_number in 1:12) {
+          if (has_replicates) {
+            rep_columns <- BothRepColumns(current_column)
+            for (j in 1:2) {
+              file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                                  " - plate ", plate_number, " rep ", j,
+                                  ".png"
                                   )
-               }
-
+              png(filename = file.path(folder_path, file_name),
+                  width = heatmap_width, height = heatmap_height,
+                  units = "in", res = 600
+                  )
+              HeatmapForPlate(GBA_df, plate_number, rep_columns[[j]],
+                              use_subtext            = column_subtext,
+                              label_values           = label_cells,
+                              use_one_scale          = !(scaled_per_plate),
+                              weighting_for_controls = condense_controls
+                              )
+              dev.off()
             }
-            dev.off()
-         }
-
-         for (i in seq_along(column_labels)) {
-
-            current_column <- names(column_labels)[[i]]
-            has_replicates <- !(is.null(GetRepNumber(current_column)))
-            column_subtext <- column_labels[[i]]
-
-            folder_name <- paste0("Heatmap PNGs - ", i, ") ", column_labels[[i]])
-            folder_name <- gsub("%", "percent", folder_name, fixed = TRUE)
-            folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
-            dir.create(folder_path, showWarnings = FALSE)
-
-            file_name <- paste0("Heatmap - ", column_labels[[i]],
-                                " -- well effect"
-                                )
-            file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-
-            png(file = file.path(folder_path, file_name),
+          } else {
+            file_name <- paste("Heatmap - ", column_file_names[[i]],
+                               " - plate ", plate_number, ".png"
+                               )
+            png(filename = file.path(folder_path, file_name),
                 width = heatmap_width, height = heatmap_height,
                 units = "in", res = 600
                 )
-            AveragedHeatmap(GBA_df, current_column,
-                            main_title = "Mean of all plates and replicates (well effect)",
-                            use_subtext = column_subtext,
-                            label_values = label_cells,
-                            use_one_scale = !(scaled_per_plate),
+            HeatmapForPlate(GBA_df, plate_number, current_column,
+                            use_subtext            = column_subtext,
+                            label_values           = label_cells,
+                            use_one_scale          = !(scaled_per_plate),
                             weighting_for_controls = condense_controls
                             )
             dev.off()
-            for (plate_number in 1:12) {
-               if (has_replicates) {
-                  rep_columns <- BothRepColumns(current_column)
-                  for (j in 1:2) {
-                     file_name <- paste0("Heatmap - ", column_labels[[i]],
-                                         " - plate ", plate_number, " rep ", j
-                                         )
-                     file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-                     png(file = file.path(folder_path, file_name),
-                         width = heatmap_width, height = heatmap_height,
-                         units = "in", res = 600
-                         )
-                     HeatmapForPlate(GBA_df, plate_number, rep_columns[[j]],
-                                     use_subtext = column_subtext,
-                                     label_values = label_cells,
-                                     use_one_scale = !(scaled_per_plate),
-                                     weighting_for_controls = condense_controls
-                                     )
-                     dev.off()
-                  }
-               } else {
-                  file_name <- paste("Heatmap - ", column_labels[[i]],
-                                     " - plate ", plate_number
-                                     )
-                  file_name <- gsub("%", "percent", file_name, fixed = TRUE)
-                  png(file = file.path(folder_path, file_name),
-                      width = heatmap_width, height = heatmap_height,
-                      units = "in", res = 600
-                      )
-                  HeatmapForPlate(GBA_df, plate_number, current_column,
-                                  use_subtext = column_subtext,
-                                  label_values = label_cells,
-                                  use_one_scale = !(scaled_per_plate),
-                                  weighting_for_controls = condense_controls
-                                  )
-                  dev.off()
-               }
-            }
-         }
-
-
+          }
+        }
       }
-   }
+    }
+  }
 }
-
-
-
-
 
 
