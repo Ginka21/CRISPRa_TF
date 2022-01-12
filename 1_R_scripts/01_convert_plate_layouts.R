@@ -19,11 +19,9 @@ long_layout_96_path  <- file.path(input_dir, "ACTIVATION LIBRARY- Plate Layout.x
 
 
 
-
 # Load data ---------------------------------------------------------------
 
 load(file.path(input_dir, "CRISPRa_4sg_df.RData"))
-
 
 
 
@@ -66,8 +64,6 @@ stopifnot(identical(layout_96_mat_list[[1]], converted_96_mat_list[[1]]))
 
 
 
-
-
 # Define functions --------------------------------------------------------
 
 PlateMappings <- function() {
@@ -86,7 +82,6 @@ PlateMappings <- function() {
     "green"  = main_plate_384_column_indices[["yellow"]] - 1L
   )
 
-
   main_plate_96_row_indices <- list(
     "yellow" = rep(1:7, each = 11),
     "red"    = rep(2:8, each = 11),
@@ -101,14 +96,11 @@ PlateMappings <- function() {
     "green"  = main_plate_384_row_indices[["yellow"]]
   )
 
-
-
   coords_96wp_mat <- matrix(seq_len(96), nrow = 8, ncol = 12, byrow = TRUE)
   coords_384wp_mat <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
 
   vertical_384_columns   <- seq(from = 3, to = 17, by = 2)
   horizontal_384_columns <- seq(from = 3, to = 23, by = 2)
-
 
   edge_plate_96_vertical <- list(
     "yellow" = coords_96wp_mat[, 1],
@@ -133,7 +125,6 @@ PlateMappings <- function() {
     "red"    = coords_384wp_mat[4, horizontal_384_columns],
     "green"  = coords_384wp_mat[6, horizontal_384_columns]
   )
-
 
   colors_df_list <- lapply(c("yellow", "red", "green"), function(x) {
 
@@ -178,9 +169,7 @@ PlateMappings <- function() {
 
 IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
 
-
   ## Specify well coordinates
-
   coords_384wp_mat <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
   alphanumeric_384wp_vec <- unlist(lapply(LETTERS[1:16], function(x) {
     lapply(1:24, function(y) {
@@ -193,9 +182,7 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
     })
   }))
 
-
   ## Define control well positions (empty wells = uninfected)
-
   control_rows <- seq(3, 15, by = 2)
   pos_controls_384_vec <- c(coords_384wp_mat[control_rows, 4],
                             coords_384wp_mat[control_rows, 20]
@@ -205,9 +192,7 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
                            )
 
 
-
   ## Initialize the results data frame
-
   results_df <- data.frame(
     "Plate_number_384" = rep(1:3, each = 384),
     "Well_number_384"  = rep(seq_len(384), times = 3),
@@ -221,9 +206,7 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
     stringsAsFactors   = FALSE
   )
 
-
   ## Define variables for the loop
-
   are_used_96wp <- rep(FALSE, 6)
   are_used_96wp[seq_along(layouts_96wp_mat_list)] <- TRUE
   use_colors <- rep(c("yellow", "red", "green"), 2)
@@ -231,7 +214,6 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
 
 
   ## Populate the data frame with the target genes
-
   for (i in seq_along(layouts_96wp_mat_list)) {
 
     if (!(are_used_96wp[[i]])) {
@@ -263,7 +245,6 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
 
 
   ## Create well coordinates and combined well IDs
-
   results_df[["Well_coords_96"]] <- alphanumeric_96wp_vec[results_df[["Well_number_96"]]]
   results_df[["Well_coords_384"]] <- alphanumeric_384wp_vec[results_df[["Well_number_384"]]]
 
@@ -287,7 +268,6 @@ IntegratePlateLayouts <- function(layouts_96wp_mat_list, mappings_df) {
                                         )
 
   ## Add control wells
-
   for (i in 1:3) {
     are_this_384wp <- results_df[["Plate_number_384"]] == i
     results_df[are_this_384wp, "Target_ID"][pos_controls_384_vec] <- "Pos. control"
@@ -351,8 +331,6 @@ integrated_df[["Well_ID_384"]] <- paste0("Plate",
 
 
 
-
-
 # Interpret flags ---------------------------------------------------------
 
 target_splits <- strsplit(integrated_df[, "Target_ID"], "_", fixed = TRUE)
@@ -395,7 +373,7 @@ cleaned_flags_vec <- vapply(flags_vec, function(x) {
   if (is.na(x)) {
     NA_character_
   } else if (grepl("PC_", x, fixed = TRUE)) {
-    "Tübingen pos. control"
+    "Tuebingen pos. control"
   } else if (grepl("Rep", x, fixed = TRUE)) {
     "Rep"
   } else if (identical(x, "Empty")) {
@@ -484,11 +462,10 @@ integrated_df[grepl("HA[0-9]{1,3}_", integrated_df[, "Target_ID"], ignore.case =
 integrated_df[grepl("scrambled", integrated_df[, "Target_ID"], ignore.case = TRUE), ]
 
 ## Questions:
-# - Do the "NFE2L2" positive controls correspond to TSS1 or TSS2?
-# - Is my assumption correct that the repetition well labelled "REST" corresponds to TSS2 (since the well for TSS2 was empty?)
+# - Do the "NFE2L2" positive controls target TSS1 or TSS2? Is my assumption correct that they target TSS1?
+# - Is my assumption correct that the repetition well labelled "REST" targets TSS2 (since the well for TSS2 was empty?)
 # - What are the following wells: "HA5_B11_Rep", "HA5_P12_Rep", "HA4_K8_Rep", "HA4_F9_Rep" and "HA5_N18_Rep"?
-# - What does "scrambled" mean?
-
+# - Do "scrambled" wells correspond to non-targeting controls?
 
 
 
@@ -510,12 +487,10 @@ layout_df <- data.frame(integrated_df[, first_columns],
                         )
 
 
-
 # Define positive and negative controls -----------------------------------
 
 layout_df[, "Is_NT_ctrl"]  <- layout_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
 layout_df[, "Is_pos_ctrl"] <- layout_df[, "Target_flag"] %in% "Pos. control"
-
 
 
 
