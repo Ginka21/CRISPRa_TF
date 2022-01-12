@@ -1,5 +1,6 @@
 # 2021-12-28
 
+
 # Define functions --------------------------------------------------------
 
 Calculate_Z_Prime <- function(sub_df, use_column) {
@@ -37,7 +38,6 @@ Calculate_SSMD_ctrls <- function(sub_df, use_column) {
   SSMD_ctrl    <- (mean_posctrl - mean_NT) / (sqrt(var_posctrl + var_NT))
   return(SSMD_ctrl)
 }
-
 
 
 
@@ -81,9 +81,6 @@ NormPlates <- function(input_df,
 
   return(unlist(results_vec_list, use.names = FALSE))
 }
-
-
-
 
 
 
@@ -140,6 +137,7 @@ Calculate_SSMD <- function(input_df,
 Calculate_T <- function(input_df, rep1_column, ...) {
   Calculate_SSMD(input_df, rep1_column, t_score = TRUE, ...)
 }
+
 
 Calculate_P <- function(input_df, rep1_column, ...) {
   t_values_vec <- Calculate_SSMD(input_df, rep1_column, ...)
