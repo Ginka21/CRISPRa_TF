@@ -34,9 +34,7 @@ use_columns <- unique(c(names(GBA_df)[!(are_after)], "CellTiterGlo_foldNT",
                         ))
 GBA_df <- GBA_df[, use_columns]
 
-for (i in 1:2) {
-  ri <- paste0("_rep", i)
-
+for (ri in paste0("_rep", 1:2)) {
   GBA_df[, paste0("DeltaNT", ri)]             <- NormPlates(GBA_df, paste0("Raw", ri))
   GBA_df[, paste0("FoldNT", ri)]              <- NormPlates(GBA_df, paste0("Raw", ri), foldNT = TRUE)
   GBA_df[, paste0("PercActivation", ri)]      <- NormPlates(GBA_df, paste0("Raw", ri), percent_activation = TRUE)
@@ -72,7 +70,7 @@ GBA_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD(GBA_df, "Raw_Glo_rep1", percent_
 
 
 
-# Calculate P value ----------------------------------------------------------
+# Calculate p value ----------------------------------------------------------
 
 GBA_df[, "p_value_deltaNT"]      <- Calculate_P(GBA_df, "Raw_rep1")
 GBA_df[, "p_value_act"]          <- Calculate_P(GBA_df, "Raw_rep1", percent_activation = TRUE)
@@ -83,7 +81,6 @@ GBA_df[, "p_value_deltaNT_Glo"]  <- Calculate_P(GBA_df, "Raw_Glo_rep1")
 GBA_df[, "p_value_act_Glo"]      <- Calculate_P(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE)
 GBA_df[, "p_value_log2_Glo"]     <- Calculate_P(GBA_df, "Raw_Glo_rep1", take_log2 = TRUE)
 GBA_df[, "p_value_act_log2_Glo"] <- Calculate_P(GBA_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE)
-
 
 
 
@@ -103,29 +100,44 @@ GBA_df[, "Hit_strength_act_log2_Glo"] <- meanFC_Glo * -log10(GBA_df[, "p_value_a
 
 
 
-
 # Define hits -------------------------------------------------------------
 
 are_gene <- !(is.na(GBA_df[, "Entrez_ID"]))
 mean_logfc <- rowMeans(GBA_df[, c("Log2FC_rep1", "Log2FC_rep2")])
-meet_criteria <- (GBA_df[, "p_value_log2"] < 0.05) &
-                 (abs(mean_logfc) > log2(1.25))
+
+meet_p_val_cutoff  <- (GBA_df[, "p_value_log2"] < 0.05)
+meet_log2fc_cutoff <- abs(mean_logfc) > log2(1.25)
+
+meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
+
+
+
+# Check chosen cut-offs against the distribution of NT controls -----------
+
 stopifnot(!(any(meet_criteria & GBA_df[, "Is_NT_ctrl"])))
 
-table(meet_criteria[are_gene])
+sum(meet_p_val_cutoff[GBA_df[, "Is_NT_ctrl"]])
+sum(meet_log2fc_cutoff[GBA_df[, "Is_NT_ctrl"]])
+
+range(GBA_df[, "p_value_log2"][GBA_df[, "Is_NT_ctrl"]])
+NT_log2fc_range <- range(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
+NT_log2fc_range
+2^NT_log2fc_range
 
 
 
 # Prepare hit list --------------------------------------------------------
 
+## Define additional columns that are useful for exporting the hit list
 reordered_df <- GBA_df
-
 reordered_df[, "Passes_cutoffs"]         <- meet_criteria
 reordered_df[, "Mean_logFC"]             <- mean_logfc
 reordered_df[, "p_value_log2_used"]      <- GBA_df[, "p_value_log2"]
 reordered_df[, "Hit_strength_log2_used"] <- GBA_df[, "Hit_strength_log2"]
 
 
+## Re-order columns to emphasize the data that was used for choosing hits,
+## and re-order genes by their rank.
 are_after <- seq_len(ncol(GBA_df)) > which(names(GBA_df) == "Is_pos_ctrl")
 use_columns <- unique(c(names(GBA_df)[!(are_after)],
                         "Passes_cutoffs", "Mean_logFC", "p_value_log2_used",
@@ -140,6 +152,8 @@ new_order <- order(meet_criteria,
 reordered_df <- reordered_df[new_order, use_columns]
 row.names(reordered_df) <- NULL
 
+
+## Create a data frame containing only hit genes
 are_hit <- (!(is.na(reordered_df[, "Entrez_ID"]))) & reordered_df[, "Passes_cutoffs"]
 hits_df <- reordered_df[are_hit, ]
 row.names(hits_df) <- NULL
@@ -159,10 +173,9 @@ write.csv(reordered_df,
           )
 
 write.csv(hits_df,
-          file = file.path(output_dir, "Tables", "GBA_hits.csv"),
+          file = file.path(output_dir, "Tables", "GBA_hits_only.csv"),
           row.names = FALSE, quote = FALSE
           )
-
 
 
 # Save data ---------------------------------------------------------------
