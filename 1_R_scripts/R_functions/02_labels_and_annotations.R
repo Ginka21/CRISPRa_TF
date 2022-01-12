@@ -24,40 +24,60 @@ columns_df <- data.frame(read_excel(file.path(input_dir, "All_metrics.xlsx")),
 
 
 
-# Define labels -----------------------------------------------------------
+# Re-order the columns ----------------------------------------------------
+
+## Order by the type of metric
 
 metrics_in_order <- unique(columns_df[, "Metric"])
 are_after <- seq_along(metrics_in_order) > which(metrics_in_order == "Fold-NT")
 metrics_in_order <- unique(c(metrics_in_order[!(are_after)], "Log2FC", metrics_in_order[are_after]))
 
-column_names_stripped <- sub("_Glo", "", columns_df[, "Column name"], fixed = FALSE)
 
+## Place the Glo-normalized version of each metric immediately after its unnormalized equivalent
+
+column_names_stripped <- sub("_Glo", "", columns_df[, "Column name"], fixed = FALSE)
 new_order <- order(match(columns_df[, "Metric"], metrics_in_order),
                    match(column_names_stripped, column_names_stripped)
                    )
-columns_df <- columns_df[new_order, ]
-are_to_exclude <- grepl("_foldNT", columns_df[, "Column name"], fixed = TRUE) # p values calculated using foldNT values are not plausible
+column_names <- columns_df[, "Column name"][new_order]
+
+
+## Place the CellTiter-Glo viability values immediately before the SSMD columns
+
+Glo_columns <- c("CellTiterGlo_raw", "CellTiterGlo_foldNT")
+
+are_before <- seq_len(nrow(columns_df)) < which(column_names == "SSMD_deltaNT")
+column_names <- unique(c(column_names[are_before], Glo_columns,
+                         column_names[!(are_before)])
+                         )
+columns_df <- columns_df[order(match(columns_df[, "Column name"], column_names)), ]
+
+
+## Exclude columns that are not needed
+
+are_to_exclude <- ((grepl("_foldNT", columns_df[, "Column name"], fixed = TRUE) &
+                   (columns_df[, "Column name"] != "CellTiterGlo_foldNT"))) |  # p values calculated using foldNT values are not plausible
+                  (columns_df[, "Metric"] == "t value")                        # t values show a simple linear relationship with SSMD values, and are thus redundant
 columns_df <- columns_df[!(are_to_exclude), ]
-columns_df <- columns_df[columns_df[, "Metric"] != "t value", ]
-
-column_labels <- columns_df[, "Label"]
-names(column_labels) <- columns_df[, "Column name"]
-names(column_labels) <- ifelse(columns_df[, "Replicates"] == "Yes",
-                        paste0(names(column_labels), "_rep1"),
-                        names(column_labels)
-                        )
-
-
-Glo_names <- c(
-  "CellTiterGlo_raw"    = "Cell viability (CellTiterGlo values)",
-  "CellTiterGlo_foldNT" = "Cell viability (normalized to NT controls)"
-)
-
-are_before <- seq_len(nrow(columns_df)) < which(columns_df[, "Column name"] == "SSMD_deltaNT")
-column_labels <- c(column_labels[are_before], Glo_names, column_labels[!(are_before)])
+row.names(columns_df) <- NULL
 
 
 
 
+# Produce named vectors ---------------------------------------------------
+
+column_names <- ifelse(columns_df[, "Replicates"] == "Yes",
+                       paste0(columns_df[, "Column name"], "_rep1"),
+                       columns_df[, "Column name"]
+                       )
+
+column_file_names <- columns_df[, "File name"]
+names(column_file_names) <- column_names
+
+long_column_labels <- columns_df[, "Long label"]
+names(long_column_labels) <- column_names
+
+short_column_labels <- columns_df[, "Short label"]
+names(short_column_labels) <- column_names
 
 
