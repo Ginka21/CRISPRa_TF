@@ -12,6 +12,7 @@ source(file.path(functions_dir, "02_labels_and_annotations.R"))
 source(file.path(functions_dir, "03_plotting_helper_functions.R"))
 
 
+
 # Define folder path ------------------------------------------------------
 
 input_dir   <- file.path(project_dir, "2_input")
@@ -30,30 +31,24 @@ load(file.path(r_data_dir, "03_analyse_data.RData"))
 
 ScatterPlot <- function(x_vec,
                         y_vec,
-                        use_limits = NULL,
-                        point_size = 0.6,
-                        label_y_axis = TRUE,
-                        use_color = NULL,
-                        top_label = NULL,
+                        use_limits      = NULL,
+                        point_size      = 0.6,
+                        label_y_axis    = TRUE,
+                        use_color       = NULL,
+                        top_label       = NULL,
                         draw_regression = TRUE
                         ) {
 
-  if (is.null(use_color)) {
-    use_color <- "#000000"
-  }
-
   stopifnot(length(x_vec) == length(y_vec))
 
+  ## Determine axis limits
   if (is.null(use_limits)) {
     use_limits = range(c(x_vec, y_vec))
   }
-
   use_limits <- use_limits + (diff(use_limits) * 0.04 * c(-1, 1))
 
-
-
   if (draw_regression) {
-    ## Perform a linear regression
+    ## Perform a linear regression (and compute a 95% confidence interval)
     model_df <- data.frame("x_var" = x_vec, "y_var" = y_vec)
     lm_model <- lm(y_var ~ x_var, data = model_df)
     lm_summary <- summary(lm_model)
@@ -74,9 +69,14 @@ ScatterPlot <- function(x_vec,
                         )
   }
 
-
+  ## Define graphical parameters
   use_mgp <- c(2.8, 0.55, 0)
   use_tcl <- -0.35
+  if (is.null(use_color)) {
+    use_color <- "#000000"
+  }
+
+  ## Set up the plot region
   plot(1,
        xlim = use_limits,
        ylim = use_limits,
@@ -85,25 +85,31 @@ ScatterPlot <- function(x_vec,
        axes = FALSE,
        type = "n"
        )
-  axis(1, mgp = use_mgp, tcl = use_tcl, gap.axis = 0.15)
+
+  ## Draw and label axes
+  axis(1, mgp = use_mgp, tcl = use_tcl, gap.axis = 0.5)
   mtext("Replicate 1", side = 1, line = 2.2)
   axis(2, las = 1, mgp = use_mgp, tcl = use_tcl)
   if (label_y_axis) {
     mtext("Replicate 2", side = 2, line = use_mgp[[1]])
   }
-  if (!(is.null(top_label))) {
-    mtext(top_label, line = 1.6, cex = par("cex"), font = 2)
-  }
 
+  ## Draw the plot title
+  if (!(is.null(top_label))) {
+    mtext(Embolden(VerticalAdjust(top_label)),
+          line = 1.6, cex = par("cex"), font = 2
+          )
+  }
   mtext(VerticalAdjust(as.expression(corr_text)),
         line = 0.05, cex = par("cex"), font = 2
         )
 
-  abline(a = 0, b = 1, col = "grey80", lty = "dotted")
+  ## Draw indicator lines
+  abline(a = 0, b = 1, col = "grey80", lty = "dashed")
   abline(h = 0, col = "gray90")
   abline(v = 0, col = "gray90")
 
-
+  ## Draw the regression line and 95% CI region
   if (draw_regression) {
     polygon(c(new_df[, 1], rev(new_df[, 1])),
             c(conf_int_mat[, 2], rev(conf_int_mat[, 3])),
@@ -111,9 +117,9 @@ ScatterPlot <- function(x_vec,
             )
     lines(new_df[, 1], conf_int_mat[, 1], col = use_color, lwd = 1.5)
   }
-
   box()
 
+  ## Draw the points of the scatter plot
   points(x_vec,
          y_vec,
          pch = 16,
@@ -121,17 +127,8 @@ ScatterPlot <- function(x_vec,
          cex = point_size * par("cex")
          )
 
-
   return(invisible(NULL))
 }
-
-
-MakeEmptyPlot <- function() {
-  plot(1, xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i",
-       type = "n", axes = FALSE, ann = FALSE
-       )
-}
-
 
 
 ReplicateScatter <- function(input_df,
@@ -181,6 +178,7 @@ ReplicateScatter <- function(input_df,
     MakeEmptyPlot()
   }
 
+  ## Draw the 3 scatter plots
   pos_ctrl_color <- brewer.pal(5, "Reds")[[4]]
   NT_ctrl_color <- brewer.pal(5, "Blues")[[4]]
 
@@ -351,14 +349,12 @@ PlotSSMDControls <- function(input_df) {
 
 
 
-
 # Calculate correlation between replicates --------------------------------
 
 ReplicateScatter(GBA_df, "Raw_rep1")
 ReplicateScatter(GBA_df, "PercActivation_log2_Glo_rep1")
 
-
-rep_columns <- grep("_rep", names(column_labels), value = TRUE, fixed = TRUE)
+rep_columns <- grep("_rep", names(column_file_names), value = TRUE, fixed = TRUE)
 
 plot_height <- 4.5
 plot_ratio <- 0.45 / 0.21
@@ -369,7 +365,8 @@ pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicat
     )
 for (use_column in rep_columns) {
   ReplicateScatter(GBA_df, rep1_column = use_column,
-                   show_title = column_labels[[use_column]], same_scale = FALSE
+                   show_title = FormatPlotMath(long_column_labels[[use_column]]),
+                   same_scale = FALSE
                    )
 }
 dev.off()
@@ -380,7 +377,8 @@ pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicat
     )
 for (use_column in rep_columns) {
   ReplicateScatter(GBA_df, rep1_column = use_column,
-                   show_title = column_labels[[use_column]], same_scale = TRUE
+                   show_title = FormatPlotMath(long_column_labels[[use_column]]),
+                   same_scale = TRUE
                    )
 }
 dev.off()
@@ -390,16 +388,18 @@ for (fixed_axes in c(FALSE, TRUE)) {
   for (i in seq_along(rep_columns)) {
     use_column <- rep_columns[[i]]
     file_name <- paste0("Replicate scatter plot - ", i,  ") ",
-                        sub("_rep1", "", use_column, fixed = TRUE), " - ",
+                        column_file_names[[use_column]], " - ",
                         if (fixed_axes) "fixed axes" else "flexible axes",
                         ".png"
                         )
-    png(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicate scatter plots - PNGs", file_name),
+    png(filename = file.path(output_dir, "Figures", "Replicate scatter plots",
+                             "Replicate scatter plots - PNGs", file_name
+                             ),
         width = plot_height * plot_ratio, height = plot_height,
         units = "in", res = 600
         )
     ReplicateScatter(GBA_df, rep1_column = use_column,
-                     show_title = column_labels[[use_column]],
+                     show_title = FormatPlotMath(long_column_labels[[use_column]]),
                      same_scale = fixed_axes
                      )
     dev.off()
@@ -423,14 +423,14 @@ PlotSSMDControls(GBA_df)
 dev.off()
 
 
-png(file = file.path(output_dir, "Figures", "Quality metrics", "Z.prime.png"),
+png(filename = file.path(output_dir, "Figures", "Quality metrics", "Z_prime.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
 PlotZPrimes(GBA_df)
 dev.off()
 
 
-png(file = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
+png(filename = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
 PlotSSMDControls(GBA_df)
