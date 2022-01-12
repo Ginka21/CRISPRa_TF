@@ -17,6 +17,7 @@ VerticalAdjust <- function(use_expression) {
   return(ConcatenateExpressions(my_list, my_sep = ""))
 }
 
+
 StripExpression <- function(my_expression) {
   if (is.character(my_expression)) {
     literal_string <- paste0("\"", capture.output(cat(my_expression)), "\"")
@@ -29,6 +30,36 @@ StripExpression <- function(my_expression) {
   return(literal_string)
 }
 
+
+
+Embolden <- function(my_string) {
+  parse(text = paste0("bold(", StripExpression(my_string), ")"))
+}
+
+
+
+FormatPlotMath <- function(char_vec) {
+
+  if (any(grepl("\"", char_vec, fixed = TRUE))) {
+    stop("The FormatPlotMath function does not support input strings with double quotation marks!")
+  }
+
+  replace_strings <- c(
+    "[Ll]og2"  = "log\"[2] * \"",
+    "[Ll]og10" = "log\"[10] * \"",
+    "[Dd]elta" = "\" * Delta * \""
+  )
+
+  results_vec <- paste0("phantom(gh) * \"", char_vec, "\" * phantom(gh)")
+  for (sub_string in names(replace_strings)) {
+    results_vec <- gsub(sub_string, replace_strings[[sub_string]], results_vec)
+  }
+  results_vec <- sapply(results_vec, function(x) parse(text = x), USE.NAMES = FALSE)
+  return(results_vec)
+}
+
+
+
 Darken <- function(color, factor = 1.4) {
   # from https://gist.github.com/Jfortin1/72ef064469d1703c6b30
   col <- col2rgb(color)
@@ -38,17 +69,22 @@ Darken <- function(color, factor = 1.4) {
 }
 
 
-palify_cache_101 <- list()
-Palify <- function(myhex, fraction_pale = 0.5) {
-  if (myhex %in% names(palify_cache_101)) {
-    color_vec <- palify_cache_101[[myhex]]
-  } else {
-    color_vec <- colorRampPalette(c(myhex, "#FFFFFF"))(101)
-    palify_cache_101[[myhex]] <- color_vec
-    assign("palify_cache_101", palify_cache_101, envir = globalenv())
-  }
-  color_vec[[round(fraction_pale * 100) + 1]]
+Palify <- function(colors_vec, fraction_pale = 0.5) {
+  adjustcolor(colors_vec,
+              offset    = c(rep(fraction_pale, 3), 0),
+              transform = diag(c(rep(1 - fraction_pale, 3), 1))
+              )
+
 }
+
+
+
+MakeEmptyPlot <- function() {
+  plot(1, xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i",
+       type = "n", axes = FALSE, ann = FALSE
+       )
+}
+
 
 
 DrawSideLegend <- function(labels_list,
@@ -129,9 +165,6 @@ DataAxisLimits <- function(data_vec, space_fraction = 0.04) {
    }
    return(use_limits)
 }
-
-
-
 
 
 
