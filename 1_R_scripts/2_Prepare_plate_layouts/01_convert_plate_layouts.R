@@ -9,10 +9,10 @@ library("readxl")
 
 # Define folder paths -----------------------------------------------------
 
-project_dir <- "~/R_projects/CRISPRa_TF"
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects")
-output_dir  <- file.path(project_dir,"4_output")
+project_dir       <- "~/R_projects/CRISPRa_TF"
+input_dir         <- file.path(project_dir, "2_input")
+general_rdata_dir <- file.path(project_dir, "3_R_objects", "1_General")
+output_dir        <- file.path(project_dir,"4_output")
 
 plate_layout_96_path <- file.path(input_dir, "2021-09-29_96formatplates.xlsx")
 long_layout_96_path  <- file.path(input_dir, "ACTIVATION LIBRARY- Plate Layout.xlsx")
@@ -483,6 +483,7 @@ first_columns <- setdiff(names(integrated_df), c("Target_ID_stripped", columns_9
 layout_df <- data.frame(integrated_df[, first_columns],
                         use_4sg_df[matches_vec, use_columns],
                         integrated_df[, columns_96wp],
+                        row.names = NULL,
                         stringsAsFactors = FALSE
                         )
 
@@ -541,7 +542,7 @@ for (i in seq_along(layouts_384_mat_list)) {
 
 # Save data ---------------------------------------------------------------
 
-save(layout_df, file = file.path(r_data_dir, "01_convert_plate_layouts.RData"))
+save(layout_df, file = file.path(general_rdata_dir, "01_convert_plate_layouts.RData"))
 
 
 

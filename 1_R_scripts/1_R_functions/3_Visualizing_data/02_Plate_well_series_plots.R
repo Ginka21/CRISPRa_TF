@@ -1,28 +1,9 @@
-# 2022-01-02
+# 2022-01-17
 
 
 # Load packages and source code -------------------------------------------
 
 library("RColorBrewer")
-
-project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
-source(file.path(functions_dir, "02_labels_and_annotations.R"))
-source(file.path(functions_dir, "03_plotting_helper_functions.R"))
-
-
-
-# Define folder path ------------------------------------------------------
-
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects")
-output_dir  <- file.path(project_dir,"4_output")
-
-
-
-# Load data ---------------------------------------------------------------
-
-load(file.path(r_data_dir, "03_analyse_data.RData"))
 
 
 
@@ -355,214 +336,81 @@ PlateWellPlot <- function(input_df,
                  use_colors = c(pos_ctrl_color, NT_ctrl_color, "black")
                  )
 
+  par(old_mar)
+
   return(invisible(NULL))
 }
 
 
 
-# Draw example plots ------------------------------------------------------
 
-PlateWellPlot(GBA_df, emphasize_NT = TRUE)
-PlateWellPlot(GBA_df, order_by_column = TRUE)
+ExportAllPlateSeriesPlots <- function(input_df,
+                                      top_folder,
+                                      plot_width = 8,
+                                      plot_height = 5
+                                      ) {
 
-PlateWellPlot(GBA_df, order_by_column = TRUE, aggregate_wells = TRUE)
-PlateWellPlot(GBA_df, order_by_column = FALSE, aggregate_wells = FALSE)
-
-
-PlateWellPlot(GBA_df, "Raw_Glo_rep1", order_by_column = TRUE, aggregate_wells = TRUE)
-PlateWellPlot(GBA_df, "Raw_Glo_rep1", order_by_column = FALSE, aggregate_wells = TRUE)
-
-
-PlateWellPlot(GBA_df, "FoldNT_rep1")
-PlateWellPlot(GBA_df, "CellTiterGlo_raw")
-
-PlateWellPlot(GBA_df, "DeltaNT_rep1")
-PlateWellPlot(GBA_df, "Raw_log2_rep1")
-
-
-PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
-
-
-
-
-# Export plots as PDF and PNG ---------------------------------------------
-
-plot_width <- 8
-plot_height <- 5
-
-plots_top_folder <- file.path(output_dir, "Figures", "Plate well series plots")
-
-for (emphasize_NT in c(FALSE, TRUE)) {
-  if (emphasize_NT) {
-    plots_path <- file.path(plots_top_folder, "b) NT controls emphasized")
-  } else {
-    plots_path <- file.path(plots_top_folder, "a) Standard version")
-  }
-  for (export_PDF in c(TRUE, FALSE)) {
-    for (by_row in c(TRUE, FALSE)) {
-      for (take_means in c(FALSE, TRUE)) {
-        file_name <- "Plate well series plots"
-        if (by_row) {
-          if (take_means) {
-            file_name <- paste0(file_name, ", row means")
-            sub_folder_name <- "Row means"
+  for (emphasize_NT in c(FALSE, TRUE)) {
+    if (emphasize_NT) {
+      plots_path <- file.path(top_folder, "b) NT controls emphasized")
+    } else {
+      plots_path <- file.path(top_folder, "a) Standard version")
+    }
+    for (export_PDF in c(TRUE, FALSE)) {
+      for (by_row in c(TRUE, FALSE)) {
+        for (take_means in c(FALSE, TRUE)) {
+          file_name <- "Plate well series plots"
+          if (by_row) {
+            if (take_means) {
+              file_name <- paste0(file_name, ", row means")
+              sub_folder_name <- "Row means"
+            } else {
+              file_name <- paste0(file_name, ", by row")
+              sub_folder_name <- "Wells ordered by row"
+            }
           } else {
-            file_name <- paste0(file_name, ", by row")
-            sub_folder_name <- "Wells ordered by row"
+            if (take_means) {
+              file_name <- paste0(file_name, ", column means")
+              sub_folder_name <- "Column means"
+            } else {
+              file_name <- paste0(file_name, ", by column")
+              sub_folder_name <- "Wells ordered by column"
+            }
           }
-        } else {
-          if (take_means) {
-            file_name <- paste0(file_name, ", column means")
-            sub_folder_name <- "Column means"
-          } else {
-            file_name <- paste0(file_name, ", by column")
-            sub_folder_name <- "Wells ordered by column"
+          if (export_PDF) {
+            pdf(file = file.path(plots_path, paste0(file_name, ".pdf")),
+                width = plot_width, height = plot_height
+            )
           }
-        }
-        if (export_PDF) {
-          pdf(file = file.path(plots_path, paste0(file_name, ".pdf")),
-              width = plot_width, height = plot_height
-          )
-        }
-        for (i in seq_along(column_file_names)) {
-          use_column <- names(column_file_names)[[i]]
-          if (!(export_PDF)) {
-            PNG_name <- paste0(file_name, " - ", i, ") ",
-                               sub("_rep1", "", use_column, fixed = TRUE),
-                               ".png"
-                               )
-            png(filename = file.path(plots_path, "PNGs", sub_folder_name, PNG_name),
-                width = plot_width, height = plot_height, res = 600, units = "in"
-                )
+          for (i in seq_along(column_file_names)) {
+            use_column <- names(column_file_names)[[i]]
+            if (!(export_PDF)) {
+              PNG_name <- paste0(file_name, " - ", i, ") ",
+                                 sub("_rep1", "", use_column, fixed = TRUE),
+                                 ".png"
+                                 )
+              png(filename = file.path(plots_path, "PNGs", sub_folder_name, PNG_name),
+                  width = plot_width, height = plot_height, res = 600, units = "in"
+                  )
+            }
+            PlateWellPlot(input_df,
+                          use_column,
+                          order_by_column = !(by_row),
+                          aggregate_wells = take_means,
+                          emphasize_NT    = emphasize_NT
+                          )
+            if (!(export_PDF)) {
+              dev.off()
+            }
           }
-          PlateWellPlot(GBA_df,
-                        use_column,
-                        order_by_column = !(by_row),
-                        aggregate_wells = take_means,
-                        emphasize_NT    = emphasize_NT
-                        )
-          if (!(export_PDF)) {
+          if (export_PDF) {
             dev.off()
           }
-        }
-        if (export_PDF) {
-          dev.off()
         }
       }
     }
   }
 }
-
-
-#
-# pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, by row.pdf"),
-#     width = plot_width, height = plot_height
-#     )
-# for (use_column in names(column_file_names)) {
-#   PlateWellPlot(GBA_df,
-#                 use_column,
-#                 order_by_column = FALSE
-#                 )
-# }
-# dev.off()
-#
-# pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, by column.pdf"),
-#     width = plot_width, height = plot_height
-#     )
-# for (use_column in names(column_file_names)) {
-#   PlateWellPlot(GBA_df,
-#                 use_column,
-#                 order_by_column = TRUE
-#                 )
-# }
-# dev.off()
-#
-#
-#
-# pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, row means.pdf"),
-#     width = plot_width, height = plot_height
-#     )
-# for (use_column in names(column_file_names)) {
-#   PlateWellPlot(GBA_df,
-#                 use_column,
-#                 order_by_column = FALSE,
-#                 aggregate_wells = TRUE
-#                 )
-# }
-# dev.off()
-#
-# pdf(file = file.path(output_dir, "Figures", "Plate well series plots", "Plate well series plots, column means.pdf"),
-#     width = plot_width, height = plot_height
-#     )
-# for (use_column in names(column_file_names)) {
-#   PlateWellPlot(GBA_df,
-#                 use_column,
-#                 order_by_column = TRUE,
-#                 aggregate_wells = TRUE
-#                 )
-# }
-# dev.off()
-#
-#
-#
-#
-# for (i in seq_along(column_file_names)) {
-#   use_column <- names(column_file_names)[[i]]
-#   file_name <- paste0("Plate well series plot - ", i,  ") ",
-#                       sub("_rep1", "", use_column, fixed = TRUE),
-#                        " - ordered by row",
-#                       ".png"
-#                       )
-#   png(filename = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "Wells ordered by row", file_name),
-#       width = plot_width, height = plot_height, units = "in", res = 600
-#       )
-#   PlateWellPlot(GBA_df, use_column, order_by_column = FALSE)
-#   dev.off()
-# }
-#
-# for (i in seq_along(column_file_names)) {
-#   use_column <- names(column_file_names)[[i]]
-#   file_name <- paste0("Plate well series plot - ", i,  ") ",
-#                       sub("_rep1", "", use_column, fixed = TRUE),
-#                       " - ordered by column",
-#                       ".png"
-#                       )
-#   png(filename = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "Wells ordered by column", file_name),
-#       width = plot_width, height = plot_height, units = "in", res = 600
-#       )
-#   PlateWellPlot(GBA_df, use_column, order_by_column = TRUE)
-#   dev.off()
-# }
-#
-#
-#
-# for (i in seq_along(column_file_names)) {
-#   use_column <- names(column_file_names)[[i]]
-#   file_name <- paste0("Plate well series plot - ", i,  ") ",
-#                       sub("_rep1", "", use_column, fixed = TRUE),
-#                        " - row means",
-#                       ".png"
-#                       )
-#   png(filename = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "Row means", file_name),
-#       width = plot_width, height = plot_height, units = "in", res = 600
-#       )
-#   PlateWellPlot(GBA_df, use_column, order_by_column = FALSE, aggregate_wells = TRUE)
-#   dev.off()
-# }
-#
-# for (i in seq_along(column_file_names)) {
-#   use_column <- names(column_file_names)[[i]]
-#   file_name <- paste0("Plate well series plot - ", i,  ") ",
-#                       sub("_rep1", "", use_column, fixed = TRUE),
-#                       " - column means",
-#                       ".png"
-#                       )
-#   png(filename = file.path(output_dir, "Figures", "Plate well series plots", "PNGs", "Column means", file_name),
-#       width = plot_width, height = plot_height, units = "in", res = 600
-#       )
-#   PlateWellPlot(GBA_df, use_column, order_by_column = TRUE, aggregate_wells = TRUE)
-#   dev.off()
-# }
 
 
 

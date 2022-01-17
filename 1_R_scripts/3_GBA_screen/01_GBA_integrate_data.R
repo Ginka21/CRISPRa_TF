@@ -3,10 +3,12 @@
 
 # Define folder path ------------------------------------------------------
 
-project_dir <- "~/R_projects/CRISPRa_TF"
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects")
-raw_dir     <- file.path(input_dir, "raw_data")
+project_dir       <- "~/R_projects/CRISPRa_TF"
+input_dir         <- file.path(project_dir, "2_input")
+rdata_dir         <- file.path(project_dir, "3_R_objects")
+general_rdata_dir <- file.path(rdata_dir, "1_General")
+GBA_rdata_dir     <- file.path(rdata_dir, "2_GBA")
+raw_dir           <- file.path(input_dir, "GBA_data")
 
 
 
@@ -27,7 +29,7 @@ SortByRoman <- function(char_vec) {
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "01_convert_plate_layouts.RData"))
+load(file.path(general_rdata_dir, "01_convert_plate_layouts.RData"))
 
 
 
@@ -76,7 +78,7 @@ GBA_df <- data.frame(
 
 # Save data ---------------------------------------------------------------
 
-save(GBA_df, file = file.path(r_data_dir, "02_integrate_data.RData"))
+save(GBA_df, file = file.path(GBA_rdata_dir, "02_integrate_data.RData"))
 
 
 
