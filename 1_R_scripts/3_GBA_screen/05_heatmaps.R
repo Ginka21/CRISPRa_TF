@@ -592,6 +592,7 @@ HeatMap384 <- function(numeric_vec,
 
 AveragedHeatmap <- function(input_df,
                             use_column,
+                            take_median            = FALSE,
                             both_replicates        = TRUE,
                             main_title             = "",
                             use_subtext            = "",
@@ -618,7 +619,12 @@ AveragedHeatmap <- function(input_df,
     vec_list <- split(input_df[, use_column], plates_vec)
   }
   all_mat <- do.call(cbind, vec_list)
-  mean_vec <- rowMeans(all_mat)
+  if (take_median) {
+    average_vec <- apply(all_mat, 1, median)
+  } else {
+    average_vec <- rowMeans(all_mat)
+  }
+
 
   ## Compute breakpoints for the color scale
   if (use_one_scale) {
@@ -642,7 +648,7 @@ AveragedHeatmap <- function(input_df,
         include_columns <- union(include_columns, rep_columns)
       }
       submit_df <- input_df[are_first_plate, include_columns]
-      submit_df[, use_column] <- mean_vec
+      submit_df[, use_column] <- average_vec
       if (has_replicates) {
         for (column_name in rep_columns) {
           input_df[, column_name] <- input_df[, use_column]
@@ -663,7 +669,7 @@ AveragedHeatmap <- function(input_df,
                 )
       }
       breaks_list <- BreaksForColumn(NULL, use_column,
-                                     use_vector = mean_vec,
+                                     use_vector = average_vec,
                                      take_log2 = take_log2,
                                      weighting_for_controls = weighting_for_controls,
                                      ...
@@ -672,7 +678,7 @@ AveragedHeatmap <- function(input_df,
   }
 
   uniform_legend <- breaks_list[["type"]] == "uniform"
-  HeatMap384(numeric_vec    = mean_vec,
+  HeatMap384(numeric_vec    = average_vec,
              use_breaks     = breaks_list[["breaks"]],
              ColorFunction  = ColorFunction,
              main_title     = main_title,
@@ -790,7 +796,7 @@ HeatmapForPlate(GBA_df, 12, "p_value_log2",
                 use_subtext = long_column_labels[["p_value_log2"]]
                 )
 
-
+stop()
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = TRUE)
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = FALSE)
 AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = TRUE)
@@ -798,6 +804,9 @@ AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = FAL
 AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE)
 AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = FALSE)
 AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE, weighting_for_controls = FALSE)
+
+AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = TRUE, take_median = TRUE)
+
 
 
 HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE,  weighting_for_controls = TRUE) # default
@@ -975,6 +984,14 @@ for (label_cells in c(FALSE, TRUE)) {
                         use_one_scale          = !(scaled_per_plate),
                         weighting_for_controls = condense_controls
                         )
+        AveragedHeatmap(GBA_df, current_column,
+                        take_median            = TRUE,
+                        main_title             = sub("Mean", "Median", plate_average_text, fixed = TRUE),
+                        use_subtext            = column_subtext,
+                        label_values           = label_cells,
+                        use_one_scale          = !(scaled_per_plate),
+                        weighting_for_controls = condense_controls
+                        )
         for (plate_number in 1:12) {
           if (has_replicates) {
             rep_columns <- BothRepColumns(current_column)
@@ -1013,9 +1030,8 @@ for (label_cells in c(FALSE, TRUE)) {
         dir.create(folder_path, showWarnings = FALSE)
 
         file_name <- paste0("Heatmap - ", column_file_names[[i]],
-                            " -- well effect.png"
+                            " -- mean across plates.png"
                             )
-
         png(filename = file.path(folder_path, file_name),
             width = heatmap_width, height = heatmap_height,
             units = "in", res = 600
@@ -1028,6 +1044,24 @@ for (label_cells in c(FALSE, TRUE)) {
                         weighting_for_controls = condense_controls
                         )
         dev.off()
+
+        file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                            " -- median across plates.png"
+                            )
+        png(filename = file.path(folder_path, file_name),
+            width = heatmap_width, height = heatmap_height,
+            units = "in", res = 600
+            )
+        AveragedHeatmap(GBA_df, current_column,
+                        take_median            = TRUE,
+                        main_title             = plate_average_text,
+                        use_subtext            = column_subtext,
+                        label_values           = label_cells,
+                        use_one_scale          = !(scaled_per_plate),
+                        weighting_for_controls = condense_controls
+                        )
+        dev.off()
+
         for (plate_number in 1:12) {
           if (has_replicates) {
             rep_columns <- BothRepColumns(current_column)

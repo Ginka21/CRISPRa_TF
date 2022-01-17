@@ -124,6 +124,10 @@ NT_log2fc_range <- range(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
 NT_log2fc_range
 2^NT_log2fc_range
 
+mean_NT <- mean(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
+sd_NT <- sd(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
+mean_NT + (c(-1, 1) * 3 * sd_NT)
+
 
 
 # Prepare hit list --------------------------------------------------------
@@ -150,6 +154,10 @@ new_order <- order(meet_criteria,
                    decreasing = TRUE
                    )
 reordered_df <- reordered_df[new_order, use_columns]
+
+are_gene <- !(is.na(reordered_df[, "Entrez_ID"]))
+are_selected <- are_gene | reordered_df[, "Is_NT_ctrl"]
+reordered_df <- reordered_df[are_selected, ]
 row.names(reordered_df) <- NULL
 
 
@@ -167,9 +175,10 @@ write.csv(GBA_df,
           row.names = FALSE, quote = FALSE
           )
 
-write.csv(reordered_df,
-          file = file.path(output_dir, "Tables", "GBA_reordered.csv"),
-          row.names = FALSE, quote = FALSE
+exclude_columns <- c("Well_coords_384", grep("_96", names(GBA_df), fixed = TRUE, value = TRUE))
+write.csv(reordered_df[, names(reordered_df) != exclude_columns],
+          file = file.path(output_dir, "Tables", "GBA_genes_and_NT_ordered.csv"),
+          row.names = FALSE, quote = FALSE, na = ""
           )
 
 write.csv(hits_df,
