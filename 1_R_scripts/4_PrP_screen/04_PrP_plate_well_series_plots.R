@@ -1,4 +1,5 @@
-# 2022-01-02
+# 2022-01-18
+
 
 
 # Load packages and source code -------------------------------------------
@@ -15,38 +16,38 @@ source(file.path(functions_dir, "3_Visualizing_data",  "02_Plate_well_series_plo
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir  <- file.path(project_dir, "3_R_objects", "2_GBA")
-output_dir  <- file.path(project_dir,"4_output", "GBA")
+r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir  <- file.path(project_dir,"4_output", "PrP")
 
 
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "03_analyse_data.RData"))
+load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
 # Draw example plots ------------------------------------------------------
 
-PlateWellPlot(GBA_df, emphasize_NT = TRUE)
-PlateWellPlot(GBA_df, order_by_column = TRUE)
+PlateWellPlot(PrP_df, emphasize_NT = TRUE)
+PlateWellPlot(PrP_df, order_by_column = TRUE)
 
-PlateWellPlot(GBA_df, order_by_column = TRUE, aggregate_wells = TRUE)
-PlateWellPlot(GBA_df, order_by_column = FALSE, aggregate_wells = FALSE)
-
-
-PlateWellPlot(GBA_df, "Raw_Glo_rep1", order_by_column = TRUE, aggregate_wells = TRUE)
-PlateWellPlot(GBA_df, "Raw_Glo_rep1", order_by_column = FALSE, aggregate_wells = TRUE)
+PlateWellPlot(PrP_df, order_by_column = TRUE, aggregate_wells = TRUE)
+PlateWellPlot(PrP_df, order_by_column = FALSE, aggregate_wells = FALSE)
 
 
-PlateWellPlot(GBA_df, "FoldNT_rep1")
-PlateWellPlot(GBA_df, "CellTiterGlo_raw")
-
-PlateWellPlot(GBA_df, "DeltaNT_rep1")
-PlateWellPlot(GBA_df, "Raw_log2_rep1")
+PlateWellPlot(PrP_df, "Raw_Glo_rep1", order_by_column = TRUE, aggregate_wells = TRUE)
+PlateWellPlot(PrP_df, "Raw_Glo_rep1", order_by_column = FALSE, aggregate_wells = TRUE)
 
 
-PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
+PlateWellPlot(PrP_df, "FoldNT_rep1")
+PlateWellPlot(PrP_df, "CellTiterGlo_raw")
+
+PlateWellPlot(PrP_df, "DeltaNT_rep1")
+PlateWellPlot(PrP_df, "Raw_log2_rep1")
+
+
+PlateWellPlot(PrP_df, "Hit_strength_deltaNT_Glo")
 
 
 
@@ -55,7 +56,7 @@ PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
 
 series_top_folder <- file.path(output_dir, "Figures", "Plate well series plots")
 
-ExportAllPlateSeriesPlots(GBA_df, top_folder = series_top_folder)
+ExportAllPlateSeriesPlots(PrP_df, top_folder = series_top_folder)
 
 
 

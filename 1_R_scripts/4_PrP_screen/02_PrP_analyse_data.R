@@ -1,4 +1,4 @@
-# 2021-12-27
+# 2022-01-18
 
 
 # Load packages and source code -------------------------------------------
@@ -14,35 +14,49 @@ source(file.path(general_functions_dir, "03_Processing_data.R"))
 
 project_dir <- "~/R_projects/CRISPRa_TF"
 input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects", "2_GBA")
-output_dir  <- file.path(project_dir,"4_output", "GBA")
+r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir  <- file.path(project_dir,"4_output", "PrP")
 
 
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "02_integrate_data.RData"))
+load(file.path(r_data_dir, "01_integrate_data.RData"))
+
+
+
+# Avoid issues with taking the logarithm of negative values ---------------
+
+are_low_rep1 <- PrP_df[, "Raw_rep1"] < 1
+are_low_rep2 <- PrP_df[, "Raw_rep2"] < 1
+are_gene <- !(is.na(PrP_df[, "Entrez_ID"]))
+table(are_low_rep1)
+table(are_low_rep2)
+stopifnot(!(are_low_rep1 & (are_gene | PrP_df[, "Is_pos_ctrl"] | PrP_df[, "Is_NT_ctrl"])))
+stopifnot(!(are_low_rep2 & (are_gene | PrP_df[, "Is_pos_ctrl"] | PrP_df[, "Is_NT_ctrl"])))
+PrP_df[are_low_rep1, "Raw_rep1"] <- 1
+PrP_df[are_low_rep2, "Raw_rep2"] <- 1
 
 
 
 # Normalize by non-targeting controls -------------------------------------
 
-GBA_df <- NormalizeWithNTControls(GBA_df)
+PrP_df <- NormalizeWithNTControls(PrP_df)
 
 
 
 # Calculate SSMD and derived statistics (p value, etc.) -------------------
 
-GBA_df <- RunSSMDStats(GBA_df)
+PrP_df <- RunSSMDStats(PrP_df)
 
 
 
 # Define hits -------------------------------------------------------------
 
-are_gene <- !(is.na(GBA_df[, "Entrez_ID"]))
-mean_logfc <- rowMeans(GBA_df[, c("Log2FC_rep1", "Log2FC_rep2")])
+are_gene <- !(is.na(PrP_df[, "Entrez_ID"]))
+mean_logfc <- rowMeans(PrP_df[, c("Log2FC_rep1", "Log2FC_rep2")])
 
-meet_p_val_cutoff  <- (GBA_df[, "p_value_log2"] < 0.05)
+meet_p_val_cutoff  <- (PrP_df[, "p_value_log2"] < 0.05)
 meet_log2fc_cutoff <- abs(mean_logfc) > log2(1.25)
 
 meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
@@ -51,18 +65,18 @@ meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
 
 # Check chosen cut-offs against the distribution of NT controls -----------
 
-stopifnot(!(any(meet_criteria & GBA_df[, "Is_NT_ctrl"])))
+# stopifnot(!(any(meet_criteria & PrP_df[, "Is_NT_ctrl"])))
 
-sum(meet_p_val_cutoff[GBA_df[, "Is_NT_ctrl"]])
-sum(meet_log2fc_cutoff[GBA_df[, "Is_NT_ctrl"]])
+sum(meet_p_val_cutoff[PrP_df[, "Is_NT_ctrl"]])
+sum(meet_log2fc_cutoff[PrP_df[, "Is_NT_ctrl"]])
 
-range(GBA_df[, "p_value_log2"][GBA_df[, "Is_NT_ctrl"]])
-NT_log2fc_range <- range(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
+range(PrP_df[, "p_value_log2"][PrP_df[, "Is_NT_ctrl"]])
+NT_log2fc_range <- range(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
 NT_log2fc_range
 2^NT_log2fc_range
 
-mean_NT <- mean(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
-sd_NT <- sd(mean_logfc[GBA_df[, "Is_NT_ctrl"]])
+mean_NT <- mean(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
+sd_NT <- sd(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
 mean_NT + (c(-1, 1) * 3 * sd_NT)
 
 
@@ -70,24 +84,24 @@ mean_NT + (c(-1, 1) * 3 * sd_NT)
 # Prepare hit list --------------------------------------------------------
 
 ## Define additional columns that are useful for exporting the hit list
-reordered_df <- GBA_df
+reordered_df <- PrP_df
 reordered_df[, "Passes_cutoffs"]         <- meet_criteria
 reordered_df[, "Mean_logFC"]             <- mean_logfc
-reordered_df[, "p_value_log2_used"]      <- GBA_df[, "p_value_log2"]
-reordered_df[, "Hit_strength_log2_used"] <- GBA_df[, "Hit_strength_log2"]
+reordered_df[, "p_value_log2_used"]      <- PrP_df[, "p_value_log2"]
+reordered_df[, "Hit_strength_log2_used"] <- PrP_df[, "Hit_strength_log2"]
 
 
 ## Re-order columns to emphasize the data that was used for choosing hits,
 ## and re-order genes by their rank.
-are_after <- seq_len(ncol(GBA_df)) > which(names(GBA_df) == "Is_pos_ctrl")
-use_columns <- unique(c(names(GBA_df)[!(are_after)],
+are_after <- seq_len(ncol(PrP_df)) > which(names(PrP_df) == "Is_pos_ctrl")
+use_columns <- unique(c(names(PrP_df)[!(are_after)],
                         "Passes_cutoffs", "Mean_logFC", "p_value_log2_used",
                         "Hit_strength_log2_used",
-                        names(GBA_df)[are_after]
+                        names(PrP_df)[are_after]
                         ))
 
 new_order <- order(meet_criteria,
-                   abs(GBA_df[, "Hit_strength_log2"]),
+                   abs(PrP_df[, "Hit_strength_log2"]),
                    decreasing = TRUE
                    )
 reordered_df <- reordered_df[new_order, use_columns]
@@ -107,25 +121,25 @@ row.names(hits_df) <- NULL
 
 # Export data -------------------------------------------------------------
 
-write.csv(GBA_df,
-          file = file.path(output_dir, "Tables", "GBA_complete.csv"),
+write.csv(PrP_df,
+          file = file.path(output_dir, "Tables", "PrP_complete.csv"),
           row.names = FALSE, quote = FALSE
           )
 
-exclude_columns <- c("Well_coords_384", grep("_96", names(GBA_df), fixed = TRUE, value = TRUE))
+exclude_columns <- c("Well_coords_384", grep("_96", names(PrP_df), fixed = TRUE, value = TRUE))
 write.csv(reordered_df[, !(names(reordered_df) %in% exclude_columns)],
-          file = file.path(output_dir, "Tables", "GBA_genes_and_NT_ordered.csv"),
+          file = file.path(output_dir, "Tables", "PrP_genes_and_NT_ordered.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 
 write.csv(hits_df,
-          file = file.path(output_dir, "Tables", "GBA_hits_only.csv"),
+          file = file.path(output_dir, "Tables", "PrP_hits_only.csv"),
           row.names = FALSE, quote = FALSE
           )
 
 
 # Save data ---------------------------------------------------------------
 
-save(GBA_df, file = file.path(r_data_dir, "03_analyse_data.RData"))
+save(PrP_df, file = file.path(r_data_dir, "02_analyse_data.RData"))
 
 
