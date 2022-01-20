@@ -8,7 +8,7 @@ library("RColorBrewer")
 project_dir   <- "~/R_projects/CRISPRa_TF"
 functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions")
 source(file.path(functions_dir, "1_General_functions", "02_plotting_helper_functions.R"))
-source(file.path(functions_dir, "3_Visualizing_data",  "06_Volcano_and_flashlight_plots.R"))
+source(file.path(functions_dir, "3_Visualizing_data",  "05_Volcano_and_flashlight_plots.R"))
 
 
 
@@ -94,6 +94,18 @@ VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_log2",
                  indicate_log2FCs = log2(1.25)
                  )
 dev.off()
+
+
+pdf(file.path(selected_volcanoes_dir, "2) Volcano plot - genes shown.pdf"),
+    width = base_width + 0.8, height = base_height
+    )
+VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_log2",
+                 show_title = Embolden(FormatPlotMath("Volcano plot (p values, log2FC)")),
+                 label_points = TRUE, indicate_areas = TRUE, indicate_lines = TRUE,
+                 indicate_log2FCs = log2(1.25)
+                 )
+dev.off()
+
 
 
 png(file.path(selected_volcanoes_dir, "3) Volcano plot - Glo-normalized - cutoffs shown.png"),
