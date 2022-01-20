@@ -91,7 +91,7 @@ png(file.path(selected_volcanoes_dir, "2) Volcano plot - genes shown.png"),
 VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_log2",
                  show_title = Embolden(FormatPlotMath("Volcano plot (p values, log2FC)")),
                  label_points = TRUE, indicate_areas = TRUE, indicate_lines = TRUE,
-                 indicate_log2FCs = log2(1.25)
+                 indicate_log2FCs = log2(1.25), label_log2FCs = 0.5
                  )
 dev.off()
 
@@ -102,7 +102,7 @@ pdf(file.path(selected_volcanoes_dir, "2) Volcano plot - genes shown.pdf"),
 VolcanoFlashPlot(GBA_df, "Log2FC_rep1", "p_value_log2",
                  show_title = Embolden(FormatPlotMath("Volcano plot (p values, log2FC)")),
                  label_points = TRUE, indicate_areas = TRUE, indicate_lines = TRUE,
-                 indicate_log2FCs = log2(1.25)
+                 indicate_log2FCs = log2(1.25), label_log2FCs = 0.5
                  )
 dev.off()
 
