@@ -1,7 +1,6 @@
 # 2022-01-18
 
 
-
 # Load packages and source code -------------------------------------------
 
 library("RColorBrewer")
@@ -27,6 +26,14 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
+# Define labels -----------------------------------------------------------
+
+AdjustLabels()
+controls_labels[["Pos"]] <- c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
+
+
+
+
 # Draw example plots ------------------------------------------------------
 
 PlateWellPlot(PrP_df, emphasize_NT = TRUE)
@@ -39,26 +46,22 @@ PlateWellPlot(PrP_df, order_by_column = FALSE, aggregate_wells = FALSE)
 PlateWellPlot(PrP_df, "Raw_Glo_rep1", order_by_column = TRUE, aggregate_wells = TRUE)
 PlateWellPlot(PrP_df, "Raw_Glo_rep1", order_by_column = FALSE, aggregate_wells = TRUE)
 
-
 PlateWellPlot(PrP_df, "FoldNT_rep1")
 PlateWellPlot(PrP_df, "CellTiterGlo_raw")
 
 PlateWellPlot(PrP_df, "DeltaNT_rep1")
 PlateWellPlot(PrP_df, "Raw_log2_rep1")
 
-
 PlateWellPlot(PrP_df, "Hit_strength_deltaNT_Glo")
 
 
 
 
-# Export plots as PDF and PNG ---------------------------------------------
+# Export plots as PDF and PNG files ---------------------------------------
 
 series_top_folder <- file.path(output_dir, "Figures", "Plate well series plots")
 
 ExportAllPlateSeriesPlots(PrP_df, top_folder = series_top_folder)
-
-
 
 
 

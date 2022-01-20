@@ -21,7 +21,7 @@ output_dir  <- file.path(project_dir,"4_output", "GBA")
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "02_integrate_data.RData"))
+load(file.path(r_data_dir, "01_integrate_data.RData"))
 
 
 
@@ -126,6 +126,6 @@ write.csv(hits_df,
 
 # Save data ---------------------------------------------------------------
 
-save(GBA_df, file = file.path(r_data_dir, "03_analyse_data.RData"))
+save(GBA_df, file = file.path(r_data_dir, "02_analyse_data.RData"))
 
 

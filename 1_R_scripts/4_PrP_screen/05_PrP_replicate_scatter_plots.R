@@ -1,4 +1,4 @@
-# 2021-12-27
+# 2022-01-20
 
 
 # Load packages and source code -------------------------------------------
@@ -15,8 +15,8 @@ source(file.path(functions_dir, "3_Visualizing_data",  "03_Replicate_scatter_plo
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "2_GBA")
-output_dir <- file.path(project_dir,"4_output", "GBA")
+r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir  <- file.path(project_dir,"4_output", "PrP")
 
 
 
@@ -26,17 +26,21 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
+# Define labels -----------------------------------------------------------
+
+AdjustLabels()
+
+
+
 # Calculate correlation between replicates --------------------------------
 
-ReplicateScatter(GBA_df, "Raw_rep1")
-ReplicateScatter(GBA_df, "PercActivation_log2_Glo_rep1")
-
-ReplicateScatter(GBA_df, "Log2FC_rep1", same_scale = FALSE)
+ReplicateScatter(PrP_df, "Raw_rep1")
+ReplicateScatter(PrP_df, "PercActivation_log2_Glo_rep1")
+ReplicateScatter(PrP_df, "Log2FC_rep1", same_scale = FALSE)
 
 
 
 # Export plots as PDF and PNG files ---------------------------------------
 
-ExportAllReplicateScatterPlots(GBA_df)
-
+ExportAllReplicateScatterPlots(PrP_df)
 

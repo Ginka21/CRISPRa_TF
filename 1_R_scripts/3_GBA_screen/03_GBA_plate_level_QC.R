@@ -23,7 +23,7 @@ output_dir  <- file.path(project_dir,"4_output", "GBA")
 
 # Load data ---------------------------------------------------------------
 
-load(file.path(r_data_dir, "03_analyse_data.RData"))
+load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 

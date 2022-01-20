@@ -7,6 +7,19 @@ library("RColorBrewer")
 
 
 
+
+
+# Define labels -----------------------------------------------------------
+
+controls_labels <- list(
+  "Pos"  = c("Positive", "controls", expression("(" * italic("GBA") * " gene)")),
+  "NT"   = c("Non-targeting", "controls"),
+  "Gene" = c("Genes in ", "CRISPRa", "library")
+)
+
+
+
+
 # Define functions --------------------------------------------------------
 
 AggregateWells <- function(input_df, use_column, by_row = FALSE) {
@@ -327,11 +340,6 @@ PlateWellPlot <- function(input_df,
          )
 
   ## Draw a legend for the points
-  controls_labels <- list(
-    "Pos"  = c("Positive", "controls", expression("(" * italic("GBA") * " gene)")),
-    "NT"   = c("Non-targeting", "controls"),
-    "Gene" = c("Genes in ", "CRISPRa", "library")
-  )
   DrawSideLegend(labels_list = controls_labels,
                  use_colors = c(pos_ctrl_color, NT_ctrl_color, "black")
                  )

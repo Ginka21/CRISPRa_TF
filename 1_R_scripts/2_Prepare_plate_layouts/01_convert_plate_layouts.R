@@ -495,14 +495,14 @@ layout_df[, "Is_pos_ctrl"] <- layout_df[, "Target_flag"] %in% "Pos. control"
 
 
 
-# Exclude problematic control wells ---------------------------------------
-## These were known a priori (dispensing issues!)
-
-columns_1to4 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)[, 1:4]
-are_problematic <- (layout_df[, "Plate_number_384"] == "X") &
-                   (layout_df[, "Well_number_384"] %in% columns_1to4)
-layout_df[are_problematic, "Is_NT_ctrl"] <- FALSE
-layout_df[are_problematic, "Is_pos_ctrl"] <- FALSE
+# # Exclude problematic control wells ---------------------------------------
+# ## These were known a priori (dispensing issues!)
+#
+# columns_1to4 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)[, 1:4]
+# are_problematic <- (layout_df[, "Plate_number_384"] == "X") &
+#                    (layout_df[, "Well_number_384"] %in% columns_1to4)
+# layout_df[are_problematic, "Is_NT_ctrl"] <- FALSE
+# layout_df[are_problematic, "Is_pos_ctrl"] <- FALSE
 
 
 

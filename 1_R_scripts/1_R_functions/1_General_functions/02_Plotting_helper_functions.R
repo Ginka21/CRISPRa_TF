@@ -47,7 +47,8 @@ FormatPlotMath <- function(char_vec) {
   replace_strings <- c(
     "[Ll]og2"  = "log\"[2] * \"",
     "[Ll]og10" = "log\"[10] * \"",
-    "[Dd]elta" = "\" * Delta * \""
+    "[Dd]elta" = "\" * Delta * \"",
+    "PrPc"     = "PrP\"^C * \""
   )
 
   results_vec <- paste0("phantom(gh) * \"", char_vec, "\" * phantom(gh)")

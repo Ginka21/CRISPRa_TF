@@ -78,7 +78,7 @@ GBA_df <- data.frame(
 
 # Save data ---------------------------------------------------------------
 
-save(GBA_df, file = file.path(GBA_rdata_dir, "02_integrate_data.RData"))
+save(GBA_df, file = file.path(GBA_rdata_dir, "01_integrate_data.RData"))
 
 
 

@@ -23,6 +23,23 @@ columns_df <- data.frame(read_excel(file.path(input_dir, "All_metrics.xlsx")),
 
 
 
+# Define functions --------------------------------------------------------
+
+AdjustLabels <- function(original_string = "GBA activity",
+                         replacement_string = "PrPc levels"
+                         ) {
+
+
+  label_names <- c("column_file_names", "long_column_labels", "short_column_labels")
+  for (label_name in label_names) {
+    new_vec <- sub(original_string, replacement_string, get(label_name), fixed = TRUE)
+    assign(label_name, new_vec, envir = globalenv())
+  }
+  return(invisible(NULL))
+}
+
+
+
 
 # Re-order the columns ----------------------------------------------------
 

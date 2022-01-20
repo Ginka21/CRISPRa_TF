@@ -7,27 +7,6 @@ library("squash")
 library("viridis")
 library("RColorBrewer")
 
-project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
-source(file.path(functions_dir, "01_calculating_scores.R"))
-source(file.path(functions_dir, "02_labels_and_annotations.R"))
-source(file.path(functions_dir, "03_plotting_helper_functions.R"))
-
-
-
-# Define folder path ------------------------------------------------------
-
-input_dir  <- file.path(project_dir, "2_input")
-r_data_dir <- file.path(project_dir, "3_R_objects")
-output_dir <- file.path(project_dir,"4_output")
-
-
-
-# Load data ---------------------------------------------------------------
-
-load(file.path(r_data_dir, "03_analyse_data.RData"))
-
-
 
 
 # Define functions --------------------------------------------------------
@@ -411,7 +390,8 @@ HeatMap384 <- function(numeric_vec,
                        label_values   = FALSE,
                        use_minuslog10 = FALSE,
                        take_log2      = FALSE,
-                       uniform_legend = FALSE
+                       uniform_legend = FALSE,
+                       legend_cex     = 0.8
                        ) {
 
   stopifnot(length(numeric_vec) == 384)
@@ -528,7 +508,7 @@ HeatMap384 <- function(numeric_vec,
        y      = start_y - diff(grconvertY(c(0, 1.0), from = "lines", to = "user")),
        labels = legend_text_vec,
        adj    = c(0.5, 0),
-       cex    = 0.8,
+       cex    = legend_cex,
        xpd    = NA
        )
   segments(x0  = legend_text_positions,
@@ -686,7 +666,8 @@ AveragedHeatmap <- function(input_df,
              label_values   = label_values,
              use_minuslog10 = IsPValue(use_column),
              take_log2      = take_log2,
-             uniform_legend = uniform_legend
+             uniform_legend = uniform_legend,
+             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8
              )
 
   return(invisible(NULL))
@@ -769,7 +750,8 @@ HeatmapForPlate <- function(input_df,
              label_values   = label_values,
              use_minuslog10 = IsPValue(use_column),
              take_log2      = take_log2,
-             uniform_legend = uniform_legend
+             uniform_legend = uniform_legend,
+             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8
              )
 
   return(invisible(NULL))
@@ -778,325 +760,196 @@ HeatmapForPlate <- function(input_df,
 
 
 
+ExportAllHeatmaps <- function(input_df) {
 
-# Draw example heatmaps ---------------------------------------------------
+  heatmap_width <- 8
+  heatmap_height <- 6.5
 
-HeatmapForPlate(GBA_df, 10, "Raw_rep1")
-HeatmapForPlate(GBA_df, 10, "Raw_rep2")
-
-
-HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
-                use_one_scale = FALSE
-                )
-HeatmapForPlate(GBA_df, 10, "Raw_rep1", weighting_for_controls = FALSE,
-                use_one_scale = TRUE
-                )
-
-HeatmapForPlate(GBA_df, 12, "p_value_log2",
-                use_subtext = long_column_labels[["p_value_log2"]]
-                )
-
-stop()
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = TRUE)
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = FALSE)
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = TRUE)
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = FALSE, use_one_scale = FALSE)
-AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE)
-AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = FALSE)
-AveragedHeatmap(GBA_df, "Raw_rep2", both_replicates = FALSE, use_one_scale = TRUE, weighting_for_controls = FALSE)
-
-AveragedHeatmap(GBA_df, "Raw_rep1", both_replicates = TRUE,  use_one_scale = TRUE, take_median = TRUE)
-
-
-
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE,  weighting_for_controls = TRUE) # default
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = TRUE)
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = TRUE,  weighting_for_controls = FALSE)
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", use_one_scale = FALSE, weighting_for_controls = FALSE)
-
-
-
-absolute_custom_breaks <- c(0, 250, seq(500, 1000, by = 50), 1500, seq(2000, 2500, by = 250))
-
-HeatmapForPlate(GBA_df, 1, "Raw_rep1",
-                use_custom_breaks = absolute_custom_breaks
-                )
-HeatmapForPlate(GBA_df, 1, "Raw_rep1",
-                ColorFunction = magma
-                )
-
-
-HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1",
-                weighting_for_controls = FALSE,
-                use_one_scale = FALSE,
-                use_subtext = long_column_labels[["Raw_log2_rep1"]]
-                )
-
-
-
-HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw")
-HeatmapForPlate(GBA_df, 2, "CellTiterGlo_raw", uniform_legend = FALSE)
-
-
-HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT")
-HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
-                weighting_for_controls = TRUE
-                )
-
-HeatmapForPlate(GBA_df, 2, "CellTiterGlo_foldNT",
-                num_uniform_breaks = 100
-                )
-
-HeatmapForPlate(GBA_df, 12, "CellTiterGlo_raw",
-                weighting_for_controls = TRUE
-                )
-HeatmapForPlate(GBA_df, 12, "CellTiterGlo_raw",
-                weighting_for_controls = TRUE,
-                num_other_breaks = 200
-                )
-
-
-HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT")
-HeatmapForPlate(GBA_df, 1, "SSMD_log2")
-HeatmapForPlate(GBA_df, 1, "SSMD_deltaNT_Glo", uniform_legend = TRUE)
-HeatmapForPlate(GBA_df, 6, "SSMD_deltaNT")
-
-
-HeatmapForPlate(GBA_df, 10, "SSMD_log2")
-HeatmapForPlate(GBA_df, 2, "p_value_log2", num_uniform_breaks = 100,
-                use_subtext = expression(italic("p") * " value")
-                )
-
-HeatmapForPlate(GBA_df, 1, "Raw_rep1")
-HeatmapForPlate(GBA_df, 2, "Raw_rep2")
-
-
-HeatmapForPlate(GBA_df, 1, "DeltaNT_rep1")
-HeatmapForPlate(GBA_df, 1, "DeltaNT_rep2")
-
-
-HeatmapForPlate(GBA_df, 10, "Raw_rep1")
-HeatmapForPlate(GBA_df, 10, "Raw_rep2")
-
-
-HeatmapForPlate(GBA_df, 1, "SSMD_log2", label_values = TRUE)
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", label_values = TRUE)
-
-
-HeatmapForPlate(GBA_df, 1, "FoldNT_rep1")
-HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
-
-
-HeatmapForPlate(GBA_df, 5, "Hit_strength_deltaNT")
-
-
-HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = TRUE)
-HeatmapForPlate(GBA_df, 10, "Raw_rep1", uniform_legend = FALSE)
-
-HeatmapForPlate(GBA_df, 10, "Raw_rep2")
-
-
-HeatmapForPlate(GBA_df, 1, "SSMD_log2", label_values = TRUE)
-HeatmapForPlate(GBA_df, 1, "Raw_rep1", label_values = TRUE)
-
-
-HeatmapForPlate(GBA_df, 1, "FoldNT_rep1")
-HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
-
-HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1")
-HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
-
-
-
-
-# Export heatmaps as PDF or PNG files -------------------------------------
-
-heatmap_width <- 8
-heatmap_height <- 6.5
-
-
-message("Exporting plate schematics...")
-pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", "Heatmap schematic.pdf"),
-    width = heatmap_width, height = heatmap_height
-    )
-for (plate_number in 1:12) {
-  PlateSchematic(GBA_df, plate_number)
-}
-dev.off()
-
-
-for (plate_number in 1:12) {
-  file_name <- paste0("Heatmap schematic - plate", plate_number, ".png")
-  png(filename = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
-      width = heatmap_width, height = heatmap_height, units = "in", res = 600
+  message("Exporting plate schematics...")
+  pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", "Heatmap schematic.pdf"),
+      width = heatmap_width, height = heatmap_height
       )
-  PlateSchematic(GBA_df, plate_number)
+  for (plate_number in 1:12) {
+    PlateSchematic(input_df, plate_number)
+  }
   dev.off()
-}
 
-
-plate_average_text <- "Mean of all plates and replicates (well effect)"
-
-for (label_cells in c(FALSE, TRUE)) {
-
-  if (label_cells) {
-    heatmaps_folder <- "Heatmaps (labelled)"
-    message("Exporting heatmaps with labels showing numerical values... ")
-  } else {
-    heatmaps_folder <- "Heatmaps"
-    message("Exporting heatmaps without well labels... ")
+  for (plate_number in 1:12) {
+    file_name <- paste0("Heatmap schematic - plate", plate_number, ".png")
+    png(filename = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
+        width = heatmap_width, height = heatmap_height, units = "in", res = 600
+        )
+    PlateSchematic(input_df, plate_number)
+    dev.off()
   }
 
-  for (scaled_per_plate in c(FALSE, TRUE)) {
-    if (scaled_per_plate) {
-      sub_folder_prefix <- "Scaled per plate"
-      message("... Exporting heatmaps that are scaled per plate... ")
-    } else {
-      sub_folder_prefix <- "Scaled across plates"
-      message("... Exporting heatmaps that share the same color scale across plates... ")
-    }
-    for (condense_controls in c(TRUE, FALSE)) {
-      if (condense_controls) {
-        sub_folder <- paste0(sub_folder_prefix, " - controls condensed")
-        message("... Exporting heatmaps where the scale is 'squeezed' for empty wells and positive controls... ")
+  plate_average_text <- "Mean of all plates and replicates (well effect)"
+
+  for (export_PNGs in c(FALSE, TRUE)) {
+    for (label_cells in c(FALSE, TRUE)) {
+
+      if (label_cells) {
+        heatmaps_folder <- "Heatmaps (labelled)"
+        message("Exporting heatmaps with labels showing numerical values... ")
       } else {
-        sub_folder <- paste0(sub_folder_prefix, " - uniform")
-        message("... Exporting heatmaps using a uniform/linear color scale... ")
+        heatmaps_folder <- "Heatmaps"
+        message("Exporting heatmaps without well labels... ")
       }
 
-      message("... Exporting PDF files... ")
-      for (i in seq_along(column_file_names)) {
+      for (scaled_per_plate in c(FALSE, TRUE)) {
+        if (scaled_per_plate) {
+          sub_folder_prefix <- "Scaled per plate"
+          message("... Exporting heatmaps that are scaled per plate... ")
+        } else {
+          sub_folder_prefix <- "Scaled across plates"
+          message("... Exporting heatmaps that share the same color scale across plates... ")
+        }
+        for (condense_controls in c(TRUE, FALSE)) {
+          if (condense_controls) {
+            sub_folder <- paste0(sub_folder_prefix, " - controls condensed")
+            message("... Exporting heatmaps where the scale is 'squeezed' for empty wells and positive controls... ")
+          } else {
+            sub_folder <- paste0(sub_folder_prefix, " - uniform")
+            message("... Exporting heatmaps using a uniform/linear color scale... ")
+          }
 
-        current_column <- names(column_file_names)[[i]]
-        message("...... for the metric:  ", current_column)
-        has_replicates <- !(is.null(GetRepNumber(current_column)))
+          if (!(export_PNGs)) {
+            message("... Exporting PDF files... ")
+            for (i in seq_along(column_file_names)) {
 
-        file_name <- paste0("Heatmaps - ", i, ") ", column_file_names[[i]], ".pdf")
-        column_subtext <- long_column_labels[[i]]
+              current_column <- names(column_file_names)[[i]]
+              message("...... for the metric:  ", current_column)
+              has_replicates <- !(is.null(GetRepNumber(current_column)))
 
-        pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
-            width = heatmap_width, height = heatmap_height
-            )
-        AveragedHeatmap(GBA_df, current_column,
-                        main_title             = plate_average_text,
-                        use_subtext            = column_subtext,
-                        label_values           = label_cells,
-                        use_one_scale          = !(scaled_per_plate),
-                        weighting_for_controls = condense_controls
-                        )
-        AveragedHeatmap(GBA_df, current_column,
-                        take_median            = TRUE,
-                        main_title             = sub("Mean", "Median", plate_average_text, fixed = TRUE),
-                        use_subtext            = column_subtext,
-                        label_values           = label_cells,
-                        use_one_scale          = !(scaled_per_plate),
-                        weighting_for_controls = condense_controls
-                        )
-        for (plate_number in 1:12) {
-          if (has_replicates) {
-            rep_columns <- BothRepColumns(current_column)
-            for (rep_column in rep_columns) {
-              HeatmapForPlate(GBA_df, plate_number, rep_column,
+              file_name <- paste0("Heatmaps - ", i, ") ", column_file_names[[i]], ".pdf")
+              column_subtext <- long_column_labels[[i]]
+
+              pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
+                  width = heatmap_width, height = heatmap_height
+                  )
+              AveragedHeatmap(input_df, current_column,
+                              main_title             = plate_average_text,
                               use_subtext            = column_subtext,
                               label_values           = label_cells,
                               use_one_scale          = !(scaled_per_plate),
                               weighting_for_controls = condense_controls
                               )
+              AveragedHeatmap(input_df, current_column,
+                              take_median            = TRUE,
+                              main_title             = sub("Mean", "Median", plate_average_text, fixed = TRUE),
+                              use_subtext            = column_subtext,
+                              label_values           = label_cells,
+                              use_one_scale          = !(scaled_per_plate),
+                              weighting_for_controls = condense_controls
+                              )
+              for (plate_number in 1:12) {
+                if (has_replicates) {
+                  rep_columns <- BothRepColumns(current_column)
+                  for (rep_column in rep_columns) {
+                    HeatmapForPlate(input_df, plate_number, rep_column,
+                                    use_subtext            = column_subtext,
+                                    label_values           = label_cells,
+                                    use_one_scale          = !(scaled_per_plate),
+                                    weighting_for_controls = condense_controls
+                                    )
+                  }
+                } else {
+                  HeatmapForPlate(input_df, plate_number, current_column,
+                                  use_subtext            = column_subtext,
+                                  label_values           = label_cells,
+                                  use_one_scale          = !(scaled_per_plate),
+                                  weighting_for_controls = condense_controls
+                                  )
+                }
+
+              }
+              dev.off()
             }
           } else {
-            HeatmapForPlate(GBA_df, plate_number, current_column,
-                            use_subtext            = column_subtext,
-                            label_values           = label_cells,
-                            use_one_scale          = !(scaled_per_plate),
-                            weighting_for_controls = condense_controls
-                            )
-          }
+            message("... Exporting PNG files... ")
+            for (i in seq_along(column_file_names)) {
 
-        }
-        dev.off()
-      }
+              current_column <- names(column_file_names)[[i]]
+              message("...... for the metric:  ", current_column)
 
-      message("... Exporting PNG files... ")
-      for (i in seq_along(column_file_names)) {
+              has_replicates <- !(is.null(GetRepNumber(current_column)))
+              column_subtext <- long_column_labels[[i]]
 
-        current_column <- names(column_file_names)[[i]]
-        message("...... for the metric:  ", current_column)
+              folder_name <- paste0(i, ") ", column_file_names[[i]])
+              folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
+              dir.create(folder_path, showWarnings = FALSE)
 
-        has_replicates <- !(is.null(GetRepNumber(current_column)))
-        column_subtext <- long_column_labels[[i]]
-
-        folder_name <- paste0(i, ") ", column_file_names[[i]])
-        folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
-        dir.create(folder_path, showWarnings = FALSE)
-
-        file_name <- paste0("Heatmap - ", column_file_names[[i]],
-                            " -- mean across plates.png"
-                            )
-        png(filename = file.path(folder_path, file_name),
-            width = heatmap_width, height = heatmap_height,
-            units = "in", res = 600
-            )
-        AveragedHeatmap(GBA_df, current_column,
-                        main_title             = plate_average_text,
-                        use_subtext            = column_subtext,
-                        label_values           = label_cells,
-                        use_one_scale          = !(scaled_per_plate),
-                        weighting_for_controls = condense_controls
-                        )
-        dev.off()
-
-        file_name <- paste0("Heatmap - ", column_file_names[[i]],
-                            " -- median across plates.png"
-                            )
-        png(filename = file.path(folder_path, file_name),
-            width = heatmap_width, height = heatmap_height,
-            units = "in", res = 600
-            )
-        AveragedHeatmap(GBA_df, current_column,
-                        take_median            = TRUE,
-                        main_title             = plate_average_text,
-                        use_subtext            = column_subtext,
-                        label_values           = label_cells,
-                        use_one_scale          = !(scaled_per_plate),
-                        weighting_for_controls = condense_controls
-                        )
-        dev.off()
-
-        for (plate_number in 1:12) {
-          if (has_replicates) {
-            rep_columns <- BothRepColumns(current_column)
-            for (j in 1:2) {
               file_name <- paste0("Heatmap - ", column_file_names[[i]],
-                                  " - plate ", plate_number, " rep ", j,
-                                  ".png"
+                                  " -- mean across plates.png"
                                   )
               png(filename = file.path(folder_path, file_name),
                   width = heatmap_width, height = heatmap_height,
                   units = "in", res = 600
                   )
-              HeatmapForPlate(GBA_df, plate_number, rep_columns[[j]],
+              AveragedHeatmap(input_df, current_column,
+                              main_title             = plate_average_text,
                               use_subtext            = column_subtext,
                               label_values           = label_cells,
                               use_one_scale          = !(scaled_per_plate),
                               weighting_for_controls = condense_controls
                               )
               dev.off()
+
+              file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                                  " -- median across plates.png"
+                                  )
+              png(filename = file.path(folder_path, file_name),
+                  width = heatmap_width, height = heatmap_height,
+                  units = "in", res = 600
+                  )
+              AveragedHeatmap(input_df, current_column,
+                              take_median            = TRUE,
+                              main_title             = plate_average_text,
+                              use_subtext            = column_subtext,
+                              label_values           = label_cells,
+                              use_one_scale          = !(scaled_per_plate),
+                              weighting_for_controls = condense_controls
+                              )
+              dev.off()
+
+              for (plate_number in 1:12) {
+                if (has_replicates) {
+                  rep_columns <- BothRepColumns(current_column)
+                  for (j in 1:2) {
+                    file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                                        " - plate ", plate_number, " rep ", j,
+                                        ".png"
+                                        )
+                    png(filename = file.path(folder_path, file_name),
+                        width = heatmap_width, height = heatmap_height,
+                        units = "in", res = 600
+                        )
+                    HeatmapForPlate(input_df, plate_number, rep_columns[[j]],
+                                    use_subtext            = column_subtext,
+                                    label_values           = label_cells,
+                                    use_one_scale          = !(scaled_per_plate),
+                                    weighting_for_controls = condense_controls
+                                    )
+                    dev.off()
+                  }
+                } else {
+                  file_name <- paste("Heatmap - ", column_file_names[[i]],
+                                     " - plate ", plate_number, ".png"
+                                     )
+                  png(filename = file.path(folder_path, file_name),
+                      width = heatmap_width, height = heatmap_height,
+                      units = "in", res = 600
+                      )
+                  HeatmapForPlate(input_df, plate_number, current_column,
+                                  use_subtext            = column_subtext,
+                                  label_values           = label_cells,
+                                  use_one_scale          = !(scaled_per_plate),
+                                  weighting_for_controls = condense_controls
+                                  )
+                  dev.off()
+                }
+              }
             }
-          } else {
-            file_name <- paste("Heatmap - ", column_file_names[[i]],
-                               " - plate ", plate_number, ".png"
-                               )
-            png(filename = file.path(folder_path, file_name),
-                width = heatmap_width, height = heatmap_height,
-                units = "in", res = 600
-                )
-            HeatmapForPlate(GBA_df, plate_number, current_column,
-                            use_subtext            = column_subtext,
-                            label_values           = label_cells,
-                            use_one_scale          = !(scaled_per_plate),
-                            weighting_for_controls = condense_controls
-                            )
-            dev.off()
           }
         }
       }

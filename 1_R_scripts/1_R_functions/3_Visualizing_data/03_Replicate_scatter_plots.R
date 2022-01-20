@@ -5,26 +5,6 @@
 
 library("RColorBrewer")
 
-project_dir   <- "~/R_projects/CRISPRa_TF"
-functions_dir <- file.path(project_dir, "1_R_scripts", "R_functions")
-source(file.path(functions_dir, "01_calculating_scores.R"))
-source(file.path(functions_dir, "02_labels_and_annotations.R"))
-source(file.path(functions_dir, "03_plotting_helper_functions.R"))
-
-
-
-# Define folder path ------------------------------------------------------
-
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects")
-output_dir  <- file.path(project_dir,"4_output")
-
-
-
-# Load data ---------------------------------------------------------------
-
-load(file.path(r_data_dir, "03_analyse_data.RData"))
-
 
 
 # Define functions --------------------------------------------------------
@@ -320,7 +300,7 @@ PlotPlateQualities <- function(rep1_vec,
 
 
 GetQualityMetric <- function(input_df, UseFunction) {
-  plate_numbers_vec <- as.integer(as.roman(GBA_df[, "Plate_number_384"]))
+  plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
   df_list <- split(input_df, plate_numbers_vec)
   rep1_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep1", numeric(1))
   rep2_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep2", numeric(1))
@@ -348,92 +328,60 @@ PlotSSMDControls <- function(input_df) {
 
 
 
+ExportAllReplicateScatterPlots <- function(input_df) {
 
-# Calculate correlation between replicates --------------------------------
+  use_dir <- file.path(output_dir, "Figures", "Replicate scatter plots")
 
-ReplicateScatter(GBA_df, "Raw_rep1")
-ReplicateScatter(GBA_df, "PercActivation_log2_Glo_rep1")
+  rep_columns <- grep("_rep", names(column_file_names), value = TRUE, fixed = TRUE)
 
-rep_columns <- grep("_rep", names(column_file_names), value = TRUE, fixed = TRUE)
+  plot_height <- 4.5
+  plot_ratio <- 0.45 / 0.21
 
-plot_height <- 4.5
-plot_ratio <- 0.45 / 0.21
-
-
-pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicate scatter plots - flexible axes.pdf"),
-    width = plot_height * plot_ratio, height = plot_height
-    )
-for (use_column in rep_columns) {
-  ReplicateScatter(GBA_df, rep1_column = use_column,
-                   show_title = FormatPlotMath(long_column_labels[[use_column]]),
-                   same_scale = FALSE
-                   )
-}
-dev.off()
-
-
-pdf(file = file.path(output_dir, "Figures", "Replicate scatter plots", "Replicate scatter plots - fixed axes.pdf"),
-    width = plot_height * plot_ratio, height = plot_height
-    )
-for (use_column in rep_columns) {
-  ReplicateScatter(GBA_df, rep1_column = use_column,
-                   show_title = FormatPlotMath(long_column_labels[[use_column]]),
-                   same_scale = TRUE
-                   )
-}
-dev.off()
-
-
-for (fixed_axes in c(FALSE, TRUE)) {
-  for (i in seq_along(rep_columns)) {
-    use_column <- rep_columns[[i]]
-    file_name <- paste0("Replicate scatter plot - ", i,  ") ",
-                        column_file_names[[use_column]], " - ",
-                        if (fixed_axes) "fixed axes" else "flexible axes",
-                        ".png"
-                        )
-    png(filename = file.path(output_dir, "Figures", "Replicate scatter plots",
-                             "Replicate scatter plots - PNGs", file_name
-                             ),
-        width = plot_height * plot_ratio, height = plot_height,
-        units = "in", res = 600
-        )
-    ReplicateScatter(GBA_df, rep1_column = use_column,
+  pdf(file = file.path(use_dir, "Replicate scatter plots - flexible axes.pdf"),
+      width = plot_height * plot_ratio, height = plot_height
+      )
+  for (use_column in rep_columns) {
+    ReplicateScatter(input_df, rep1_column = use_column,
                      show_title = FormatPlotMath(long_column_labels[[use_column]]),
-                     same_scale = fixed_axes
+                     same_scale = FALSE
                      )
-    dev.off()
   }
+  dev.off()
+
+
+  pdf(file = file.path(use_dir, "Replicate scatter plots - fixed axes.pdf"),
+      width = plot_height * plot_ratio, height = plot_height
+      )
+  for (use_column in rep_columns) {
+    ReplicateScatter(input_df, rep1_column = use_column,
+                     show_title = FormatPlotMath(long_column_labels[[use_column]]),
+                     same_scale = TRUE
+                     )
+  }
+  dev.off()
+
+
+  for (fixed_axes in c(FALSE, TRUE)) {
+    for (i in seq_along(rep_columns)) {
+      use_column <- rep_columns[[i]]
+      file_name <- paste0("Replicate scatter plot - ", i,  ") ",
+                          column_file_names[[use_column]], " - ",
+                          if (fixed_axes) "fixed axes" else "flexible axes",
+                          ".png"
+                          )
+      png(filename = file.path(use_dir, "Replicate scatter plots - PNGs", file_name),
+          width = plot_height * plot_ratio, height = plot_height,
+          units = "in", res = 600
+          )
+      ReplicateScatter(input_df, rep1_column = use_column,
+                       show_title = FormatPlotMath(long_column_labels[[use_column]]),
+                       same_scale = fixed_axes
+                       )
+      dev.off()
+    }
+  }
+
+  return(invisible(NULL))
 }
-
-
-# Calculate plate-wise quality metrics ------------------------------------
-
-PlotZPrimes(GBA_df)
-PlotSSMDControls(GBA_df)
-
-plot_width <- 5.5
-plot_height <- 3.8
-
-pdf(file = file.path(output_dir, "Figures", "Quality metrics", "Quality metrics.pdf"),
-    width = plot_width, height = plot_height
-    )
-PlotZPrimes(GBA_df)
-PlotSSMDControls(GBA_df)
-dev.off()
-
-
-png(filename = file.path(output_dir, "Figures", "Quality metrics", "Z_prime.png"),
-    width = plot_width, height = plot_height, units = "in", res = 600
-    )
-PlotZPrimes(GBA_df)
-dev.off()
-
-
-png(filename = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
-    width = plot_width, height = plot_height, units = "in", res = 600
-    )
-PlotSSMDControls(GBA_df)
-dev.off()
 
 
