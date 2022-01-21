@@ -26,7 +26,7 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-# Calculate correlation between replicates --------------------------------
+# Examine the correlation between replicates ------------------------------
 
 ReplicateScatter(GBA_df, "Raw_rep1")
 ReplicateScatter(GBA_df, "PercActivation_log2_Glo_rep1")
@@ -35,8 +35,10 @@ ReplicateScatter(GBA_df, "Log2FC_rep1", same_scale = FALSE)
 
 
 
+
 # Export plots as PDF and PNG files ---------------------------------------
 
 ExportAllReplicateScatterPlots(GBA_df)
+
 
 

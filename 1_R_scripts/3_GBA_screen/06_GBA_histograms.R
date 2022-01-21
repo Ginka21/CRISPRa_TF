@@ -43,11 +43,11 @@ ThreeHistograms(GBA_df, "p_value_deltaNT")
 
 
 
-
-# Export plots as PDF and PNG files ---------------------------------------
+# Export histograms as PDF and PNG files ----------------------------------
 
 plot_width <- 7
 plot_height <- 5
+
 
 pdf(file = file.path(output_dir, "Figures", "Histograms", "Histograms.pdf"),
     width = plot_width, height = plot_height

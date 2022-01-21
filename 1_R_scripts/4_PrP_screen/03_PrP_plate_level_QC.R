@@ -16,8 +16,8 @@ source(file.path(functions_dir, "3_Visualizing_data",  "01_Plate_level_QC.R"))
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
-output_dir  <- file.path(project_dir,"4_output", "PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir <- file.path(project_dir,"4_output", "PrP")
 
 
 
@@ -32,6 +32,10 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 PlotZPrimes(PrP_df)
 PlotSSMDControls(PrP_df)
+
+
+
+# Export plots as PDF or PNG files ----------------------------------------
 
 plot_width <- 5.5
 plot_height <- 3.8

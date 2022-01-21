@@ -785,7 +785,14 @@ ExportAllHeatmaps <- function(input_df) {
 
   plate_average_text <- "Mean of all plates and replicates (well effect)"
 
-  for (export_PNGs in c(FALSE, TRUE)) {
+  for (export_PDFs in c(TRUE, FALSE)) {
+
+    if (export_PDFs) {
+      message("Exporting PDF files...")
+    } else {
+      message("Exporting PNG files... ")
+    }
+
     for (label_cells in c(FALSE, TRUE)) {
 
       if (label_cells) {
@@ -813,8 +820,7 @@ ExportAllHeatmaps <- function(input_df) {
             message("... Exporting heatmaps using a uniform/linear color scale... ")
           }
 
-          if (!(export_PNGs)) {
-            message("... Exporting PDF files... ")
+          if (export_PDFs) {
             for (i in seq_along(column_file_names)) {
 
               current_column <- names(column_file_names)[[i]]
@@ -866,7 +872,7 @@ ExportAllHeatmaps <- function(input_df) {
               dev.off()
             }
           } else {
-            message("... Exporting PNG files... ")
+            # Export PNG files
             for (i in seq_along(column_file_names)) {
 
               current_column <- names(column_file_names)[[i]]
@@ -955,6 +961,7 @@ ExportAllHeatmaps <- function(input_df) {
       }
     }
   }
+  return(invisible(NULL))
 }
 
 

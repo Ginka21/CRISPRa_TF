@@ -26,17 +26,18 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-
-# Define labels -----------------------------------------------------------
+# Modify labels (for PrPc screen) -----------------------------------------
 
 AdjustLabels()
 controls_labels[["Pos"]] <- c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
 
 
 
+# Adjust default plot settings --------------------------------------------
 
-# Plot histograms ---------------------------------------------------------
-
+## Use the following code to modify the default version of the histogram
+## to use more pronounced borders for the vertical bars:
+#
 # OriginalThreeHistograms <- ThreeHistograms
 # ThreeHistograms <- function(...) {
 #   all_args <- list(...)
@@ -45,6 +46,10 @@ controls_labels[["Pos"]] <- c("Positive", "controls", expression("(" * italic("P
 #   }
 #   do.call(OriginalThreeHistograms, all_args)
 # }
+
+
+
+# Plot histograms ---------------------------------------------------------
 
 ThreeHistograms(PrP_df, "Raw_rep1")
 ThreeHistograms(PrP_df, "FoldNT_rep1")
@@ -61,10 +66,11 @@ ThreeHistograms(PrP_df, "p_value_deltaNT")
 
 
 
-# Export plots as PDF and PNG files ---------------------------------------
+# Export histograms as PDF and PNG files ----------------------------------
 
 plot_width <- 7
 plot_height <- 5
+
 
 pdf(file = file.path(output_dir, "Figures", "Histograms", "Histograms.pdf"),
     width = plot_width, height = plot_height

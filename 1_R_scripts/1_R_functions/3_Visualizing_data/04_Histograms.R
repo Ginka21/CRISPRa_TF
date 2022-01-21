@@ -7,7 +7,6 @@ library("RColorBrewer")
 
 
 
-
 # Define labels -----------------------------------------------------------
 
 controls_labels <- list(
@@ -125,7 +124,8 @@ ThreeHistograms <- function(input_df,
     PlotHistResults(NT_hist,   fill_colors[[2]], border_colors[[2]])
     PlotHistResults(pos_hist,  fill_colors[[3]], border_colors[[3]])
   } else {
-    # Prevent the positive controls from obscuring genes with low p values
+    # Prevent the positive controls from obscuring genes,
+    ## by placing them in the background.
     PlotHistResults(pos_hist,  fill_colors[[3]], border_colors[[3]])
     PlotHistResults(gene_hist, fill_colors[[1]], border_colors[[1]])
     PlotHistResults(NT_hist,   fill_colors[[2]], border_colors[[2]])
@@ -134,7 +134,6 @@ ThreeHistograms <- function(input_df,
   box(bty = "l")
 
   # Add legend
-
   DrawSideLegend(labels_list    = controls_labels,
                  use_pch        = 22,
                  use_colors     = fill_colors,
@@ -142,8 +141,8 @@ ThreeHistograms <- function(input_df,
                  use_point_size = 1.4,
                  lines_x_start  = 0.75
                  )
-  par(old_mar)
 
+  par(old_mar)
   return(invisible(NULL))
 }
 

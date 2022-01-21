@@ -1,45 +1,8 @@
 # 2021-12-28
 
 
-# Define functions --------------------------------------------------------
 
-Calculate_Z_Prime <- function(sub_df, use_column) {
-
-  are_NT <- sub_df[, "Is_NT_ctrl"]
-  are_pos <- sub_df[, "Is_pos_ctrl"]
-
-  # Calculate Z' factor
-  ## Means and Standard Deviation of controls
-  NT_vec       <- sub_df[are_NT, use_column]
-  posctrl_vec  <- sub_df[are_pos, use_column]
-  mean_NT      <- mean(NT_vec)
-  mean_posctrl <- mean(posctrl_vec)
-  sd_NT        <- sd(NT_vec)
-  sd_posctrl   <- sd(posctrl_vec)
-
-  z_prime      <- (1 - (3 * (sd_NT + sd_posctrl)) / (mean_posctrl - mean_NT))
-  return(z_prime)
-}
-
-
-Calculate_SSMD_ctrls <- function(sub_df, use_column) {
-
-  are_NT <- sub_df[, "Is_NT_ctrl"]
-  are_pos <- sub_df[, "Is_pos_ctrl"]
-
-  ## Means and variance of controls
-  NT_vec       <- sub_df[are_NT, use_column]
-  posctrl_vec  <- sub_df[are_pos, use_column]
-  mean_NT      <- mean(NT_vec)
-  mean_posctrl <- mean(posctrl_vec)
-  var_NT       <- var(NT_vec)
-  var_posctrl  <- var(posctrl_vec)
-
-  SSMD_ctrl    <- (mean_posctrl - mean_NT) / (sqrt(var_posctrl + var_NT))
-  return(SSMD_ctrl)
-}
-
-
+# Functions for data normalization ----------------------------------------
 
 NormPlates <- function(input_df,
                        use_column,
@@ -84,6 +47,7 @@ NormPlates <- function(input_df,
 
 
 
+# Functions for calculating test statistics for individual genes ----------
 
 Calculate_SSMD <- function(input_df,
                            rep1_column,
@@ -97,14 +61,12 @@ Calculate_SSMD <- function(input_df,
   norm_rep1 <- NormPlates(input_df, rep1_column, ...)
   norm_rep2 <- NormPlates(input_df, rep2_column, ...)
 
-  plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
-  split_df_list <- split(input_df, plate_numbers_vec)
-
   are_NT <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
-
   if (!(plate_wise_NT_variance)) {
     var_vec <- mapply(function(x, y) var(c(x, y)), norm_rep1[are_NT], norm_rep2[are_NT])
   }
+
+  plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
 
   results_vec_list <- tapply(seq_along(are_NT), plate_numbers_vec, function(x) {
 
@@ -143,6 +105,46 @@ Calculate_P <- function(input_df, rep1_column, ...) {
   t_values_vec <- Calculate_SSMD(input_df, rep1_column, ...)
   p_values_vec <- (2 * pt(abs(t_values_vec), 1, lower.tail = FALSE))
   return(p_values_vec)
+}
+
+
+
+# Functions for plate-level quality control -------------------------------
+
+Calculate_Z_Prime <- function(sub_df, use_column) {
+
+  are_NT <- sub_df[, "Is_NT_ctrl"]
+  are_pos <- sub_df[, "Is_pos_ctrl"]
+
+  # Calculate Z' factor
+  ## using means and standard deviation of controls
+  NT_vec       <- sub_df[are_NT, use_column]
+  posctrl_vec  <- sub_df[are_pos, use_column]
+  mean_NT      <- mean(NT_vec)
+  mean_posctrl <- mean(posctrl_vec)
+  sd_NT        <- sd(NT_vec)
+  sd_posctrl   <- sd(posctrl_vec)
+
+  z_prime      <- (1 - (3 * (sd_NT + sd_posctrl)) / (mean_posctrl - mean_NT))
+  return(z_prime)
+}
+
+
+Calculate_SSMD_ctrls <- function(sub_df, use_column) {
+
+  are_NT <- sub_df[, "Is_NT_ctrl"]
+  are_pos <- sub_df[, "Is_pos_ctrl"]
+
+  ## Means and variance of controls
+  NT_vec       <- sub_df[are_NT, use_column]
+  posctrl_vec  <- sub_df[are_pos, use_column]
+  mean_NT      <- mean(NT_vec)
+  mean_posctrl <- mean(posctrl_vec)
+  var_NT       <- var(NT_vec)
+  var_posctrl  <- var(posctrl_vec)
+
+  SSMD_ctrl    <- (mean_posctrl - mean_NT) / (sqrt(var_posctrl + var_NT))
+  return(SSMD_ctrl)
 }
 
 

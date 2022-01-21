@@ -254,21 +254,32 @@ ExportAllVolcanoAndFlashlightPlots <- function(input_df) {
 
   for (use_device in c("none", "pdf", "png")) {
 
+    if (use_device == "pdf") {
+      message("Exporting PDF files...")
+    } else if (use_device == "png") {
+      message("Exporting PNG files...")
+    } else if (use_device == "none") {
+      message("Diplaying plots in the editor...")
+    }
+
     for (plot_type in plot_types) {
 
       if (plot_type == "Volcano") {
+        message("... creating volcano plots...")
         folder_name <- "Volcano plots"
         PNG_prefix <- "Volcano plot"
         x_sub <- "Log2FC"
         y_sub <- "p_value"
         title_prefix <- "Volcano plot"
       } else if (plot_type == "Dual flashlight (logFC)") {
+        message("... creating dual-flashlight plots (using log2FC)...")
         folder_name <- "Dual flashlight plots (logFC)"
         PNG_prefix <- "Dual flashlight (logFC)"
         x_sub <- "Log2FC"
         y_sub <- "SSMD"
         title_prefix <- "Dual flashlight plot"
       } else if (plot_type == "Dual flashlight (% activation)") {
+        message("... creating dual-flashlight plots (using % activation)...")
         folder_name <- "Dual flashlight plots (pct activation)"
         PNG_prefix <- "Dual flashlight (% activation)"
         x_sub <- "PercActivation"
@@ -325,7 +336,7 @@ ExportAllVolcanoAndFlashlightPlots <- function(input_df) {
       }
     }
   }
-
   return(invisible(NULL))
 }
+
 

@@ -15,8 +15,8 @@ source(file.path(functions_dir, "3_Visualizing_data",  "03_Replicate_scatter_plo
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
-output_dir  <- file.path(project_dir,"4_output", "PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir <- file.path(project_dir,"4_output", "PrP")
 
 
 
@@ -26,13 +26,13 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-# Define labels -----------------------------------------------------------
+# Modify labels (for PrPc screen) -----------------------------------------
 
 AdjustLabels()
 
 
 
-# Calculate correlation between replicates --------------------------------
+# Examine the correlation between replicates ------------------------------
 
 ReplicateScatter(PrP_df, "Raw_rep1")
 ReplicateScatter(PrP_df, "PercActivation_log2_Glo_rep1")
@@ -40,7 +40,10 @@ ReplicateScatter(PrP_df, "Log2FC_rep1", same_scale = FALSE)
 
 
 
+
 # Export plots as PDF and PNG files ---------------------------------------
 
 ExportAllReplicateScatterPlots(PrP_df)
+
+
 

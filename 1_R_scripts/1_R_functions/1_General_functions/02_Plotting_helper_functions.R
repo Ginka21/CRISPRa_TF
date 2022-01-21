@@ -2,7 +2,7 @@
 
 
 
-# Define functions --------------------------------------------------------
+# Helper functions for modifying plotmath expressions ---------------------
 
 ConcatenateExpressions <- function(expression_list, my_sep = "  \u2013  ") {
   literal_strings <- vapply(expression_list, StripExpression, "")
@@ -31,11 +31,9 @@ StripExpression <- function(my_expression) {
 }
 
 
-
 Embolden <- function(my_string) {
   parse(text = paste0("bold(", StripExpression(my_string), ")"))
 }
-
 
 
 FormatPlotMath <- function(char_vec) {
@@ -61,6 +59,9 @@ FormatPlotMath <- function(char_vec) {
 
 
 
+
+# Functions for modifying colors ------------------------------------------
+
 Darken <- function(color, factor = 1.4) {
   # from https://gist.github.com/Jfortin1/72ef064469d1703c6b30
   col <- col2rgb(color)
@@ -80,12 +81,14 @@ Palify <- function(colors_vec, fraction_pale = 0.5) {
 
 
 
+
+# Functions for creating plot elements ------------------------------------
+
 MakeEmptyPlot <- function() {
   plot(1, xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i",
        type = "n", axes = FALSE, ann = FALSE
        )
 }
-
 
 
 DrawSideLegend <- function(labels_list,
@@ -166,8 +169,6 @@ DataAxisLimits <- function(data_vec, space_fraction = 0.04) {
    }
    return(use_limits)
 }
-
-
 
 
 

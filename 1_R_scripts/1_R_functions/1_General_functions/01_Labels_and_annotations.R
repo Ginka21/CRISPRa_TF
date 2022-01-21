@@ -14,7 +14,6 @@ input_dir   <- file.path(project_dir, "2_input")
 
 
 
-
 # Read in data ------------------------------------------------------------
 
 columns_df <- data.frame(read_excel(file.path(input_dir, "All_metrics.xlsx")),
@@ -37,7 +36,6 @@ AdjustLabels <- function(original_string = "GBA activity",
   }
   return(invisible(NULL))
 }
-
 
 
 
@@ -77,7 +75,6 @@ are_to_exclude <- ((grepl("_foldNT", columns_df[, "Column name"], fixed = TRUE) 
                   (columns_df[, "Metric"] == "t value")                        # t values show a simple linear relationship with SSMD values, and are thus redundant
 columns_df <- columns_df[!(are_to_exclude), ]
 row.names(columns_df) <- NULL
-
 
 
 

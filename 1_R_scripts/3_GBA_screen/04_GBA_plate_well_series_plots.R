@@ -45,7 +45,6 @@ PlateWellPlot(GBA_df, "CellTiterGlo_raw")
 PlateWellPlot(GBA_df, "DeltaNT_rep1")
 PlateWellPlot(GBA_df, "Raw_log2_rep1")
 
-
 PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
 
 
@@ -56,7 +55,6 @@ PlateWellPlot(GBA_df, "Hit_strength_deltaNT_Glo")
 series_top_folder <- file.path(output_dir, "Figures", "Plate well series plots")
 
 ExportAllPlateSeriesPlots(GBA_df, top_folder = series_top_folder)
-
 
 
 

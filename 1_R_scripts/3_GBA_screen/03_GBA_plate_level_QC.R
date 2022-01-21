@@ -27,11 +27,14 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-
 # Calculate plate-wise quality metrics ------------------------------------
 
 PlotZPrimes(GBA_df)
 PlotSSMDControls(GBA_df)
+
+
+
+# Export plots as PDF or PNG files ----------------------------------------
 
 plot_width <- 5.5
 plot_height <- 3.8

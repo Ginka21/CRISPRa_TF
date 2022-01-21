@@ -337,6 +337,8 @@ ExportAllReplicateScatterPlots <- function(input_df) {
   plot_height <- 4.5
   plot_ratio <- 0.45 / 0.21
 
+  message("Exporting PDF plots...")
+
   pdf(file = file.path(use_dir, "Replicate scatter plots - flexible axes.pdf"),
       width = plot_height * plot_ratio, height = plot_height
       )
@@ -360,6 +362,7 @@ ExportAllReplicateScatterPlots <- function(input_df) {
   }
   dev.off()
 
+  message("Exporting PNG plots...")
 
   for (fixed_axes in c(FALSE, TRUE)) {
     for (i in seq_along(rep_columns)) {
@@ -380,7 +383,6 @@ ExportAllReplicateScatterPlots <- function(input_df) {
       dev.off()
     }
   }
-
   return(invisible(NULL))
 }
 

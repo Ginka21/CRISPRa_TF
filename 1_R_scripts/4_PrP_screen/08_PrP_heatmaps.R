@@ -29,8 +29,7 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-
-# Define labels -----------------------------------------------------------
+# Modify labels (for PrPc screen) -----------------------------------------
 
 AdjustLabels()
 
@@ -165,7 +164,6 @@ HeatmapForPlate(PrP_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 if (FALSE) {
   ExportAllHeatmaps(PrP_df)
 }
-
 
 
 

@@ -6,16 +6,14 @@
 project_dir           <- "~/R_projects/CRISPRa_TF"
 general_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "2_Analyzing_data")
 source(file.path(general_functions_dir, "01_Calculating_scores.R"))
-source(file.path(general_functions_dir, "03_Processing_data.R"))
+source(file.path(general_functions_dir, "02_Processing_data.R"))
 
 
 
 # Define folder path ------------------------------------------------------
 
-project_dir <- "~/R_projects/CRISPRa_TF"
-input_dir   <- file.path(project_dir, "2_input")
-r_data_dir  <- file.path(project_dir, "3_R_objects", "3_PrP")
-output_dir  <- file.path(project_dir,"4_output", "PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+output_dir <- file.path(project_dir, "4_output", "PrP")
 
 
 

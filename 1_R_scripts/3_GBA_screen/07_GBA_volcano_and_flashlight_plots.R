@@ -66,7 +66,7 @@ VolcanoFlashPlot(GBA_df, "PercActivation_rep1", "SSMD_deltaNT",
 
 
 
-# Export individual plots as PNG files ------------------------------------
+# Export individually customized plots ------------------------------------
 
 base_width <- 5.5
 base_height <- 5.1
@@ -121,7 +121,7 @@ dev.off()
 
 
 
-# Export plots as PDF and PNG files ---------------------------------------
+# Export all plots as PDF and PNG files -----------------------------------
 
 ExportAllVolcanoAndFlashlightPlots(GBA_df)
 

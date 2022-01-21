@@ -7,8 +7,6 @@ library("RColorBrewer")
 
 
 
-
-
 # Define labels -----------------------------------------------------------
 
 controls_labels <- list(
@@ -16,7 +14,6 @@ controls_labels <- list(
   "NT"   = c("Non-targeting", "controls"),
   "Gene" = c("Genes in ", "CRISPRa", "library")
 )
-
 
 
 
@@ -351,20 +348,26 @@ PlateWellPlot <- function(input_df,
 
 
 
-
 ExportAllPlateSeriesPlots <- function(input_df,
                                       top_folder,
                                       plot_width = 8,
                                       plot_height = 5
                                       ) {
 
-  for (emphasize_NT in c(FALSE, TRUE)) {
-    if (emphasize_NT) {
-      plots_path <- file.path(top_folder, "b) NT controls emphasized")
+  for (export_PDF in c(TRUE, FALSE)) {
+    if (export_PDF) {
+      message("Exporting PDF files...")
     } else {
-      plots_path <- file.path(top_folder, "a) Standard version")
+      message("Exporting PNG files...")
     }
-    for (export_PDF in c(TRUE, FALSE)) {
+    for (emphasize_NT in c(FALSE, TRUE)) {
+      if (emphasize_NT) {
+        plots_path <- file.path(top_folder, "b) NT controls emphasized")
+        message("Exporting the version where non-targeting controls are emphasized...")
+      } else {
+        plots_path <- file.path(top_folder, "a) Standard version")
+        message("Exporting the standard version (where NT controls may be obscured by genes)...")
+      }
       for (by_row in c(TRUE, FALSE)) {
         for (take_means in c(FALSE, TRUE)) {
           file_name <- "Plate well series plots"
@@ -372,17 +375,21 @@ ExportAllPlateSeriesPlots <- function(input_df,
             if (take_means) {
               file_name <- paste0(file_name, ", row means")
               sub_folder_name <- "Row means"
+              message("... row means are shown...")
             } else {
               file_name <- paste0(file_name, ", by row")
               sub_folder_name <- "Wells ordered by row"
+              message("... wells are ordered by row...")
             }
           } else {
             if (take_means) {
               file_name <- paste0(file_name, ", column means")
               sub_folder_name <- "Column means"
+              message("... column means are shown...")
             } else {
               file_name <- paste0(file_name, ", by column")
               sub_folder_name <- "Wells ordered by column"
+              message("... wells are ordered by column...")
             }
           }
           if (export_PDF) {
@@ -418,6 +425,7 @@ ExportAllPlateSeriesPlots <- function(input_df,
       }
     }
   }
+  return(invisible(NULL))
 }
 
 

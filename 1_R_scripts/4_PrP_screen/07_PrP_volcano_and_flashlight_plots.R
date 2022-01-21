@@ -26,7 +26,7 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
-# Define labels -----------------------------------------------------------
+# Modify labels (for PrPc screen) -----------------------------------------
 
 controls_labels[["Pos"]] <- c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
 
@@ -74,7 +74,7 @@ VolcanoFlashPlot(PrP_df, "PercActivation_rep1", "SSMD_deltaNT",
 
 
 
-# Export individual plots as PNG files ------------------------------------
+# Export individually customized plots ------------------------------------
 
 base_width <- 5.5
 base_height <- 5.1
@@ -115,12 +115,11 @@ VolcanoFlashPlot(PrP_df, "Log2FC_Glo_rep1", "p_value_log2_Glo",
 dev.off()
 
 
-stop()
 
-# Export plots as PDF and PNG files ---------------------------------------
+
+# Export all plots as PDF and PNG files -----------------------------------
 
 ExportAllVolcanoAndFlashlightPlots(PrP_df)
-
 
 
 
