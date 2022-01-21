@@ -55,9 +55,11 @@ are_gene <- !(is.na(PrP_df[, "Entrez_ID"]))
 mean_logfc <- rowMeans(PrP_df[, c("Log2FC_rep1", "Log2FC_rep2")])
 
 meet_p_val_cutoff  <- (PrP_df[, "p_value_log2"] < 0.05)
-meet_log2fc_cutoff <- abs(mean_logfc) > log2(1.25)
+meet_log2fc_cutoff <- abs(mean_logfc) > log2(2)
 
 meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
+
+table(meet_criteria & are_gene)
 
 
 
