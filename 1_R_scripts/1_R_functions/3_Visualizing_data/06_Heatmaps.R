@@ -939,9 +939,9 @@ ExportAllHeatmaps <- function(input_df) {
                     dev.off()
                   }
                 } else {
-                  file_name <- paste("Heatmap - ", column_file_names[[i]],
-                                     " - plate ", plate_number, ".png"
-                                     )
+                  file_name <- paste0("Heatmap - ", column_file_names[[i]],
+                                      " - plate ", plate_number, ".png"
+                                      )
                   png(filename = file.path(folder_path, file_name),
                       width = heatmap_width, height = heatmap_height,
                       units = "in", res = 600
