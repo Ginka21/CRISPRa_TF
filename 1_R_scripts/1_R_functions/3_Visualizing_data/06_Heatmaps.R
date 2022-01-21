@@ -881,7 +881,7 @@ ExportAllHeatmaps <- function(input_df) {
               has_replicates <- !(is.null(GetRepNumber(current_column)))
               column_subtext <- long_column_labels[[i]]
 
-              folder_name <- paste0(i, ") ", column_file_names[[i]])
+              folder_name <- paste0(i, ") ", sub("_rep1", "", current_column, fixed = TRUE))
               folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
               dir.create(folder_path, showWarnings = FALSE)
 
