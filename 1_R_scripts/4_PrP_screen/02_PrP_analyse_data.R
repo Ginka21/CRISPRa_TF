@@ -134,7 +134,7 @@ write.csv(reordered_df[, !(names(reordered_df) %in% exclude_columns)],
 
 write.csv(hits_df[, !(names(hits_df) %in% exclude_columns)],
           file = file.path(output_dir, "Tables", "PrP_hits_only.csv"),
-          row.names = FALSE, quote = FALSE
+          row.names = FALSE, quote = FALSE, na = ""
           )
 
 
