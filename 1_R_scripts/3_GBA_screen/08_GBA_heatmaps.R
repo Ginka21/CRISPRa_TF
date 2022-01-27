@@ -31,6 +31,8 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 # Draw example heatmaps ---------------------------------------------------
 
+PlateSchematic(GBA_df, 1, label_genes = TRUE, color_by_source_plate = TRUE)
+
 HeatmapForPlate(GBA_df, 10, "Raw_rep1")
 HeatmapForPlate(GBA_df, 10, "Raw_rep2")
 
@@ -157,8 +159,9 @@ HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 
 
-
 # Export heatmaps as PDF or PNG files -------------------------------------
+
+ExportAllHeatmaps(GBA_df, only_schematics = TRUE)
 
 if (FALSE) {
   ExportAllHeatmaps(GBA_df)

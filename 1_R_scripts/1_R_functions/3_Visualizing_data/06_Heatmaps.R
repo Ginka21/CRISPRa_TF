@@ -250,7 +250,12 @@ PrettyRound <- function(numeric_vec) {
 
 
 
-PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
+PlateSchematic <- function(input_df,
+                           plate_number,
+                           main_title = NULL,
+                           label_genes = FALSE,
+                           color_by_source_plate = FALSE
+                           ) {
 
   if (is.numeric(plate_number)) {
     plate_number <- as.character(as.roman(plate_number))
@@ -264,6 +269,20 @@ PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
   are_pos <- input_df[, "Is_pos_ctrl"][are_this_plate]
   are_gene <- !(is.na(input_df[, "Entrez_ID"][are_this_plate]))
   are_mCherry <- input_df[, "Target_flag"][are_this_plate] %in% "mCherry"
+  if (label_genes) {
+    gene_labels <- input_df[, "Gene_symbol"][are_this_plate]
+    gene_splits <- strsplit(gene_labels[are_gene], "-", fixed = TRUE)
+    was_split <- lengths(gene_splits) > 1
+    gene_labels[are_gene][was_split] <- lapply(gene_splits[was_split],
+                                               function(x) {
+                                                 if (all(nchar(x) >= 4)) {
+                                                   paste0(x, collapse = "-\n")
+                                                 } else {
+                                                   paste0(x, collapse = "-")
+                                                 }
+                                               })
+  }
+
   type_colors <- c(
     "Empty"         = "gray95",
     "Untransfected" = "gray80",
@@ -299,6 +318,20 @@ PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
     labels_list <- labels_list[names(labels_list) != "mCherry"]
   }
 
+  if (color_by_source_plate) {
+    gene_colors <- brewer.pal(9, "Purples")[3:8]
+    type_colors[["Gene"]] <- gene_colors[[4]]
+    rounds_plates_384 <- split(1:12, rep(1:4, each = 3))
+    all_plate_numbers_384 <- as.integer(as.roman(input_df[, "Plate_number_384"]))
+    rounds_plates_96 <- lapply(rounds_plates_384, function(x) {
+      results_vec <- unique(input_df[all_plate_numbers_384 %in% x, "Plate_number_96"])
+      sort(results_vec[!(is.na(results_vec))])
+    })
+    colors_plates_96 <- unlist(lapply(rounds_plates_96, function(x) gene_colors[seq_along(x)]), use.names = FALSE)
+    plate_numbers_96 <- input_df[, "Plate_number_96"][are_this_plate][are_gene]
+    color_vec[are_gene] <- colors_plates_96[plate_numbers_96]
+  }
+
   color_mat <- matrix(color_vec, nrow = 16, ncol = 24, byrow = TRUE)
   color_mat[, c(1, 24)] <- type_colors[["Empty"]]
 
@@ -325,7 +358,18 @@ PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
            col = grid_color, lwd = use_lwd, xpd = NA
            )
 
-  ## Annotate plot
+  ## Label with gene names
+  if (label_genes) {
+    text(x      = rep(1:24, times = 16),
+         y      = rev(rep(1:16, each = 24)),
+         labels = gene_labels,
+         cex    = 0.3,
+         font   = 4,
+         xpd    = NA,
+         )
+  }
+
+  ## Label with row and column names
   text(x      = par("usr")[[1]] - diff(grconvertX(c(0, 0.8), from = "lines", to = "user")),
        y      = seq_len(nrow(color_mat)),
        labels = rev(LETTERS[seq_len(nrow(color_mat))]),
@@ -341,9 +385,9 @@ PlateSchematic <- function(input_df, plate_number, main_title = NULL) {
        xpd    = NA
        )
 
+
   ## Draw the legend
   start_y <- par("usr")[[3]] - diff(grconvertY(c(0, 1.5), from = "lines", to = "user"))
-
   x_space <- diff(grconvertX(c(0, 2.8), from = "lines", to = "user"))
   x_positions <- seq(0, x_space * length(type_colors), length.out = length(type_colors))
   x_positions <- x_positions - (mean(x_positions) - grconvertX(0.5, from = "npc", to = "user"))
@@ -760,27 +804,54 @@ HeatmapForPlate <- function(input_df,
 
 
 
-ExportAllHeatmaps <- function(input_df) {
+ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FALSE) {
 
   heatmap_width <- 8
   heatmap_height <- 6.5
 
   message("Exporting plate schematics...")
-  pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", "Heatmap schematic.pdf"),
-      width = heatmap_width, height = heatmap_height
-      )
-  for (plate_number in 1:12) {
-    PlateSchematic(input_df, plate_number)
-  }
-  dev.off()
+  for (label_genes in c(TRUE, FALSE)) {
+    for (color_by_96wp in c(TRUE, FALSE)) {
 
-  for (plate_number in 1:12) {
-    file_name <- paste0("Heatmap schematic - plate", plate_number, ".png")
-    png(filename = file.path(output_dir, "Figures", "Heatmap schematic", "PNGs", file_name),
-        width = heatmap_width, height = heatmap_height, units = "in", res = 600
-        )
-    PlateSchematic(input_df, plate_number)
-    dev.off()
+      if (label_genes) {
+        label_string <- "Heatmap schematic - genes labelled"
+        PNG_folder_name <- "PNGs - heatmap schematic - genes labelled"
+      } else {
+        label_string <- "Heatmap schematic"
+        PNG_folder_name <- "PNGs - heatmap schematic"
+      }
+      if (color_by_96wp) {
+        label_string <- paste0(label_string, " - colored by source plate")
+        PNG_folder_name <- paste0(PNG_folder_name, " - colored by source plate")
+      }
+
+      pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", paste0(label_string, ".pdf")),
+          width = heatmap_width, height = heatmap_height
+          )
+      for (plate_number in 1:12) {
+        PlateSchematic(input_df, plate_number, label_genes = label_genes,
+                       color_by_source_plate = color_by_96wp
+                       )
+      }
+      dev.off()
+
+      for (plate_number in 1:12) {
+        PNG_folder_path <- file.path(output_dir, "Figures", "Heatmap schematic", PNG_folder_name)
+        dir.create(PNG_folder_path, showWarnings = FALSE)
+        file_name <- paste0(label_string, " - plate", plate_number, ".png")
+        png(filename = file.path(output_dir, "Figures", "Heatmap schematic", PNG_folder_name, file_name),
+            width = heatmap_width, height = heatmap_height, units = "in", res = 600
+            )
+        PlateSchematic(input_df, plate_number, label_genes = label_genes,
+                       color_by_source_plate = color_by_96wp
+                       )
+        dev.off()
+      }
+    }
+  }
+
+  if (only_schematics) {
+    return(invisible(NULL))
   }
 
   plate_average_text <- "Mean of all plates and replicates (well effect)"
@@ -873,6 +944,9 @@ ExportAllHeatmaps <- function(input_df) {
             }
           } else {
             # Export PNG files
+            if (!(export_PNGs)) {
+              next
+            }
             for (i in seq_along(column_file_names)) {
 
               current_column <- names(column_file_names)[[i]]
