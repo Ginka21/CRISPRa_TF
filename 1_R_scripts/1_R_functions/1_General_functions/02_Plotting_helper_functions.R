@@ -90,6 +90,20 @@ MakeEmptyPlot <- function() {
        )
 }
 
+AbbreviateDataAxis <- function(side = 2, mgp = 0.38, tcl = -0.3) {
+  tick_pos <- axTicks(side)
+  if (all(tick_pos[-1] >= (5 * 10^5))) {
+    axis_labels <- paste0(format(tick_pos / 10^6), "M")
+  } else if (all(tick_pos[-1] >= (5 * 10^4))) {
+    axis_labels <- paste0(format(tick_pos / 1000), "k")
+  } else {
+    axis_labels <- format(tick_pos)
+  }
+  axis(side, labels = axis_labels, at = tick_pos,
+       mgp = c(3, mgp, 0), tcl = tcl, las = 1
+       )
+}
+
 
 DrawSideLegend <- function(labels_list,
                            use_colors,

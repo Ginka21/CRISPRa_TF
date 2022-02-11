@@ -16,7 +16,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "02_Plate_well_series_plo
 # Define folder path ------------------------------------------------------
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
-output_dir <- file.path(project_dir,"4_output", "PrP")
+output_dir <- file.path(project_dir, "4_output", "PrP")
 
 
 

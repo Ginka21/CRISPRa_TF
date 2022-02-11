@@ -16,7 +16,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "04_Histograms.R"))
 # Define folder path ------------------------------------------------------
 
 r_data_dir  <- file.path(project_dir, "3_R_objects", "2_GBA")
-output_dir  <- file.path(project_dir,"4_output", "GBA")
+output_dir  <- file.path(project_dir, "4_output", "GBA")
 
 
 

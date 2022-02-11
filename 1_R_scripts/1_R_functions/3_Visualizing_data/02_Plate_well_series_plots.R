@@ -395,7 +395,7 @@ ExportAllPlateSeriesPlots <- function(input_df,
           if (export_PDF) {
             pdf(file = file.path(plots_path, paste0(file_name, ".pdf")),
                 width = plot_width, height = plot_height
-            )
+                )
           }
           for (i in seq_along(column_file_names)) {
             use_column <- names(column_file_names)[[i]]
