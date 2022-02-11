@@ -105,7 +105,7 @@ BreaksForColumn <- function(input_df,
 
   if (is.null(use_vector)) {
     mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
-    are_empty <- input_df[, "Well_number_384"] %in% c(mat_384[, c(1, 24)])
+    are_empty <- input_df[, "Well_number_384"] %in% mat_384[, c(1, 24)]
     are_pos_ctrl <- input_df[, "Is_pos_ctrl"]
 
     rep_number <- GetRepNumber(use_column)
@@ -435,7 +435,8 @@ HeatMap384 <- function(numeric_vec,
                        use_minuslog10 = FALSE,
                        take_log2      = FALSE,
                        uniform_legend = FALSE,
-                       legend_cex     = 0.8
+                       legend_cex     = 0.8,
+                       well_label_cex = 0.4
                        ) {
 
   stopifnot(length(numeric_vec) == 384)
@@ -603,7 +604,7 @@ HeatMap384 <- function(numeric_vec,
          y      = y_positions,
          labels = PrettyRound(numeric_vec),
          col    = ifelse(use_dark_text, "gray25", "gray75"),
-         cex    = 0.4,
+         cex    = well_label_cex,
          font   = 2,
          xpd    = NA
          )
@@ -711,7 +712,8 @@ AveragedHeatmap <- function(input_df,
              use_minuslog10 = IsPValue(use_column),
              take_log2      = take_log2,
              uniform_legend = uniform_legend,
-             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8
+             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8,
+             well_label_cex = if (use_column == "CellTiterGlo_raw") 0.3 else 0.4
              )
 
   return(invisible(NULL))
@@ -795,7 +797,8 @@ HeatmapForPlate <- function(input_df,
              use_minuslog10 = IsPValue(use_column),
              take_log2      = take_log2,
              uniform_legend = uniform_legend,
-             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8
+             legend_cex     = if (use_column == "CellTiterGlo_raw") 0.7 else 0.8,
+             well_label_cex = if (use_column == "CellTiterGlo_raw") 0.3 else 0.4
              )
 
   return(invisible(NULL))
