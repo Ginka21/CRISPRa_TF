@@ -19,7 +19,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "06_Heatmaps.R"))
 # Define folder path ------------------------------------------------------
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "2_GBA")
-output_dir <- file.path(project_dir,"4_output", "GBA")
+output_dir <- file.path(project_dir, "4_output", "GBA")
 
 
 
@@ -156,6 +156,7 @@ HeatmapForPlate(GBA_df, 1, "FoldNT_rep1", take_log2 = TRUE)
 
 HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1")
 HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
+
 
 
 
