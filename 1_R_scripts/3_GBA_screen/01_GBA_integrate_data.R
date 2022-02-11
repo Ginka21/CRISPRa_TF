@@ -66,6 +66,7 @@ lum_signal_vec_list <- lapply(lum_df_list, function(x) {
 columns_1to4 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)[, 1:4]
 are_problematic <- (layout_df[, "Plate_number_384"] == "X") &
                    (layout_df[, "Well_number_384"] %in% columns_1to4)
+layout_df[, "Is_problematic"] <- are_problematic
 layout_df[are_problematic, "Is_NT_ctrl"] <- FALSE
 layout_df[are_problematic, "Is_pos_ctrl"] <- FALSE
 
