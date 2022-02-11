@@ -163,6 +163,8 @@ HeatmapForPlate(GBA_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 ExportAllHeatmaps(GBA_df, only_schematics = TRUE)
 
+ExportAllHeatmaps(GBA_df, export_PNGs = FALSE)
+
 if (FALSE) {
   ExportAllHeatmaps(GBA_df)
 }
