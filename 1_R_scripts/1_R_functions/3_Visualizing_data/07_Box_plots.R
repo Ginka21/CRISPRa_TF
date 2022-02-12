@@ -25,7 +25,8 @@ BeeBox <- function(numeric_vec,
                    use_spacing         = 0.5,
                    point_cex           = 0.8,
                    horiz_lines         = NULL,
-                   indicate_zero       = TRUE
+                   indicate_zero       = TRUE,
+                   indicate_n          = TRUE
                    ) {
 
   assign("delete_numeric_vec", numeric_vec, envir = globalenv())
@@ -154,6 +155,18 @@ BeeBox <- function(numeric_vec,
   labels_top <- sapply(labels_splits, "[", 1)
   labels_bottom <- sapply(labels_splits, "[", 2)
 
+  if (indicate_n) {
+    group_labels_line <- group_labels_line + 0.6
+    mtext(lengths(numeric_list),
+          at   = group_positions,
+          side = 1,
+          line = -0.3,
+          cex  = 0.5,
+          font = 2,
+          col  = "gray80"
+          )
+  }
+
   mtext(sapply(labels_top, VerticalAdjust),
         at   = group_positions,
         side = 1,
@@ -182,7 +195,8 @@ BeeBoxPlates <- function(input_df,
                          plate_number   = NULL,
                          show_96wp      = FALSE,
                          common_scale   = TRUE,
-                         point_cex      = 0.7
+                         point_cex      = 0.7,
+                         indicate_n     = TRUE
                          ) {
 
 
@@ -398,7 +412,7 @@ BeeBoxPlates <- function(input_df,
            group_labels_cex = group_labels_cex, group_positions = positions_vec,
            group_label_lheight = 0.7, group_labels_line = 0.4,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
-           point_cex = point_cex, horiz_lines = horiz_lines
+           indicate_n = indicate_n
            )
 
     ## Create x axis labels for the super-groups
@@ -409,7 +423,9 @@ BeeBoxPlates <- function(input_df,
       if (length(positions_list[[i]]) > 1) {
         segments(x0  = positions_list[[i]][[1]],
                  x1  = positions_list[[i]][[length(positions_list[[i]])]],
-                 y0  = par("usr")[[3]] - diff(grconvertY(c(0, 1.45), from = "lines", to = "user")),
+                 y0  = par("usr")[[3]] - diff(grconvertY(c(0, 1.45 + if (indicate_n) 0.6 else 0),
+                                                         from = "lines", to = "user"
+                                                         )),
                  xpd = NA,
                  col = "gray65"
                  )
@@ -418,8 +434,10 @@ BeeBoxPlates <- function(input_df,
     group_labels <- sub(" control", " ctrl", levels(groups_fac), fixed = TRUE)
     group_labels <- sub("Pos. ", "Pos ", group_labels, fixed = TRUE)
     mtext(group_labels,
-          at = vapply(positions_list, mean, numeric(1)),
-          line = 1.5, cex = par("cex") * group_labels_cex, side = 1
+          side = 1,
+          at   = vapply(positions_list, mean, numeric(1)),
+          line = 1.5 + if (indicate_n) 0.6 else 0,
+          cex  = par("cex") * group_labels_cex
           )
 
   } else {
@@ -427,7 +445,8 @@ BeeBoxPlates <- function(input_df,
     BeeBox(numeric_vec, groups_fac,
            group_colors[levels(groups_fac)], y_axis_label = y_axis_label,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
-           point_cex = point_cex, horiz_lines = horiz_lines
+           point_cex = point_cex, horiz_lines = horiz_lines,
+           indicate_n = indicate_n
            )
   }
 
