@@ -104,9 +104,11 @@ BeeBox <- function(numeric_vec,
   box(bty = "l")
 
   ## Draw the jittered points
+  set.seed(1)
   if (use_swarm) {
     beeswarm_df <- beeswarm(numeric_list, at = group_positions, do.plot = FALSE,
-                            cex = point_cex, spacing = use_spacing
+                            cex = point_cex, spacing = use_spacing,
+                            priority = "random"
                             )
     x_vec <- beeswarm_df[, "x"]
     x_pos <- rep(group_positions, lengths(numeric_list))
@@ -119,7 +121,6 @@ BeeBox <- function(numeric_vec,
                            adjustcolor(light_colors, alpha.f = 0.4)
                            )
   } else {
-    set.seed(1)
     x_vec <- rep(group_positions, lengths(numeric_list))
     x_vec <- x_vec + rnorm(n = length(x_vec), mean = 0, sd = 0.06)
   }
