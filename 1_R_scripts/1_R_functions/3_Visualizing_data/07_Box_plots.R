@@ -22,11 +22,13 @@ BeeBox <- function(numeric_vec,
                    group_labels_cex    = 0.9,
                    group_labels_line   = 0.5,
                    group_label_lheight = 0.9,
+                   draw_group_labels   = TRUE,
                    use_spacing         = 0.5,
                    point_cex           = 0.8,
                    horiz_lines         = NULL,
                    indicate_zero       = TRUE,
-                   indicate_n          = TRUE
+                   indicate_n          = TRUE,
+                   points_alpha        = 0.4
                    ) {
 
   assign("delete_numeric_vec", numeric_vec, envir = globalenv())
@@ -125,7 +127,7 @@ BeeBox <- function(numeric_vec,
          y   = unlist(numeric_list),
          cex = point_cex,
          pch = 16,
-         col = rep(adjustcolor(point_colors, alpha.f = 0.4), lengths(numeric_list)),
+         col = rep(adjustcolor(point_colors, alpha.f = points_alpha), lengths(numeric_list)),
          xpd = NA
          )
 
@@ -167,22 +169,25 @@ BeeBox <- function(numeric_vec,
           )
   }
 
-  mtext(sapply(labels_top, VerticalAdjust),
-        at   = group_positions,
-        side = 1,
-        line = group_labels_line,
-        cex  = par("cex") * group_labels_cex
-        )
+  if (draw_group_labels) {
+    mtext(sapply(labels_top, VerticalAdjust),
+          at   = group_positions,
+          side = 1,
+          line = group_labels_line,
+          cex  = par("cex") * group_labels_cex
+          )
 
-  mtext(ifelse(is.na(labels_bottom),
-               NA,
-               sapply(labels_bottom, VerticalAdjust)
-               ),
-        at   = group_positions,
-        side = 1,
-        line = group_labels_line + group_label_lheight,
-        cex  = par("cex") * group_labels_cex
-        )
+    mtext(ifelse(is.na(labels_bottom),
+                 NA,
+                 sapply(labels_bottom, VerticalAdjust)
+                 ),
+          at   = group_positions,
+          side = 1,
+          line = group_labels_line + group_label_lheight,
+          cex  = par("cex") * group_labels_cex
+          )
+
+  }
 
   return(invisible(NULL))
 }
