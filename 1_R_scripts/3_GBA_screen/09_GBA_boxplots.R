@@ -31,8 +31,6 @@ BeeBoxPlates(GBA_df, "Raw_rep1", show_subgroups = TRUE, show_96wp = TRUE)
 BeeBoxPlates(GBA_df, "CellTiterGlo_raw", show_subgroups = TRUE, show_96wp = TRUE, plate_number = 22)
 BeeBoxPlates(GBA_df, "CellTiterGlo_raw", show_subgroups = FALSE, show_96wp = TRUE, plate_number = 22)
 
-
-
 BeeBoxPlates(GBA_df, "Raw_rep1", compare_group = "Gene")
 BeeBoxPlates(GBA_df, "Raw_rep1", compare_group = "NT control")
 BeeBoxPlates(GBA_df, "Raw_rep1", compare_group = "Pos. control")
@@ -43,10 +41,6 @@ BeeBoxPlates(GBA_df, "Raw_rep1", compare_group = "Pos. control")
 # Export plots as PDF and PNG files ---------------------------------------
 
 ExportAllBoxPlots(GBA_df, file.path(output_dir, "Figures", "Box plots"))
-
-
-
-
 
 
 
