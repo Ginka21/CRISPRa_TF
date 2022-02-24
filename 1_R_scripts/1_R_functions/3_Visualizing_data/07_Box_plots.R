@@ -28,7 +28,9 @@ BeeBox <- function(numeric_vec,
                    horiz_lines         = NULL,
                    indicate_zero       = TRUE,
                    indicate_n          = TRUE,
-                   points_alpha        = 0.4
+                   points_alpha        = 0.4,
+                   opaque_box          = NULL,
+                   violin_wex          = 0.9
                    ) {
 
   assign("delete_numeric_vec", numeric_vec, envir = globalenv())
@@ -95,7 +97,7 @@ BeeBox <- function(numeric_vec,
           drawRect = FALSE,
           col      = violin_colors,
           border   = NA,
-          wex      = 0.9,
+          wex      = violin_wex,
           add      = TRUE,
           axes     = FALSE
           )
@@ -115,8 +117,13 @@ BeeBox <- function(numeric_vec,
     x_deviations_list <- split(x_pos - x_vec,
                                match(beeswarm_df[, "x.orig"], levels(groups_fac))
                                )
-    are_large_group <- vapply(x_deviations_list, function(x) any(abs(x) > 0.11), logical(1))
-    light_colors <- ifelse(are_large_group,
+    if (is.null(opaque_box)) {
+      are_opaque <- vapply(x_deviations_list, function(x) any(abs(x) > 0.11), logical(1))
+    } else {
+      are_opaque <- opaque_box
+    }
+
+    light_colors <- ifelse(are_opaque,
                            adjustcolor(light_colors, alpha.f = 0.7),
                            adjustcolor(light_colors, alpha.f = 0.4)
                            )
@@ -195,16 +202,44 @@ BeeBox <- function(numeric_vec,
 
 
 
+PositionsForSubgroups <- function(subgroup_levels_list, space_ratio = 0.7) {
+  num_subgroups <- length(unlist(subgroup_levels_list, use.names = FALSE))
+  total_space <- num_subgroups - 1L
+  large_space_after <- unlist(lapply(subgroup_levels_list, function(x) {
+    if (length(x) == 1) {
+      TRUE
+    } else {
+      c(rep(FALSE, length(x) - 1), TRUE)
+    }
+  }))
+  are_large_space <- large_space_after[-length(large_space_after)]
+  large_space_size <- total_space / (sum(are_large_space) + (sum(!(are_large_space)) * space_ratio))
+  positions_vec <- rep(NA, num_subgroups)
+  positions_vec[c(1, length(positions_vec))] <- c(1, length(positions_vec))
+  for (i in seq_len(length(positions_vec) - 2) + 1) {
+    new_pos <- positions_vec[[i - 1]]
+    if (large_space_after[[i - 1]]) {
+      new_pos <- new_pos + large_space_size
+    } else {
+      new_pos <- new_pos + large_space_size * space_ratio
+    }
+    positions_vec[[i]] <- new_pos
+  }
+  return(positions_vec)
+}
+
+
+
 BeeBoxPlates <- function(input_df,
                          use_column,
                          show_subgroups = FALSE,
+                         compare_group  = NULL,
                          plate_number   = NULL,
                          show_96wp      = FALSE,
                          common_scale   = TRUE,
                          point_cex      = 0.7,
                          indicate_n     = TRUE
                          ) {
-
 
   if (is.null(plate_number)) {
     if (show_96wp) {
@@ -253,7 +288,6 @@ BeeBoxPlates <- function(input_df,
                                      )
                               )
                        )
-
 
   ## Exclude wells that shouldn't be used for calculating the y axis limits
   are_to_exclude <- (groups_vec == "Empty well")
@@ -325,8 +359,117 @@ BeeBoxPlates <- function(input_df,
   }
   old_par <- par(mar = c(3.8, 4.1, 3.4, 2))
 
-  ## If show_subgroups is TRUE, wells are sub-divided by their physical location
-  if (show_subgroups) {
+
+  if (!(is.null(compare_group))) {
+    wells_384_vec <- input_df[, "Well_number_384"][!(are_to_exclude)]
+    are_own_NT <- wells_384_vec %in% mat_384[, c(2, 22)]
+    if (compare_group == "Genes and NT") {
+      if (show_96wp) {
+        stop("When the value of the 'compare_group' argument is 'Genes and NT'",
+             ", the 'show_96wp' argument is not supported!"
+             )
+      }
+      are_this_group <- (groups_vec == "Gene") |
+                        ((groups_vec == "NT control") & !(are_own_NT))
+      plate_numbers_fac <- factor(input_df[, "Plate_number_384"][!(are_to_exclude)][are_this_group],
+                                  levels = as.character(as.roman(1:12))
+                                  )
+      these_groups_fac <- factor(groups_vec[are_this_group])
+      plate_groups_fac <- interaction(plate_numbers_fac, these_groups_fac,
+                                      sep = " / ", lex.order = TRUE, drop = TRUE
+                                      )
+      subgroup_levels_list <- lapply(split(as.character(these_groups_fac), plate_numbers_fac), unique)
+      subgroup_labels <- unlist(subgroup_levels_list, use.names = FALSE)
+      use_level_colors <- group_colors[levels(droplevels(groups_fac[are_this_group]))][subgroup_labels]
+      subgroup_labels <- c("Gene"       = "G",
+                           "NT control" = "NT"
+                           )[subgroup_labels]
+      positions_vec <- PositionsForSubgroups(subgroup_levels_list, space_ratio = 0.55)
+      group_labels_cex <- 0.7
+      positions_list <- split(positions_vec,
+                              rep(seq_along(subgroup_levels_list), lengths(subgroup_levels_list))
+                              )
+      group_labels_line <- 0.2
+      violin_wex <- 0.7
+      assign("delete_positions_list", positions_list, envir = globalenv())
+    } else {
+      if (compare_group == "Own NT control") {
+        compare_group <- "NT control"
+        are_this_group <- (groups_vec == compare_group) & are_own_NT
+      } else {
+        are_this_group <- groups_vec == compare_group
+      }
+      if (show_96wp) {
+        group_labels_cex <- 0.75
+        group_labels_line <- 0.4
+        plate_groups_fac <- factor(input_df[, "Plate_number_96"][!(are_to_exclude)][are_this_group])
+      } else {
+        group_labels_cex <- 0.9
+        group_labels_line <- 0.5
+        plate_groups_fac <- factor(input_df[, "Plate_number_384"][!(are_to_exclude)][are_this_group],
+                                   levels = as.character(as.roman(1:12))
+                                   )
+      }
+      use_level_colors <- rep(group_colors[[compare_group]], nlevels(plate_groups_fac))
+      subgroup_labels <- levels(plate_groups_fac)
+      positions_vec <- NULL
+      violin_wex <- 0.9
+    }
+    numeric_vec <- numeric_vec[are_this_group]
+
+    titles_vec <- c(
+      "Own NT control" = "In-house non-targeting controls",
+      "Genes and NT"   = "Genes and interspersed NT controls",
+      "Gene"           = "Genes",
+      "NT control"     = "Non-targeting controls",
+      "Pos. control"   = "Positive control"
+    )
+    if (compare_group %in% names(titles_vec)) {
+      use_title <- titles_vec[[compare_group]]
+    } else {
+      use_title <- compare_group
+    }
+    if (show_96wp) {
+      use_title <- paste(use_title, "across 96-well plates")
+    } else {
+      use_title <- paste(use_title, "across plates")
+    }
+    assign("delete_are_this_group", are_this_group, envir = globalenv())
+    assign("delete_numeric_vec", numeric_vec, envir = globalenv())
+    assign("delete_plate_numbers_fac", plate_groups_fac, envir = globalenv())
+
+    BeeBox(numeric_vec, plate_groups_fac, use_level_colors,
+           group_labels = subgroup_labels,
+           y_axis_label = y_axis_label,
+           use_spacing = use_spacing, use_y_limits = use_y_limits,
+           point_cex = point_cex, horiz_lines = horiz_lines,
+           indicate_n = indicate_n,
+           group_labels_cex = group_labels_cex,
+           group_positions = positions_vec, opaque_box = TRUE,
+           group_labels_line = group_labels_line,
+           violin_wex = violin_wex
+           )
+    if (compare_group == "Genes and NT") {
+      mtext(levels(plate_numbers_fac),
+            side = 1,
+            at   = vapply(positions_list, mean, numeric(1)),
+            line = 1.2 + if (indicate_n) 0.6 else 0,
+            cex  = par("cex") * 0.8
+            )
+    } else {
+      if (show_96wp) {
+        x_axis_label <- "96-well plate number"
+      } else {
+        x_axis_label <- "Plate number"
+      }
+      mtext(x_axis_label,
+            side = 1,
+            line = (if (show_96wp) 1.55 else 1.65) + (if (indicate_n) 0.6 else 0),
+            cex  = par("cex")
+            )
+    }
+  } else if (show_subgroups) { # If show_subgroups is TRUE, wells are sub-divided by their physical location
+
     ## Split the control wells into subgroups
     subgroups_fac <- rep(NA, length(groups_fac))
     are_NT <- groups_fac == "NT control"
@@ -377,35 +520,15 @@ BeeBoxPlates <- function(input_df,
                                    )
 
     ## Assign labels and colors to the subgroups
-    subgroups_levels_list <- lapply(split(as.character(subgroups_fac), groups_fac), unique)
-    subgroups_levels_list <- lapply(subgroups_levels_list, function(x) x[order(match(x, levels(subgroups_fac)))])
-    subgroup_labels <- unlist(subgroups_levels_list, use.names = FALSE)
-    subgroup_colors <- rep(group_colors[levels(groups_fac)], lengths(subgroups_levels_list))
+    subgroup_levels_list <- lapply(split(as.character(subgroups_fac), groups_fac), unique)
+    subgroup_levels_list <- lapply(subgroup_levels_list, function(x) x[order(match(x, levels(subgroups_fac)))])
+    subgroup_labels <- unlist(subgroup_levels_list, use.names = FALSE)
+    subgroup_colors <- rep(group_colors[levels(groups_fac)], lengths(subgroup_levels_list))
 
     ## Determine the x axis locations for the subgroups
-    total_space <- nlevels(interaction_fac) - 1L
-    space_ratio <- 0.7
-    large_space_after <- unlist(lapply(subgroups_levels_list, function(x) {
-      if (length(x) == 1) {
-        TRUE
-      } else {
-        c(rep(FALSE, length(x) - 1), TRUE)
-      }
-    }))
-    are_large_space <- large_space_after[-length(large_space_after)]
-    large_space_size <- total_space / (sum(are_large_space) + (sum(!(are_large_space)) * space_ratio))
-    positions_vec <- rep(NA, nlevels(interaction_fac))
-    positions_vec[c(1, length(positions_vec))] <- c(1, length(positions_vec))
-    for (i in seq_len(length(positions_vec) - 2) + 1) {
-      new_pos <- positions_vec[[i - 1]]
-      if (large_space_after[[i - 1]]) {
-        new_pos <- new_pos + large_space_size
-      } else {
-        new_pos <- new_pos + large_space_size * space_ratio
-      }
-      positions_vec[[i]] <- new_pos
-    }
-
+    assign("delete_interaction_fac", interaction_fac, envir = globalenv())
+    assign("delete_subgroup_levels_list", subgroup_levels_list, envir = globalenv())
+    positions_vec <- PositionsForSubgroups(subgroup_levels_list)
 
     ## Create the bee/violin/box plot for the subgroups
     if (show_96wp) {
@@ -418,12 +541,12 @@ BeeBoxPlates <- function(input_df,
            group_labels_cex = group_labels_cex, group_positions = positions_vec,
            group_label_lheight = 0.7, group_labels_line = 0.4,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
-           indicate_n = indicate_n
+           indicate_n = indicate_n, point_cex = point_cex
            )
 
     ## Create x axis labels for the super-groups
     positions_list <- split(positions_vec,
-                            rep(seq_len(nlevels(groups_fac)), lengths(subgroups_levels_list))
+                            rep(seq_len(nlevels(groups_fac)), lengths(subgroup_levels_list))
                             )
     for (i in seq_along(positions_list)) {
       if (length(positions_list[[i]]) > 1) {
@@ -471,6 +594,10 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
   narrow_width <- 5
   wide_width <- 6.2
 
+  compare_groups <- c(
+    "Gene", "Own NT control", "Pos. control", "Genes and NT"
+  )
+
   for (export_PDF in c(TRUE, FALSE)) {
 
     if (export_PDF) {
@@ -478,7 +605,6 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
     } else {
       message("Exporting PNG files...")
     }
-
 
     if (export_PDF) {
       figures_folder <- file.path(top_folder, "PDFs")
@@ -488,14 +614,13 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
       dir.create(figures_folder, showWarnings = FALSE)
     }
 
-    for (show_subgroups in c(FALSE, TRUE)) {
+    for (show_subgroups in c(TRUE, FALSE)) {
 
       if (show_subgroups) {
         message("... wells are divided into subgroups by their physical location...")
       } else {
         message("... wells are combined according to their target type...")
       }
-
 
       if (show_subgroups) {
         use_width <- wide_width
@@ -518,6 +643,16 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
               width = use_width, height = use_height
               )
           BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups)
+          if (show_subgroups) {
+            for (compare_group in compare_groups) {
+              BeeBoxPlates(input_df, use_column, compare_group = compare_group)
+            }
+            for (compare_group in c("Gene", "NT control")) {
+              BeeBoxPlates(input_df, use_column, compare_group = compare_group,
+                           show_96wp = TRUE
+                           )
+            }
+          }
           for (plate_number in as.character(as.roman(1:12))) {
             BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
                          plate_number = plate_number
@@ -541,8 +676,43 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
               )
           BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups)
           dev.off()
-          for (i in 2:13) {
-            roman_number <- as.character(as.roman(i - 1))
+
+          if (show_subgroups) {
+            for (i in seq_along(compare_groups)) {
+              compare_group <- compare_groups[[i]]
+              png(filename = file.path(sub_sub_folder,
+                                       paste0(formatC(i + 1, flag = "0", width = 2),
+                                              ") Box plot - ", compare_group, " across plates",
+                                              ".png"
+                                              )
+                                       ),
+                  width = use_width, height = use_height, units = "in", res = 600
+                  )
+              BeeBoxPlates(input_df, use_column, compare_group = compare_group)
+              dev.off()
+            }
+            for (i in 1:2) {
+              compare_group <- c("Gene", "NT control")[[i]]
+              png(filename = file.path(sub_sub_folder,
+                                       paste0(formatC(i + 1 + length(compare_groups), flag = "0", width = 2),
+                                              ") Box plot - ", compare_group, " across 96wp",
+                                              ".png"
+                                              )
+                                       ),
+                  width = use_width, height = use_height, units = "in", res = 600
+                  )
+              BeeBoxPlates(input_df, use_column, compare_group = compare_group,
+                           show_96wp = TRUE
+                           )
+              dev.off()
+            }
+            current_i <- 4 + length(compare_groups)
+          } else {
+            current_i <- 2
+          }
+
+          for (i in current_i:(current_i + 12 - 1)) {
+            roman_number <- as.character(as.roman(i - current_i + 1))
             png(filename = file.path(sub_sub_folder,
                                      paste0(formatC(i, flag = "0", width = 2),
                                             ") Box plot - plate ", roman_number,
@@ -557,14 +727,16 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
             dev.off()
           }
           png(filename = file.path(sub_sub_folder,
-                                   "14) Box plot - all 96-well plates.png"
+                                   paste0(current_i + 12, ") Box plot - all 96-well plates.png")
                                    ),
               width = use_width, height = use_height, units = "in", res = 600
               )
-          BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups)
+          BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
+                       show_96wp = TRUE
+                       )
           dev.off()
-          for (i in 15:(15 + 22 - 1)) {
-            plate_number <- i - 14
+          for (i in (current_i + 13):(current_i + 12 + 22)) {
+            plate_number <- i - (current_i + 12)
             png(filename = file.path(sub_sub_folder,
                                      paste0(formatC(i, flag = "0", width = 2),
                                             ") Box plot - plate ", plate_number,

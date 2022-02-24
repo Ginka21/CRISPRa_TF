@@ -40,6 +40,16 @@ BeeBoxPlates(PrP_df, "CellTiterGlo_raw", show_subgroups = FALSE, show_96wp = TRU
 
 BeeBoxPlates(PrP_df, "Raw_Glo_rep1")
 
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "Gene")
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "Own NT control")
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "Pos. control")
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "Genes and NT")
+
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "Gene", show_96wp = TRUE)
+BeeBoxPlates(PrP_df, "Raw_rep1", compare_group = "NT control", show_96wp = TRUE)
+
+
+
 
 
 # Export plots as PDF and PNG files ---------------------------------------
