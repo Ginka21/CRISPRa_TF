@@ -221,7 +221,7 @@ PlateWellPlot <- function(input_df,
 
   ## Annotate the plot
   title(show_title, cex.main = 1.1)
-  axis(2, las = 1, mgp = use_mgp, tcl = use_tcl)
+  AbbreviateDataAxis(2, mgp = use_mgp[[2]], tcl = use_tcl)
   axis(1, mgp = use_mgp, cex.axis = par("cex"), tcl = use_tcl)
   mtext(y_axis_label, side = 2, line = 3)
   label_x_pos <- par("usr")[[1]] + diff(grconvertX(c(0, 0.2), from = "lines", to = "user"))
