@@ -26,6 +26,8 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 # Draw example plots ------------------------------------------------------
 
+BeeBoxPlates(GBA_df, "Raw_rep1", plate_number = "II", split_NT = TRUE)
+
 BeeBoxPlates(GBA_df, "Raw_rep1", show_subgroups = TRUE, plate_number = 2)
 BeeBoxPlates(GBA_df, "Raw_rep1", show_subgroups = TRUE, show_96wp = TRUE)
 BeeBoxPlates(GBA_df, "CellTiterGlo_raw", show_subgroups = TRUE, show_96wp = TRUE, plate_number = 22)

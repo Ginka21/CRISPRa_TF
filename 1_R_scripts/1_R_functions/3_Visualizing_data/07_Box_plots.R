@@ -231,6 +231,7 @@ PositionsForSubgroups <- function(subgroup_levels_list, space_ratio = 0.7) {
 BeeBoxPlates <- function(input_df,
                          use_column,
                          show_subgroups = FALSE,
+                         split_NT       = FALSE,
                          compare_group  = NULL,
                          plate_number   = NULL,
                          show_96wp      = FALSE,
@@ -238,6 +239,10 @@ BeeBoxPlates <- function(input_df,
                          point_cex      = 0.7,
                          indicate_n     = TRUE
                          ) {
+
+  if (show_subgroups && split_NT) {
+    stop("Please choose either 'show_subgroups' or 'split_NT' to be TRUE!")
+  }
 
   if (is.null(plate_number)) {
     if (show_96wp) {
@@ -329,6 +334,9 @@ BeeBoxPlates <- function(input_df,
   } else {
     well_numbers_vec <- input_df[, "Well_number_384"]
   }
+  if (split_NT) {
+    are_to_exclude <- are_to_exclude | (groups_vec == "mCherry")
+  }
 
   numeric_vec <- numeric_vec[!(are_to_exclude)]
   groups_vec <- groups_vec[!(are_to_exclude)]
@@ -340,13 +348,29 @@ BeeBoxPlates <- function(input_df,
   }
 
   ## Create a factor that groups wells by the target type
-  group_colors <- c(
-    "Gene"         = "Purples",
-    "NT control"   = "Blues",
-    "Pos. control" = "Reds",
-    "No virus"     = "Greys",
-    "mCherry"      = "Oranges"
-  )
+
+  if (split_NT) {
+    group_colors <- c(
+      "Gene"         = "Purples",
+      "Tubingen NT"  = "Blues",
+      "Own NT"       = "Blues",
+      "Pos. control" = "Reds",
+      "No virus"     = "Greys"
+    )
+    are_NT <- groups_vec == "NT control"
+    wells_384_vec <- input_df[, "Well_number_384"][!(are_to_exclude)][are_NT]
+    are_own_NT <- wells_384_vec %in% mat_384[, c(2, 22)]
+    groups_vec[are_NT] <- ifelse(are_own_NT, "Own NT", "Tubingen NT")
+  } else {
+    group_colors <- c(
+      "Gene"         = "Purples",
+      "NT control"   = "Blues",
+      "Pos. control" = "Reds",
+      "No virus"     = "Greys",
+      "mCherry"      = "Oranges"
+    )
+
+  }
   groups_fac <- droplevels(factor(groups_vec, levels = names(group_colors)))
 
   ## Prepare plot parameters
@@ -569,11 +593,14 @@ BeeBoxPlates <- function(input_df,
 
   } else {
     ## Create the bee/violin/box plot for wells combined by target type
+    if (split_NT && is.null(horiz_lines)) {
+      horiz_lines <- median(numeric_vec[groups_vec == "Gene"])
+    }
     BeeBox(numeric_vec, groups_fac,
            group_colors[levels(groups_fac)], y_axis_label = y_axis_label,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
            point_cex = point_cex, horiz_lines = horiz_lines,
-           indicate_n = indicate_n
+           indicate_n = indicate_n,
            )
   }
 
@@ -612,7 +639,7 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
       dir.create(figures_folder, showWarnings = FALSE)
     }
 
-    for (show_subgroups in c(TRUE, FALSE)) {
+    for (show_subgroups in c(FALSE, TRUE)) {
 
       if (show_subgroups) {
         message("... wells are divided into subgroups by their physical location...")
@@ -650,6 +677,8 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
                            show_96wp = TRUE
                            )
             }
+          } else {
+            BeeBoxPlates(input_df, use_column, split_NT = TRUE)
           }
           for (plate_number in as.character(as.roman(1:12))) {
             BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
@@ -706,7 +735,16 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
             }
             current_i <- 4 + length(compare_groups)
           } else {
-            current_i <- 2
+            png(filename = file.path(sub_sub_folder,
+                                     "02) Box plots - NT controls split.png"
+                                     ),
+                width = use_width, height = use_height, units = "in", res = 600
+                )
+            BeeBoxPlates(input_df, use_column, compare_group = compare_group,
+                         show_96wp = TRUE
+                         )
+            dev.off()
+            current_i <- 3
           }
 
           for (i in current_i:(current_i + 12 - 1)) {

@@ -33,6 +33,8 @@ AdjustLabels()
 
 # Draw example plots ------------------------------------------------------
 
+BeeBoxPlates(PrP_df, "Raw_rep1", split_NT = TRUE)
+
 BeeBoxPlates(PrP_df, "Raw_rep1", show_subgroups = TRUE, plate_number = 2)
 BeeBoxPlates(PrP_df, "Raw_rep1", show_subgroups = TRUE, show_96wp = TRUE)
 BeeBoxPlates(PrP_df, "CellTiterGlo_raw", show_subgroups = TRUE, show_96wp = TRUE, plate_number = 22)
