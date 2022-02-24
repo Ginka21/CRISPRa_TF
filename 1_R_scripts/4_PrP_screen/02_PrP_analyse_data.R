@@ -37,15 +37,61 @@ PrP_df[are_low_rep2, "Raw_rep2"] <- 1
 
 
 
+
+# Correct for the pipetting error for CellTiterGlo on Plate VII -----------
+
+mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
+are_own_NT <- PrP_df[, "Is_NT_ctrl"] & (PrP_df[, "Well_number_384"] %in% mat_384[, c(2, 22)])
+are_gene <- !(is.na(PrP_df[, "Entrez_ID"]))
+
+plate_numbers_vec <- as.integer(as.roman(PrP_df[, "Plate_number_384"]))
+use_plates <- setdiff(plate_numbers_vec, c(7, 8))
+
+gene_to_NT_factors <- vapply(use_plates, function(x) {
+  are_this_plate <- plate_numbers_vec == x
+  median(PrP_df[, "CellTiterGlo_raw"][are_this_plate & are_own_NT]) /
+  median(PrP_df[, "CellTiterGlo_raw"][are_this_plate & are_gene])
+}, numeric(1))
+
+gene_to_pos_factors <- vapply(use_plates, function(x) {
+  are_this_plate <- plate_numbers_vec == x
+  median(PrP_df[, "CellTiterGlo_raw"][are_this_plate & PrP_df[, "Is_pos_ctrl"]]) /
+  median(PrP_df[, "CellTiterGlo_raw"][are_this_plate & are_gene])
+}, numeric(1))
+
+are_plate7 <- plate_numbers_vec == 7
+are_gene_plate7 <- are_plate7 & are_gene &
+                   (PrP_df[, "Well_number_384"] %in% mat_384[seq(2, 14, by = 2), ])
+
+median_gene <- median(PrP_df[, "CellTiterGlo_raw"][are_gene_plate7])
+est_median_NT <- median_gene * median(gene_to_NT_factors)
+est_median_pos <- median_gene * median(gene_to_pos_factors)
+
+Glo_plate7_mat <- matrix(PrP_df[, "CellTiterGlo_raw"][are_plate7],
+                         nrow = 16, ncol = 24, byrow = TRUE
+                         )
+new_Glo_plate7_mat <- Glo_plate7_mat
+replace_rows <- seq(3, 15, by = 2)
+new_Glo_plate7_mat[replace_rows, 2:23] <- NA
+new_Glo_plate7_mat[replace_rows, seq(3, 23)] <- Glo_plate7_mat[replace_rows, seq(2, 22)]
+new_Glo_plate7_mat[replace_rows, seq(6, 18, by = 2)] <- Glo_plate7_mat[replace_rows, seq(5, 17, by = 2)]
+new_Glo_plate7_mat[replace_rows, c(2, 24)] <- est_median_NT
+new_Glo_plate7_mat[replace_rows, c(4, 20)] <- est_median_pos
+
+new_Glo_vec <- as.vector(t(new_Glo_plate7_mat))
+PrP_df[, "CellTiterGlo_raw"][are_plate7] <- new_Glo_vec
+
+
+
 # Normalize by non-targeting controls -------------------------------------
 
-PrP_df <- NormalizeWithNTControls(PrP_df)
+PrP_df <- NormalizeWithNTControls(PrP_df, correct_NT = TRUE)
 
 
 
 # Calculate SSMD and derived statistics (p value, etc.) -------------------
 
-PrP_df <- RunSSMDStats(PrP_df)
+PrP_df <- RunSSMDStats(PrP_df, correct_NT = TRUE)
 
 
 
