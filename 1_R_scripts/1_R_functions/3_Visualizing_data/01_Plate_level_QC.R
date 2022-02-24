@@ -112,26 +112,26 @@ PlotPlateQualities <- function(rep1_vec,
 }
 
 
-GetQualityMetric <- function(input_df, UseFunction) {
+GetQualityMetric <- function(input_df, UseFunction, filter_NT = FALSE) {
   plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
   df_list <- split(input_df, plate_numbers_vec)
-  rep1_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep1", numeric(1))
-  rep2_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep2", numeric(1))
+  rep1_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep1", filter_NT = filter_NT, numeric(1))
+  rep2_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep2", filter_NT = filter_NT, numeric(1))
   results_mat <- cbind("rep1" = rep1_vec, "rep2" = rep2_vec)
   return(results_mat)
 }
 
 
-PlotZPrimes <- function(input_df) {
-  z_primes_mat <- GetQualityMetric(input_df, Calculate_Z_Prime)
+PlotZPrimes <- function(input_df, filter_NT = FALSE) {
+  z_primes_mat <- GetQualityMetric(input_df, Calculate_Z_Prime, filter_NT = filter_NT)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
                      y_limits_include = c(0, 1, -0.2), y_axis_label = "Z' factor"
                      )
 }
 
 
-PlotSSMDControls <- function(input_df) {
-  z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls)
+PlotSSMDControls <- function(input_df, filter_NT = FALSE) {
+  z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls, filter_NT = filter_NT)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
                      y_limits_include = c(0, 7),
                      y_axis_label = "SSMD (pos./neg. controls)",

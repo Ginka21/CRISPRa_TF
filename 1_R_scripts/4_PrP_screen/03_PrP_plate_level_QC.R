@@ -30,8 +30,8 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 # Calculate plate-wise quality metrics ------------------------------------
 
-PlotZPrimes(PrP_df)
-PlotSSMDControls(PrP_df)
+PlotZPrimes(PrP_df, filter_NT = TRUE)
+PlotSSMDControls(PrP_df, filter_NT = TRUE)
 
 
 
@@ -43,22 +43,22 @@ plot_height <- 3.8
 pdf(file = file.path(output_dir, "Figures", "Quality metrics", "Quality metrics.pdf"),
     width = plot_width, height = plot_height
     )
-PlotZPrimes(PrP_df)
-PlotSSMDControls(PrP_df)
+PlotZPrimes(PrP_df, filter_NT = TRUE)
+PlotSSMDControls(PrP_df, filter_NT = TRUE)
 dev.off()
 
 
 png(filename = file.path(output_dir, "Figures", "Quality metrics", "Z_prime.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
-PlotZPrimes(PrP_df)
+PlotZPrimes(PrP_df, filter_NT = TRUE)
 dev.off()
 
 
 png(filename = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
-PlotSSMDControls(PrP_df)
+PlotSSMDControls(PrP_df, filter_NT = TRUE)
 dev.off()
 
 
