@@ -563,7 +563,8 @@ BeeBoxPlates <- function(input_df,
            group_labels_cex = group_labels_cex, group_positions = positions_vec,
            group_label_lheight = 0.7, group_labels_line = 0.4,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
-           indicate_n = indicate_n, point_cex = point_cex
+           indicate_n = indicate_n, point_cex = point_cex,
+           horiz_lines = horiz_lines
            )
 
     ## Create x axis labels for the super-groups
@@ -600,7 +601,7 @@ BeeBoxPlates <- function(input_df,
            group_colors[levels(groups_fac)], y_axis_label = y_axis_label,
            use_spacing = use_spacing, use_y_limits = use_y_limits,
            point_cex = point_cex, horiz_lines = horiz_lines,
-           indicate_n = indicate_n,
+           indicate_n = indicate_n
            )
   }
 
