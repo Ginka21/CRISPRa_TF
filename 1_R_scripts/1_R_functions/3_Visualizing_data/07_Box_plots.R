@@ -194,9 +194,7 @@ BeeBox <- function(numeric_vec,
           line = group_labels_line + group_label_lheight,
           cex  = par("cex") * group_labels_cex
           )
-
   }
-
   return(invisible(NULL))
 }
 
@@ -682,8 +680,8 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
               compare_group <- compare_groups[[i]]
               png(filename = file.path(sub_sub_folder,
                                        paste0(formatC(i + 1, flag = "0", width = 2),
-                                              ") Box plot - ", compare_group, " across plates",
-                                              ".png"
+                                              ") Box plot - ", tolower(compare_group),
+                                              " across plates.png"
                                               )
                                        ),
                   width = use_width, height = use_height, units = "in", res = 600
@@ -695,8 +693,8 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
               compare_group <- c("Gene", "NT control")[[i]]
               png(filename = file.path(sub_sub_folder,
                                        paste0(formatC(i + 1 + length(compare_groups), flag = "0", width = 2),
-                                              ") Box plot - ", compare_group, " across 96wp",
-                                              ".png"
+                                              ") Box plot - ", tolower(compare_group),
+                                              " across 96wp.png"
                                               )
                                        ),
                   width = use_width, height = use_height, units = "in", res = 600
