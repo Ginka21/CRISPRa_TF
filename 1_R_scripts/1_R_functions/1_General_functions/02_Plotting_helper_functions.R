@@ -90,6 +90,7 @@ MakeEmptyPlot <- function() {
        )
 }
 
+
 AbbreviateDataAxis <- function(side = 2, mgp = 0.38, tcl = -0.3) {
   tick_pos <- axTicks(side)
   if (all(tick_pos[-1] >= (5 * 10^5))) {
