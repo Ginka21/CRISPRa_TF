@@ -105,6 +105,14 @@ HeatmapForPlate(PrP_df, 12, "CellTiterGlo_raw",
                 num_other_breaks = 200
                 )
 
+HeatmapForPlate(PrP_df, 7, "CellTiterGlo_raw",
+                weighting_for_controls = TRUE
+                )
+
+HeatmapForPlate(PrP_df, 5, "CellTiterGlo_raw",
+                weighting_for_controls = TRUE
+                )
+
 
 HeatmapForPlate(PrP_df, 1, "SSMD_deltaNT")
 HeatmapForPlate(PrP_df, 1, "SSMD_log2")
