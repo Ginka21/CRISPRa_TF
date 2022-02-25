@@ -25,11 +25,23 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
+# Differentiate between own and Tubingen NT controls ----------------------
 
-# Modify labels (for PrPc screen) -----------------------------------------
+mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
+are_own_NT <- PrP_df[, "Target_flag"] %in% "Own NT control"
+are_Tubingen_NT <- PrP_df[, "Is_NT_ctrl"] & !(are_own_NT)
 
-controls_labels[["Pos"]] <- c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
+PrP_df[, "Is_NT_ctrl"] <- are_Tubingen_NT
+PrP_df[, "Custom_color"] <- are_own_NT
 
+controls_labels <- list(
+  "o_NT" = c("Own", "non-targeting", "controls"),
+  "T_NT" = c("Tubingen", "non-targeting", "controls"),
+  "Pos"  = c("Positive", "controls", expression("(" * italic("PRNP") * " gene)")),
+  "Gene" = c("Genes in ", "CRISPRa", "library")
+)
+
+controls_colors <- c(custom_color, NT_ctrl_color, pos_ctrl_color, "black")
 
 
 

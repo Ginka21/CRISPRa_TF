@@ -15,6 +15,11 @@ controls_labels <- list(
   "Gene" = c("Genes in ", "CRISPRa", "library")
 )
 
+pos_ctrl_color <- brewer.pal(5, "Reds")[[4]]
+NT_ctrl_color  <- brewer.pal(5, "Blues")[[4]]
+custom_color   <- brewer.pal(5, "Purples")[[4]]
+controls_colors <- c(NT_ctrl_color, pos_ctrl_color, "black")
+
 
 
 # Define pairs of metrics -------------------------------------------------
@@ -109,13 +114,18 @@ VolcanoFlashPlot <- function(input_df,
   }
 
   ## Prepare data subsets
-  are_NT      <- input_df[, "Is_NT_ctrl"]
-  are_posctrl <- input_df[, "Is_pos_ctrl"]
-  are_gene    <- !(is.na(input_df[, "Entrez_ID"]))
+  are_NT        <- input_df[, "Is_NT_ctrl"]
+  are_posctrl   <- input_df[, "Is_pos_ctrl"]
+  are_gene      <- !(is.na(input_df[, "Entrez_ID"]))
+  if ("Custom_color" %in% names(input_df)) {
+    are_custom_color <- input_df[, "Custom_color"]
+  } else {
+    are_custom_color <- rep(FALSE, nrow(input_df))
+  }
   if (show_only_genes) {
     are_valid <- are_gene
   } else {
-    are_valid <- are_NT | are_posctrl | are_gene
+    are_valid <- are_NT | are_posctrl | are_gene | are_custom_color
   }
 
   ## Prepare graphical parameters
@@ -185,8 +195,14 @@ VolcanoFlashPlot <- function(input_df,
 
   if (!(show_only_genes)) {
 
-    pos_ctrl_color <- brewer.pal(5, "Reds")[[4]]
-    NT_ctrl_color <- brewer.pal(5, "Blues")[[4]]
+    if (any(are_custom_color)) {
+      points(log_fc_vec[are_custom_color],
+             y_value_vec[are_custom_color],
+             pch = 16,
+             col = adjustcolor(custom_color, alpha.f = 0.5),
+             cex = point_size
+             )
+    }
 
     points(log_fc_vec[are_posctrl],
            y_value_vec[are_posctrl],
@@ -204,11 +220,19 @@ VolcanoFlashPlot <- function(input_df,
 
     ## Draw a legend for the points
     DrawSideLegend(labels_list = controls_labels,
-                   use_colors = c(NT_ctrl_color, pos_ctrl_color, "black")
+                   use_colors = controls_colors
                    )
+  } else {
+    are_custom_gene <- are_gene & are_custom_color
+    if (any(are_custom_color)) {
+      points(log_fc_vec[are_custom_gene],
+             y_value_vec[are_custom_gene],
+             pch = 16,
+             col = adjustcolor(custom_color, alpha.f = 0.5),
+             cex = point_size
+             )
+    }
   }
-
-
 
   ## Highlight genes that pass the cutoffs
   are_to_highlight <- are_gene &
