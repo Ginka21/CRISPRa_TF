@@ -2,20 +2,37 @@
 
 
 
+
+# Define constants --------------------------------------------------------
+
+normalization_methods <- c("all NT",              # The standard option. Uses all non-targeting controls for normalization.
+                           "own NT",              # Uses only the in-house non-targeting controls (which are present on every plate) for normalization and calculating the fold change. The Tubingen controls are not used.
+                           "own NT, with factor", # Uses only the in-house non-targeting controls to calculate the median for normalization, but correct this median using a factor that attempts to adjust for any differences between in-house non-targeting controls and Tubingen non-targeting controls.
+                           "genes",               # Normalize by the median of genes on that plate (assuming that the average gene shows no perturbation effect, similar to a good non-targeting control).
+                           "genes and all NT",    # Normalize by the median of genes. Use non-targeting controls only as a component of the estimation of the standard deviation.
+                           "genes and own NT"     # Normalize by the median of genes. Use in-house non-targeting controls only as a component of the estimation of the standard deviation.
+
+                           )
+
+
+
 # Functions for data normalization ----------------------------------------
 
-ObtainNTFactors <- function(input_df, use_column) {
+ObtainNTFactors <- function(input_df, use_column, take_log2 = FALSE) {
   plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
   numeric_vec <- input_df[, use_column]
+  if (take_log2) {
+    numeric_vec <- log2(numeric_vec)
+  }
   mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
-  are_own_NT <- input_df[, "Is_NT_ctrl"] & (input_df[, "Well_number_384"] %in% mat_384[, c(2, 22)])
+  are_own_NT <- input_df[, "Target_flag"] %in% "Own NT control"
   are_Tubingen_NT <- input_df[, "Is_NT_ctrl"] & !(are_own_NT)
   both_NT_plates <- unique(plate_numbers_vec[are_Tubingen_NT])
   median_factors <- vapply(both_NT_plates, function(x) {
     are_this_plate <- plate_numbers_vec == x
     median_own_NT <- median(numeric_vec[are_this_plate & are_own_NT])
     median_Tubingen_NT <- median(numeric_vec[are_this_plate & are_Tubingen_NT])
-    NT_factor <- median_own_NT / median_Tubingen_NT
+    NT_factor <- median_Tubingen_NT / median_own_NT
     return(NT_factor)
   }, numeric(1))
   names(median_factors) <- both_NT_plates
@@ -23,12 +40,12 @@ ObtainNTFactors <- function(input_df, use_column) {
 }
 
 
-ObtainAllNTFactors <- function(input_df, Glo = FALSE) {
+ObtainAllNTFactors <- function(input_df, Glo = FALSE, take_log2 = FALSE) {
   if (Glo) {
-    median_factors_mat <- as.matrix(ObtainNTFactors(input_df, "CellTiterGlo_raw"))
+    median_factors_mat <- as.matrix(ObtainNTFactors(input_df, "CellTiterGlo_raw", take_log2 = take_log2))
   } else {
-    median_factors_mat <- cbind(ObtainNTFactors(input_df, "Raw_rep1"),
-                                ObtainNTFactors(input_df, "Raw_rep2")
+    median_factors_mat <- cbind(ObtainNTFactors(input_df, "Raw_rep1", take_log2 = take_log2),
+                                ObtainNTFactors(input_df, "Raw_rep2", take_log2 = take_log2)
                                 )
     colnames(median_factors_mat) <- c("Raw_rep1", "Raw_rep2")
   }
@@ -41,23 +58,34 @@ NormPlates <- function(input_df,
                        take_log2 = FALSE,
                        foldNT = FALSE,
                        percent_activation = FALSE,
-                       correct_NT = FALSE
+                       norm_method = "all NT"
                        ) {
+
+  stopifnot(norm_method %in% normalization_methods)
+  norm_with_genes <- norm_method %in% c("genes", "genes and own NT", "genes and all NT")
 
   if (foldNT && percent_activation) {
     stop("The 'foldNT' and 'percent_activation' arguments are mutually exclusive!")
   }
 
   plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
-  are_NT <- input_df[, "Is_NT_ctrl"]
+  if (norm_method %in% c("own NT, with factor", "own NT")) {
+    are_NT <- input_df[, "Target_flag"] %in% "Own NT control"
+  } else if (norm_method == "all NT") {
+    are_NT <- input_df[, "Is_NT_ctrl"]
+  }
   are_pos <- input_df[, "Is_pos_ctrl"]
+  are_gene <- !(is.na(input_df[, "Entrez_ID"]))
   numeric_vec <- input_df[, use_column]
   if (take_log2) {
     numeric_vec <- log2(numeric_vec)
   }
 
-  if (correct_NT) {
-    NT_factors <- ObtainAllNTFactors(input_df, Glo = use_column == "CellTiterGlo_raw")
+  if (norm_method == "own NT, with factor") {
+    NT_factors <- ObtainAllNTFactors(input_df,
+                                     Glo = use_column == "CellTiterGlo_raw",
+                                     take_log2 = take_log2
+                                     )
     use_NT_factor <- median(NT_factors)
   }
 
@@ -66,18 +94,28 @@ NormPlates <- function(input_df,
     sub_vec <- numeric_vec[x]
     sub_are_NT <- are_NT[x]
     sub_are_pos <- are_pos[x]
+    sub_are_gene <- are_gene[x]
 
-    median_NT <- median(sub_vec[sub_are_NT])
-    if (correct_NT) {
-      median_NT <- median_NT / use_NT_factor
+    if (norm_with_genes) {
+      use_median <- median(sub_vec[sub_are_gene])
+    } else {
+      use_median <- median(sub_vec[sub_are_NT])
+      if (norm_method == "own NT, with factor") {
+        use_median <- use_median * use_NT_factor
+      }
     }
 
     if (foldNT && !(take_log2)) {
-      sub_results <- sub_vec / median_NT
+      sub_results <- sub_vec / use_median
     } else {
-      sub_results <- sub_vec - median_NT
+      sub_results <- sub_vec - use_median
       if (percent_activation) {
-        sub_results <- sub_results / (median(sub_results[sub_are_pos]) - median(sub_results[sub_are_NT]))
+        if (norm_with_genes) {
+          use_median <- median(sub_results[sub_are_gene])
+        } else {
+          use_median <- median(sub_results[sub_are_NT])
+        }
+        sub_results <- sub_results / (median(sub_results[sub_are_pos]) - use_median)
       }
     }
     return(sub_results)
@@ -94,15 +132,24 @@ Calculate_SSMD <- function(input_df,
                            rep1_column,
                            t_score = FALSE,
                            plate_wise_NT_variance = TRUE,
+                           norm_method = "all NT",
                            ...
                            ) {
 
+  stopifnot(norm_method %in% normalization_methods)
+
   rep2_column <- sub("_rep1", "_rep2", rep1_column, fixed = TRUE)
 
-  norm_rep1 <- NormPlates(input_df, rep1_column, ...)
-  norm_rep2 <- NormPlates(input_df, rep2_column, ...)
+  norm_rep1 <- NormPlates(input_df, rep1_column, norm_method = norm_method, ...)
+  norm_rep2 <- NormPlates(input_df, rep2_column, norm_method = norm_method, ...)
 
-  are_NT <- input_df[, "Target_flag"] %in% c("Own NT control", "Scrambled")
+  if (norm_method %in% c("own NT, with factor", "own NT", "genes and own NT")) {
+    are_NT <- input_df[, "Target_flag"] %in% "Own NT control"
+  } else {
+    are_NT <- input_df[, "Is_NT_ctrl"]
+  }
+  are_gene <- !(is.na(input_df[, "Entrez_ID"]))
+
   if (!(plate_wise_NT_variance)) {
     var_vec <- mapply(function(x, y) var(c(x, y)), norm_rep1[are_NT], norm_rep2[are_NT])
   }
@@ -112,19 +159,22 @@ Calculate_SSMD <- function(input_df,
   results_vec_list <- tapply(seq_along(are_NT), plate_numbers_vec, function(x) {
 
     sub_are_NT <- are_NT[x]
+    sub_are_gene <- are_gene[x]
     rep1_vec <- norm_rep1[x]
     rep2_vec <- norm_rep2[x]
 
-    if (plate_wise_NT_variance) {
+    if (norm_method == "genes") {
+      var_vec <- mapply(function(x, y) var(c(x, y)), rep1_vec[sub_are_gene], rep2_vec[sub_are_gene])
+    } else {
       var_vec <- mapply(function(x, y) var(c(x, y)), rep1_vec[sub_are_NT], rep2_vec[sub_are_NT])
     }
-    median_NT_var <- median(var_vec)
+    var_s0 <- median(var_vec)
 
     results_vec <- vapply(seq_along(x), function(y) {
       delta_vec <- c(rep1_vec[[y]], rep2_vec[[y]])
       mean_diff <- mean(delta_vec)
       var_diff <- var(delta_vec)
-      divisor <- (0.5 * var_diff) + (0.5 * median_NT_var)
+      divisor <- (0.5 * var_diff) + (0.5 * var_s0)
       if (t_score) {
         divisor <- divisor / 2
       }

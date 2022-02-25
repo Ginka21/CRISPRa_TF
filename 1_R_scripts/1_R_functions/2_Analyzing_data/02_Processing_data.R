@@ -4,9 +4,9 @@
 
 # Define functions --------------------------------------------------------
 
-NormalizeWithNTControls <- function(use_df, correct_NT = FALSE) {
+NormalizeWithNTControls <- function(use_df, norm_method = "all NT") {
 
-  use_df[, "CellTiterGlo_foldNT"] <- NormPlates(use_df, "CellTiterGlo_raw", foldNT = TRUE, correct_NT = correct_NT)
+  use_df[, "CellTiterGlo_foldNT"] <- NormPlates(use_df, "CellTiterGlo_raw", foldNT = TRUE, norm_method = "all NT")
 
   are_after <- seq_len(ncol(use_df)) > which(names(use_df) == "CellTiterGlo_raw")
   use_columns <- unique(c(names(use_df)[!(are_after)], "CellTiterGlo_foldNT",
@@ -15,20 +15,20 @@ NormalizeWithNTControls <- function(use_df, correct_NT = FALSE) {
   use_df <- use_df[, use_columns]
 
   for (ri in paste0("_rep", 1:2)) {
-    use_df[, paste0("DeltaNT", ri)]             <- NormPlates(use_df, paste0("Raw", ri), correct_NT = correct_NT)
-    use_df[, paste0("FoldNT", ri)]              <- NormPlates(use_df, paste0("Raw", ri), foldNT = TRUE, correct_NT = correct_NT)
-    use_df[, paste0("PercActivation", ri)]      <- NormPlates(use_df, paste0("Raw", ri), percent_activation = TRUE, correct_NT = correct_NT)
+    use_df[, paste0("DeltaNT", ri)]             <- NormPlates(use_df, paste0("Raw", ri), norm_method = "all NT")
+    use_df[, paste0("FoldNT", ri)]              <- NormPlates(use_df, paste0("Raw", ri), foldNT = TRUE, norm_method = "all NT")
+    use_df[, paste0("PercActivation", ri)]      <- NormPlates(use_df, paste0("Raw", ri), percent_activation = TRUE, norm_method = "all NT")
     use_df[, paste0("Raw_log2", ri)]            <- log2(use_df[, paste0("Raw", ri)])
-    use_df[, paste0("Log2FC", ri)]              <- NormPlates(use_df, paste0("Raw", ri), take_log2 = TRUE, correct_NT = correct_NT)
-    use_df[, paste0("PercActivation_log2", ri)] <- NormPlates(use_df, paste0("Raw", ri), percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+    use_df[, paste0("Log2FC", ri)]              <- NormPlates(use_df, paste0("Raw", ri), take_log2 = TRUE, norm_method = "all NT")
+    use_df[, paste0("PercActivation_log2", ri)] <- NormPlates(use_df, paste0("Raw", ri), percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
 
     use_df[, paste0("Raw_Glo", ri)]                 <- use_df[, paste0("Raw", ri)] / use_df[, "CellTiterGlo_foldNT"]
-    use_df[, paste0("DeltaNT_Glo", ri)]             <- NormPlates(use_df, paste0("Raw_Glo", ri), correct_NT = correct_NT)
-    use_df[, paste0("FoldNT_Glo", ri)]              <- NormPlates(use_df, paste0("Raw_Glo", ri), foldNT = TRUE, correct_NT = correct_NT)
-    use_df[, paste0("PercActivation_Glo", ri)]      <- NormPlates(use_df, paste0("Raw_Glo", ri), percent_activation = TRUE, correct_NT = correct_NT)
+    use_df[, paste0("DeltaNT_Glo", ri)]             <- NormPlates(use_df, paste0("Raw_Glo", ri), norm_method = "all NT")
+    use_df[, paste0("FoldNT_Glo", ri)]              <- NormPlates(use_df, paste0("Raw_Glo", ri), foldNT = TRUE, norm_method = "all NT")
+    use_df[, paste0("PercActivation_Glo", ri)]      <- NormPlates(use_df, paste0("Raw_Glo", ri), percent_activation = TRUE, norm_method = "all NT")
     use_df[, paste0("Raw_log2_Glo", ri)]            <- log2(use_df[, paste0("Raw_Glo", ri)])
-    use_df[, paste0("Log2FC_Glo", ri)]              <- NormPlates(use_df, paste0("Raw_Glo", ri), take_log2 = TRUE, correct_NT = correct_NT)
-    use_df[, paste0("PercActivation_log2_Glo", ri)] <- NormPlates(use_df, paste0("Raw_Glo", ri), percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+    use_df[, paste0("Log2FC_Glo", ri)]              <- NormPlates(use_df, paste0("Raw_Glo", ri), take_log2 = TRUE, norm_method = "all NT")
+    use_df[, paste0("PercActivation_log2_Glo", ri)] <- NormPlates(use_df, paste0("Raw_Glo", ri), percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
   }
 
   stripped_columns <- sub("_rep[12]", "", names(use_df))
@@ -39,30 +39,30 @@ NormalizeWithNTControls <- function(use_df, correct_NT = FALSE) {
 
 
 
-RunSSMDStats <- function(use_df, correct_NT = FALSE) {
+RunSSMDStats <- function(use_df, norm_method = "all NT") {
 
   ## Calculate SSMD
-  use_df[, "SSMD_deltaNT"]      <- Calculate_SSMD(use_df, "Raw_rep1", correct_NT = correct_NT)
-  use_df[, "SSMD_act"]          <- Calculate_SSMD(use_df, "Raw_rep1", percent_activation = TRUE, correct_NT = correct_NT)
-  use_df[, "SSMD_log2"]         <- Calculate_SSMD(use_df, "Raw_rep1", take_log2 = TRUE, correct_NT = correct_NT)
-  use_df[, "SSMD_act_log2"]     <- Calculate_SSMD(use_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+  use_df[, "SSMD_deltaNT"]      <- Calculate_SSMD(use_df, "Raw_rep1", norm_method = "all NT")
+  use_df[, "SSMD_act"]          <- Calculate_SSMD(use_df, "Raw_rep1", percent_activation = TRUE, norm_method = "all NT")
+  use_df[, "SSMD_log2"]         <- Calculate_SSMD(use_df, "Raw_rep1", take_log2 = TRUE, norm_method = "all NT")
+  use_df[, "SSMD_act_log2"]     <- Calculate_SSMD(use_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
 
-  use_df[, "SSMD_deltaNT_Glo"]  <- Calculate_SSMD(use_df, "Raw_Glo_rep1", correct_NT = correct_NT)
-  use_df[, "SSMD_act_Glo"]      <- Calculate_SSMD(use_df, "Raw_Glo_rep1", percent_activation = TRUE, correct_NT = correct_NT)
-  use_df[, "SSMD_log2_Glo"]     <- Calculate_SSMD(use_df, "Raw_Glo_rep1", take_log2 = TRUE, correct_NT = correct_NT)
-  use_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD(use_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+  use_df[, "SSMD_deltaNT_Glo"]  <- Calculate_SSMD(use_df, "Raw_Glo_rep1", norm_method = "all NT")
+  use_df[, "SSMD_act_Glo"]      <- Calculate_SSMD(use_df, "Raw_Glo_rep1", percent_activation = TRUE, norm_method = "all NT")
+  use_df[, "SSMD_log2_Glo"]     <- Calculate_SSMD(use_df, "Raw_Glo_rep1", take_log2 = TRUE, norm_method = "all NT")
+  use_df[, "SSMD_act_log2_Glo"] <- Calculate_SSMD(use_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
 
 
   ## Calculate p value
-  use_df[, "p_value_deltaNT"]      <- Calculate_P(use_df, "Raw_rep1", correct_NT = correct_NT)
-  use_df[, "p_value_act"]          <- Calculate_P(use_df, "Raw_rep1", percent_activation = TRUE, correct_NT = correct_NT)
-  use_df[, "p_value_log2"]         <- Calculate_P(use_df, "Raw_rep1", take_log2 = TRUE, correct_NT = correct_NT)
-  use_df[, "p_value_act_log2"]     <- Calculate_P(use_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+  use_df[, "p_value_deltaNT"]      <- Calculate_P(use_df, "Raw_rep1", norm_method = "all NT")
+  use_df[, "p_value_act"]          <- Calculate_P(use_df, "Raw_rep1", percent_activation = TRUE, norm_method = "all NT")
+  use_df[, "p_value_log2"]         <- Calculate_P(use_df, "Raw_rep1", take_log2 = TRUE, norm_method = "all NT")
+  use_df[, "p_value_act_log2"]     <- Calculate_P(use_df, "Raw_rep1", percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
 
-  use_df[, "p_value_deltaNT_Glo"]  <- Calculate_P(use_df, "Raw_Glo_rep1", correct_NT = correct_NT)
-  use_df[, "p_value_act_Glo"]      <- Calculate_P(use_df, "Raw_Glo_rep1", percent_activation = TRUE, correct_NT = correct_NT)
-  use_df[, "p_value_log2_Glo"]     <- Calculate_P(use_df, "Raw_Glo_rep1", take_log2 = TRUE, correct_NT = correct_NT)
-  use_df[, "p_value_act_log2_Glo"] <- Calculate_P(use_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE, correct_NT = correct_NT)
+  use_df[, "p_value_deltaNT_Glo"]  <- Calculate_P(use_df, "Raw_Glo_rep1", norm_method = "all NT")
+  use_df[, "p_value_act_Glo"]      <- Calculate_P(use_df, "Raw_Glo_rep1", percent_activation = TRUE, norm_method = "all NT")
+  use_df[, "p_value_log2_Glo"]     <- Calculate_P(use_df, "Raw_Glo_rep1", take_log2 = TRUE, norm_method = "all NT")
+  use_df[, "p_value_act_log2_Glo"] <- Calculate_P(use_df, "Raw_Glo_rep1", percent_activation = TRUE, take_log2 = TRUE, norm_method = "all NT")
 
 
   ## Calculate hit strength
