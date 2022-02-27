@@ -95,73 +95,57 @@ PrP_df <- RunSSMDStats(PrP_df, norm_method = "genes")
 
 
 
-# Define hits -------------------------------------------------------------
 
-are_gene <- !(is.na(PrP_df[, "Entrez_ID"]))
-mean_logfc <- rowMeans(PrP_df[, c("Log2FC_rep1", "Log2FC_rep2")])
-
-meet_p_val_cutoff  <- (PrP_df[, "p_value_log2"] < 0.05)
-meet_log2fc_cutoff <- abs(mean_logfc) > log2(2)
-
-meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
-
-table(meet_criteria & are_gene)
-
-
-
-# Check chosen cut-offs against the distribution of NT controls -----------
-
-# stopifnot(!(any(meet_criteria & PrP_df[, "Is_NT_ctrl"])))
-
-sum(meet_p_val_cutoff[PrP_df[, "Is_NT_ctrl"]])
-sum(meet_log2fc_cutoff[PrP_df[, "Is_NT_ctrl"]])
-
-range(PrP_df[, "p_value_log2"][PrP_df[, "Is_NT_ctrl"]])
-NT_log2fc_range <- range(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
-NT_log2fc_range
-2^NT_log2fc_range
-
-mean_NT <- mean(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
-sd_NT <- sd(mean_logfc[PrP_df[, "Is_NT_ctrl"]])
-mean_NT + (c(-1, 1) * 3 * sd_NT)
 
 
 
 # Prepare hit list --------------------------------------------------------
 
-## Define additional columns that are useful for exporting the hit list
-reordered_df <- PrP_df
-reordered_df[, "Passes_cutoffs"]         <- meet_criteria
-reordered_df[, "Mean_logFC"]             <- mean_logfc
-reordered_df[, "p_value_log2_used"]      <- PrP_df[, "p_value_log2"]
-reordered_df[, "Hit_strength_log2_used"] <- PrP_df[, "Hit_strength_log2"]
+hits_df_list <- CreateHitLists(PrP_df,
+                               log2fc_column       = "Log2FC_rep1",
+                               p_value_column      = "p_value_log2",
+                               hit_strength_column = "Hit_strength_log2",
+                               p_value_cutoff      = 0.05,
+                               log2fc_cutoff       = log2(2)
+                               )
+
+Glo_hits_df_list <- CreateHitLists(PrP_df,
+                                   log2fc_column       = "Log2FC_Glo_rep1",
+                                   p_value_column      = "p_value_log2_Glo",
+                                   hit_strength_column = "Hit_strength_log2_Glo",
+                                   p_value_cutoff      = 0.05,
+                                   log2fc_cutoff       = log2(2)
+                                   )
 
 
-## Re-order columns to emphasize the data that was used for choosing hits,
-## and re-order genes by their rank.
-are_after <- seq_len(ncol(PrP_df)) > which(names(PrP_df) == "Is_pos_ctrl")
-use_columns <- unique(c(names(PrP_df)[!(are_after)],
-                        "Passes_cutoffs", "Mean_logFC", "p_value_log2_used",
-                        "Hit_strength_log2_used",
-                        names(PrP_df)[are_after]
-                        ))
 
-new_order <- order(meet_criteria,
-                   abs(PrP_df[, "Hit_strength_log2"]),
-                   decreasing = TRUE
-                   )
-reordered_df <- reordered_df[new_order, use_columns]
+# Examine criteria for defining hits --------------------------------------
 
-are_gene <- !(is.na(reordered_df[, "Entrez_ID"]))
-are_selected <- are_gene | reordered_df[, "Is_NT_ctrl"]
-reordered_df <- reordered_df[are_selected, ]
-row.names(reordered_df) <- NULL
+use_df <- hits_df_list[["original_df"]]
+are_gene <- !(is.na(use_df[, "Entrez_ID"]))
+
+meet_p_val_cutoff  <- (use_df[, "p_value_log2"] < 0.05)
+meet_log2fc_cutoff <- abs(use_df[, "Mean_log2FC"]) > log2(2)
+
+meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
+table(meet_criteria & are_gene)
 
 
-## Create a data frame containing only hit genes
-are_hit <- (!(is.na(reordered_df[, "Entrez_ID"]))) & reordered_df[, "Passes_cutoffs"]
-hits_df <- reordered_df[are_hit, ]
-row.names(hits_df) <- NULL
+
+
+# Check chosen cut-offs against the distribution of NT controls -----------
+
+sum(meet_p_val_cutoff[use_df[, "Is_NT_ctrl"]])
+sum(meet_log2fc_cutoff[use_df[, "Is_NT_ctrl"]])
+
+range(use_df[, "p_value_log2"][use_df[, "Is_NT_ctrl"]])
+NT_log2fc_range <- range(use_df[, "Mean_log2FC"][use_df[, "Is_NT_ctrl"]])
+NT_log2fc_range
+2^NT_log2fc_range
+
+mean_NT <- mean(use_df[, "Mean_log2FC"][use_df[, "Is_NT_ctrl"]])
+sd_NT <- sd(use_df[, "Mean_log2FC"][use_df[, "Is_NT_ctrl"]])
+mean_NT + (c(-1, 1) * 3 * sd_NT)
 
 
 
@@ -173,13 +157,24 @@ write.csv(PrP_df,
           )
 
 exclude_columns <- c("Well_coords_384", grep("_96", names(PrP_df), fixed = TRUE, value = TRUE))
-write.csv(reordered_df[, !(names(reordered_df) %in% exclude_columns)],
-          file = file.path(output_dir, "Tables", "PrP_genes_and_NT_ordered.csv"),
+export_columns <- setdiff(names(hits_df_list[["reordered_df"]]),  exclude_columns)
+write.csv(hits_df_list[["reordered_df"]][, export_columns],
+          file = file.path(output_dir, "Tables", "PrP_no_Glo_genes_and_NT_ordered.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 
-write.csv(hits_df[, !(names(hits_df) %in% exclude_columns)],
-          file = file.path(output_dir, "Tables", "PrP_hits_only.csv"),
+write.csv(hits_df_list[["hits_df"]][, export_columns],
+          file = file.path(output_dir, "Tables", "PrP_no_Glo_hits_only.csv"),
+          row.names = FALSE, quote = FALSE, na = ""
+          )
+
+write.csv(Glo_hits_df_list[["reordered_df"]][, export_columns],
+          file = file.path(output_dir, "Tables", "PrP_Glo_normalized_genes_and_NT_ordered.csv"),
+          row.names = FALSE, quote = FALSE, na = ""
+          )
+
+write.csv(Glo_hits_df_list[["hits_df"]][, export_columns],
+          file = file.path(output_dir, "Tables", "PrP_Glo_normalized_hits_only.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 

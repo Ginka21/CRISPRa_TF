@@ -83,4 +83,71 @@ RunSSMDStats <- function(use_df, norm_method = "all NT") {
 
 
 
+CreateHitLists <- function(input_df,
+                           log2fc_column,
+                           p_value_column,
+                           hit_strength_column,
+                           p_value_cutoff = 0.05,
+                           log2fc_cutoff = log2(2)
+                           ) {
+
+  ## Establish criteria for defining hits
+  are_gene <- !(is.na(input_df[, "Entrez_ID"]))
+  if (grepl("_rep[0-9]+$", log2fc_column)) {
+    if (!(grepl("_rep1", log2fc_column, fixed = TRUE))) {
+      stop("Unexpected value for 'log2fc_column!")
+    }
+    rep2_column <- sub("_rep1", "_rep2", log2fc_column, fixed = TRUE)
+    log2fc_vec <- rowMeans(input_df[, c(log2fc_column, rep2_column)])
+  } else {
+    log2fc_vec <- input_df[, log2fc_column]
+  }
+
+  meet_p_val_cutoff  <- (input_df[, p_value_column] < p_value_cutoff)
+  meet_log2fc_cutoff <- abs(log2fc_vec) > log2fc_cutoff
+
+  meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
+
+  ## Define additional columns that are useful for exporting the hit list
+  input_df[, "Passes_cutoffs"]    <- meet_criteria
+  input_df[, "Mean_log2FC"]       <- log2fc_vec
+  input_df[, "p_value_used"]      <- input_df[, p_value_column]
+  input_df[, "Hit_strength_used"] <- input_df[, hit_strength_column]
+
+
+  ## Re-order columns to emphasize the data that was used for choosing hits,
+  ## and re-order genes by their rank.
+  are_after <- seq_len(ncol(input_df)) > which(names(input_df) == "Is_pos_ctrl")
+  use_columns <- unique(c(names(input_df)[!(are_after)],
+                          "Passes_cutoffs", "Mean_log2FC", "p_value_used",
+                          "Hit_strength_used",
+                          names(input_df)[are_after]
+                          ))
+  input_df <- input_df[, use_columns]
+
+  new_order <- order(meet_criteria,
+                     abs(input_df[, hit_strength_column]),
+                     decreasing = TRUE
+                     )
+  reordered_df <- input_df[new_order, ]
+
+  are_gene <- !(is.na(reordered_df[, "Entrez_ID"]))
+  are_selected <- are_gene | reordered_df[, "Is_NT_ctrl"]
+  reordered_df <- reordered_df[are_selected, ]
+  row.names(reordered_df) <- NULL
+
+
+  ## Create a data frame containing only hit genes
+  are_hit <- (!(is.na(reordered_df[, "Entrez_ID"]))) & reordered_df[, "Passes_cutoffs"]
+  hits_df <- reordered_df[are_hit, ]
+  row.names(hits_df) <- NULL
+
+  results_list <- list(
+    "original_df"  = input_df,
+    "reordered_df" = reordered_df,
+    "hits_df"      = hits_df
+  )
+  return(results_list)
+}
+
 
