@@ -91,13 +91,12 @@ NormPlates <- function(input_df,
   results_vec_list <- tapply(seq_along(numeric_vec), plate_numbers_vec, function(x) {
 
     sub_vec <- numeric_vec[x]
-    sub_are_NT <- are_NT[x]
-    sub_are_pos <- are_pos[x]
-    sub_are_gene <- are_gene[x]
 
     if (norm_with_genes) {
+      sub_are_gene <- are_gene[x]
       use_median <- median(sub_vec[sub_are_gene])
     } else {
+      sub_are_NT <- are_NT[x]
       use_median <- median(sub_vec[sub_are_NT])
       if (norm_method == "own NT, with factor") {
         use_median <- use_median * use_NT_factor
@@ -109,6 +108,7 @@ NormPlates <- function(input_df,
     } else {
       sub_results <- sub_vec - use_median
       if (percent_activation) {
+        sub_are_pos <- are_pos[x]
         if (norm_with_genes) {
           use_median <- median(sub_results[sub_are_gene])
         } else {
