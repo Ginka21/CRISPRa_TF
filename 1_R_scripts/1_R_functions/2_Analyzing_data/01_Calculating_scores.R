@@ -11,7 +11,6 @@ normalization_methods <- c("all NT",              # The standard option. Uses al
                            "genes",               # Normalize by the median of genes on that plate (assuming that the average gene shows no perturbation effect, similar to a good non-targeting control).
                            "genes and all NT",    # Normalize by the median of genes. Use non-targeting controls only as a component of the estimation of the standard deviation.
                            "genes and own NT"     # Normalize by the median of genes. Use in-house non-targeting controls only as a component of the estimation of the standard deviation.
-
                            )
 
 
