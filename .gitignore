@@ -6,17 +6,5 @@
 CRISPRa_TF.Rproj
 
 3_R_objects
-4_output/Plate_layout
-4_output/GBA/Figures
-4_output/PrP/Figures
-
-4_output/GBA/Tables/GBA_complete.csv
-4_output/GBA/Tables/GBA_genes_and_NT_ordered.csv
-4_output/GBA/Tables/GBA_genes_and_NT_ordered.xlsx
-
-4_output/PrP/Tables/PrP_complete.csv
-4_output/PrP/Tables/PrP_genes_and_NT_ordered.csv
-4_output/PrP/Tables/PrP_genes_and_NT_ordered.xlsx
-
-
+4_output
 
