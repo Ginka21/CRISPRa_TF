@@ -5,11 +5,14 @@
 
 library("readxl")
 
+project_dir <- "~/R_projects/CRISPRa_TF"
+misc_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "4_Misc_functions")
+source(file.path(misc_functions_dir, "01_Converting_plate_layouts.R"))
+
 
 
 # Define folder paths -----------------------------------------------------
 
-project_dir       <- "~/R_projects/CRISPRa_TF"
 input_dir         <- file.path(project_dir, "2_input")
 general_rdata_dir <- file.path(project_dir, "3_R_objects", "1_General")
 output_dir        <- file.path(project_dir,"4_output")
@@ -157,7 +160,6 @@ PlateMappings <- function() {
       ),
       stringsAsFactors = FALSE
     )
-
   })
 
   results_df <- do.call(rbind.data.frame, c(colors_df_list, list(stringsAsFactors = FALSE, make.row.names = FALSE)))
@@ -406,7 +408,6 @@ integrated_df[integrated_df[, "Target_ID_stripped"] %in% "NFE2L2", "Target_ID_st
 
 
 
-
 # Create analogous TSS IDs for the 4sg library ----------------------------
 
 are_to_use <- (!(CRISPRa_4sg_df[, "Is_obsolete"] %in% "Yes")) &
@@ -429,6 +430,16 @@ for (entrez_ID in names(TSS_splits)[num_TSSs_vec >= 2]) {
 IDs_4sg_vec <- paste0(use_4sg_df[["Gene_symbol"]],
                       ifelse(is.na(TSS_vec), "", paste0("_", TSS_vec))
                       )
+
+
+
+# Add plate and well numbers ----------------------------------------------
+
+plate_string_splits <- strsplit(use_4sg_df[, "Plate_string"], "_", fixed = TRUE)
+plates_vec <- sapply(plate_string_splits, "[[", 2)
+plates_vec <- paste0("HA_", sub("tf", "", plates_vec, fixed = TRUE))
+use_4sg_df[, "Library_plate"] <- plates_vec
+use_4sg_df[, "Library_coords"] <- ConvertWellNumbers(use_4sg_df[, "Well_number"])
 
 
 
@@ -473,7 +484,9 @@ integrated_df[grepl("scrambled", integrated_df[, "Target_ID"], ignore.case = TRU
 
 matches_vec <- match(integrated_df[, "Target_ID_stripped"], IDs_4sg_vec)
 
-use_columns <- c("Gene_symbol", "Entrez_ID", "TSS_ID", "Is_main_TSS")
+use_columns <- c("Gene_symbol", "Entrez_ID", "TSS_ID", "Is_main_TSS",
+                 "Library_plate", "Library_coords"
+                 )
 
 add_df <- use_4sg_df[matches_vec, use_columns]
 
@@ -486,6 +499,7 @@ layout_df <- data.frame(integrated_df[, first_columns],
                         row.names = NULL,
                         stringsAsFactors = FALSE
                         )
+
 
 
 # Define positive and negative controls -----------------------------------
