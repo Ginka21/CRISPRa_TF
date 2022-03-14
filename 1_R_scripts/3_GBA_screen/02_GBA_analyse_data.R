@@ -3,10 +3,10 @@
 
 # Load packages and source code -------------------------------------------
 
-project_dir           <- "~/R_projects/CRISPRa_TF"
-general_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "2_Analyzing_data")
-source(file.path(general_functions_dir, "01_Calculating_scores.R"))
-source(file.path(general_functions_dir, "02_Processing_data.R"))
+project_dir            <- "~/R_projects/CRISPRa_TF"
+analysis_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "2_Analyzing_data")
+source(file.path(analysis_functions_dir, "01_Calculating_scores.R"))
+source(file.path(analysis_functions_dir, "02_Processing_data.R"))
 
 
 

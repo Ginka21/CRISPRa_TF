@@ -3,10 +3,10 @@
 
 # Load packages and source code -------------------------------------------
 
-project_dir           <- "~/R_projects/CRISPRa_TF"
-general_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "2_Analyzing_data")
-source(file.path(general_functions_dir, "01_Calculating_scores.R"))
-source(file.path(general_functions_dir, "02_Processing_data.R"))
+project_dir <- "~/R_projects/CRISPRa_TF"
+analysis_functions_dir <- file.path(project_dir, "1_R_scripts", "1_R_functions", "2_Analyzing_data")
+source(file.path(analysis_functions_dir, "01_Calculating_scores.R"))
+source(file.path(analysis_functions_dir, "02_Processing_data.R"))
 
 
 
@@ -96,9 +96,6 @@ PrP_df <- RunSSMDStats(PrP_df, norm_method = "genes")
 
 
 
-
-
-
 # Prepare hit list --------------------------------------------------------
 
 hits_df_list <- CreateHitLists(PrP_df,
@@ -129,7 +126,6 @@ meet_log2fc_cutoff <- abs(use_df[, "Mean_log2FC"]) > log2(2)
 
 meet_criteria <- meet_p_val_cutoff & meet_log2fc_cutoff
 table(meet_criteria & are_gene)
-
 
 
 
