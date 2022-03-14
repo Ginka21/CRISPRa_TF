@@ -35,9 +35,9 @@ OrderFileNames <- function(short_file_names) {
 }
 
 ReadInPrPData <- function(sub_folder, skip_lines) {
-  rounds_folders <- list.files(file.path(raw_data_dir, sub_folder), full.names = TRUE)
+  rounds_folders <- list.files(path.expand(file.path(raw_data_dir, sub_folder)), full.names = TRUE)
   paths_vec <- unlist(lapply(rounds_folders, function(x) {
-    grep("\\.csv$", list.files(x, full.names = TRUE), value = TRUE)
+    grep("\\.csv$", list.files(path.expand(x), full.names = TRUE), value = TRUE)
   }))
   df_list <- lapply(paths_vec, read.csv, skip = skip_lines, stringsAsFactors = FALSE)
   names(df_list) <- TidyFileNames(paths_vec)

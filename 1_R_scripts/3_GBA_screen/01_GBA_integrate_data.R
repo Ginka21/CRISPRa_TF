@@ -35,7 +35,7 @@ load(file.path(general_rdata_dir, "01_convert_plate_layouts.RData"))
 
 # Read in data ------------------------------------------------------------
 
-raw_files_vec <- list.files(raw_data_dir)
+raw_files_vec <- list.files(path.expand(raw_data_dir))
 are_luminescence <- grepl("Luminescence", raw_files_vec, fixed = TRUE)
 GBA_files_vec <- raw_files_vec[!are_luminescence]
 GBA_files_vec <- SortByRoman(GBA_files_vec)
