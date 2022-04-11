@@ -165,6 +165,16 @@ dev.off()
 
 
 
+pdf(file.path(selected_volcanoes_dir, "4) Volcano plot - Glo-normalized - genes shown.pdf"),
+    width = base_width + 0.8, height = base_height#, units = "in", res = 600
+    )
+VolcanoFlashPlot(PrP_df, "Log2FC_Glo_rep1", "p_value_log2_Glo",
+                 show_title = Embolden(FormatPlotMath("Volcano plot (normalized to CellTiter-Glo)")),
+                 label_points = TRUE, indicate_areas = TRUE, indicate_lines = TRUE,
+                 indicate_log2FCs = log2(2), tiny_labels = TRUE
+                 )
+dev.off()
+
 
 
 
