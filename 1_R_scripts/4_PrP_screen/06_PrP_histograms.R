@@ -17,6 +17,7 @@ source(file.path(functions_dir, "3_Visualizing_data", "04_Histograms.R"))
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
 output_dir <- file.path(project_dir, "4_output", "PrP")
+manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
 
 
 
@@ -62,6 +63,37 @@ ThreeHistograms(PrP_df, "Log2FC_rep1", gene_border_color = "gray30")
 ThreeHistograms(PrP_df, "CellTiterGlo_raw")
 ThreeHistograms(PrP_df, "CellTiterGlo_foldNT")
 ThreeHistograms(PrP_df, "p_value_deltaNT")
+
+
+
+
+# Export plots for the manuscript -----------------------------------------
+
+old_controls_labels <- controls_labels
+
+controls_labels <- list(
+  "Gene" = c("Genes in", "CRISPRa library"),
+  "NT"   = c("Non-targeting", "controls"),
+  "Pos"  = c("Positive controls", expression("(" * italic("PRNP") * " gene)"))
+)
+
+manuscript_width <- 3.4
+manuscript_height <- 2.4
+manuscript_mai <- c(0.5, 0.5, 0.2, 0.2)
+
+pdf(file = file.path(manuscript_dir, "Figure 6D - histogram.pdf"),
+    width = manuscript_width, height = manuscript_height
+    )
+par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
+ThreeHistograms(PrP_df, "FoldNT_rep1", use_mai = manuscript_mai,
+                legend_x_start = -7, legend_y_mid = 0.65,
+                use_mgp = c(2.5, 0.65, 0),
+                xlab_line = 2.3,
+                x_axis_label = FormatPlotMath("PrPc levels (normalized by plate medians)")
+                )
+dev.off()
+
+controls_labels <- old_controls_labels
 
 
 

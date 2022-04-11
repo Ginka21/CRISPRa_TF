@@ -16,7 +16,9 @@ PlotPlateQualities <- function(rep1_vec,
                                quality_ranges = list(c(0.5, 1),
                                                      c(0, 0.5),
                                                      c(-Inf, 0)
-                                                     )
+                                                     ),
+                               use_mai = c(0.7, 0.82, 0.5, 0.42),
+                               line_adjust = 0
                                ) {
 
   stopifnot(length(rep1_vec) == length(rep2_vec))
@@ -40,7 +42,7 @@ PlotPlateQualities <- function(rep1_vec,
   }
 
   ## Set up the plot region
-  old_mai <- par("mai" = c(0.7, 0.82, 0.5, 0.42))
+  old_mai <- par("mai" = use_mai)
   plot(1,
        xlim = x_limits,
        ylim = y_limits,
@@ -50,16 +52,16 @@ PlotPlateQualities <- function(rep1_vec,
        axes = FALSE,
        ann  = FALSE
        )
-  axis(2, las = 1, mgp = c(3, 0.75, 0), tcl = -0.45)
-  mtext(y_axis_label, side = 2, line = 2.8)
+  axis(2, las = 1, mgp = c(3, 0.75, 0), tcl = -0.45, lwd = par("lwd"))
+  mtext(y_axis_label, side = 2, line = 2.8 + line_adjust, cex = par("cex"))
 
   mtext(as.character(as.roman(seq_along(x_mids))),
         at = x_mids,
         side = 1,
         line = 0.3,
-        cex = 0.9
+        cex = 0.9 * par("cex")
         )
-  mtext("Plate number", side = 1, line = 1.8)
+  mtext("Plate number", side = 1, line = 1.8 + line_adjust, cex = par("cex"))
 
 
   ## Indicate specific y axis ranges with colors
@@ -96,7 +98,7 @@ PlotPlateQualities <- function(rep1_vec,
   abline(v = seq_len(length(x_mids) + 1) - 0.5,
          col = "gray70", lwd = 0.5
          )
-  box()
+  box(lwd = par("lwd"))
 
   ## Plot the quality control metrics
   points(x   = x_positions,
@@ -112,7 +114,7 @@ PlotPlateQualities <- function(rep1_vec,
 }
 
 
-GetQualityMetric <- function(input_df, UseFunction, filter_NT = FALSE) {
+GetQualityMetric <- function(input_df, UseFunction, filter_NT = FALSE, ...) {
   plate_numbers_vec <- as.integer(as.roman(input_df[, "Plate_number_384"]))
   df_list <- split(input_df, plate_numbers_vec)
   rep1_vec <- vapply(df_list, UseFunction, use_column = "Raw_rep1", filter_NT = filter_NT, numeric(1))
@@ -122,20 +124,22 @@ GetQualityMetric <- function(input_df, UseFunction, filter_NT = FALSE) {
 }
 
 
-PlotZPrimes <- function(input_df, filter_NT = FALSE) {
+PlotZPrimes <- function(input_df, filter_NT = FALSE, ...) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_Z_Prime, filter_NT = filter_NT)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
-                     y_limits_include = c(0, 1, -0.2), y_axis_label = "Z' factor"
+                     y_limits_include = c(0, 1, -0.2), y_axis_label = "Z' factor",
+                     ...
                      )
 }
 
 
-PlotSSMDControls <- function(input_df, filter_NT = FALSE) {
+PlotSSMDControls <- function(input_df, filter_NT = FALSE, y_limits_include = c(0, 7), ...) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls, filter_NT = filter_NT)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
-                     y_limits_include = c(0, 7),
+                     y_limits_include = y_limits_include,
                      y_axis_label = "SSMD (pos./neg. controls)",
-                     quality_ranges = list(c(5, 7), c(3, 5), c(-Inf, 3))
+                     quality_ranges = list(c(5, 7), c(3, 5), c(-Inf, 3)),
+                     ...
                      )
 }
 

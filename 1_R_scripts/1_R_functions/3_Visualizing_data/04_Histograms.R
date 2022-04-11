@@ -37,10 +37,15 @@ PlotHistResults <- function(hist_results, fill_color, border_color) {
 
 ThreeHistograms <- function(input_df,
                             use_column,
-                            x_axis_label = NULL,
+                            x_axis_label      = NULL,
                             gene_border_color = "gray55",
-                            gene_fill_color = "black",
-                            gene_fill_alpha = 0.35
+                            gene_fill_color   = "black",
+                            gene_fill_alpha   = 0.35,
+                            use_mai           = c(1.0, 0.92, 0.76, 1.5),
+                            legend_x_start    = 0.75,
+                            legend_y_mid      = 0.5,
+                            use_mgp           = c(2.7, 0.65, 0),
+                            xlab_line         = use_mgp[[1]]
                             ) {
 
   if (is.null(x_axis_label)) {
@@ -96,24 +101,24 @@ ThreeHistograms <- function(input_df,
     brewer.pal(5, "Reds")[[5]]   # positive control
   )
 
-  use_mgp    <- c(2.7, 0.65, 0)
-  use_tcl    <- -0.45
+  use_tcl <- -0.45
 
   ## Prepare the plot region
-  old_mar    <- par(mar = c(5, 4.6, 3.8, 7.5))
+  old_mai <- par(mai = use_mai)
   plot(1,
-       xlim   = x_limits,
-       ylim   = y_limits,
-       xaxs   = "i",
-       yaxs   = "i",
-       axes   = FALSE,
-       xlab   = x_axis_label,
-       ylab   = "Count",
-       mgp    = use_mgp,
-       type   = "n"
+       xlim = x_limits,
+       ylim = y_limits,
+       xaxs = "i",
+       yaxs = "i",
+       axes = FALSE,
+       xlab = "",
+       ylab = "Count",
+       mgp  = use_mgp,
+       type = "n"
        )
-  axis(1,          mgp = use_mgp, tcl = use_tcl)
-  axis(2, las = 2, mgp = use_mgp, tcl = use_tcl)
+  axis(1, mgp = use_mgp, tcl = use_tcl, lwd = par("lwd"))
+  mtext(x_axis_label, side = 1, line = xlab_line, cex = par("cex"))
+  axis(2, las = 2, mgp = use_mgp, tcl = use_tcl, lwd = par("lwd"))
   if (use_column == "CellTiterGlo_foldNT") {
     abline(v = 1, lty = "dashed", col = "gray40")
   }
@@ -139,10 +144,11 @@ ThreeHistograms <- function(input_df,
                  use_colors     = fill_colors,
                  border_colors  = border_colors,
                  use_point_size = 1.4,
-                 lines_x_start  = 0.75
+                 lines_x_start  = legend_x_start,
+                 y_mid          = legend_y_mid
                  )
 
-  par(old_mar)
+  par(old_mai)
   return(invisible(NULL))
 }
 

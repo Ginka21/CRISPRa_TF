@@ -18,6 +18,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "01_Plate_level_QC.R"))
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
 output_dir <- file.path(project_dir, "4_output", "PrP")
+manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
 
 
 
@@ -60,5 +61,33 @@ png(filename = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
     )
 PlotSSMDControls(PrP_df, filter_NT = TRUE)
 dev.off()
+
+
+
+# Export plots for the manuscript -----------------------------------------
+
+manuscript_width <- 3.1
+manuscript_height <- 1.95
+manuscript_mai <- c(0.4, 0.5, 0.1, 0.15)
+
+pdf(file = file.path(manuscript_dir, "Figure 6B - Z-prime.pdf"),
+    width = manuscript_width, height = manuscript_height
+    )
+par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
+PlotZPrimes(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
+            line_adjust = -0.3
+            )
+dev.off()
+
+
+pdf(file = file.path(manuscript_dir, "Figure 6C - controls SSMD.pdf"),
+    width = manuscript_width, height = manuscript_height
+    )
+par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
+PlotSSMDControls(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
+                 line_adjust = -0.3, y_limits_include = c(0, 12)
+                 )
+dev.off()
+
 
 

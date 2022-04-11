@@ -17,6 +17,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "03_Replicate_scatter_plo
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
 output_dir <- file.path(project_dir, "4_output", "PrP")
+manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
 
 
 
@@ -37,6 +38,37 @@ AdjustLabels()
 ReplicateScatter(PrP_df, "Raw_rep1")
 ReplicateScatter(PrP_df, "PercActivation_log2_Glo_rep1")
 ReplicateScatter(PrP_df, "Log2FC_rep1", same_scale = FALSE)
+
+
+
+
+# Export plots for the manuscript -----------------------------------------
+
+manuscript_width <- 2.4
+manuscript_height <- 2.4
+manuscript_mai <- c(0.5, 0.5, 0.2, 0.2)
+
+input_df <- PrP_df
+are_gene <- !(is.na(input_df[, "Entrez_ID"]))
+
+x_vec <- PrP_df[, "Log2FC_rep1"][are_gene]
+y_vec <- PrP_df[, "Log2FC_rep2"][are_gene]
+
+axis_limits <- range(c(x_vec, y_vec))
+
+pdf(file = file.path(manuscript_dir, "Figure 6E - scatter plot.pdf"),
+    width = manuscript_width, height = manuscript_height
+    )
+par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
+ScatterPlot(x_vec,
+            y_vec,
+            top_label = "",
+            use_limits = axis_limits,
+            use_mgp = c(2.2, 0.55, 0), xlab_line = 2.12,
+            point_size = 0.8
+            )
+dev.off()
+
 
 
 

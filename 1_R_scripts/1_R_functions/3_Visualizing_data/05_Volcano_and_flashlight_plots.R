@@ -87,7 +87,9 @@ VolcanoFlashPlot <- function(input_df,
                              indicate_areas    = FALSE,
                              indicate_lines    = FALSE,
                              label_points      = FALSE,
-                             tiny_labels       = FALSE
+                             tiny_labels       = FALSE,
+                             use_mai           = NULL,
+                             use_mgp           = c(2.8, 0.7, 0)
                              ) {
 
 
@@ -114,9 +116,9 @@ VolcanoFlashPlot <- function(input_df,
   }
 
   ## Prepare data subsets
-  are_NT        <- input_df[, "Is_NT_ctrl"]
-  are_posctrl   <- input_df[, "Is_pos_ctrl"]
-  are_gene      <- !(is.na(input_df[, "Entrez_ID"]))
+  are_NT      <- input_df[, "Is_NT_ctrl"]
+  are_posctrl <- input_df[, "Is_pos_ctrl"]
+  are_gene    <- !(is.na(input_df[, "Entrez_ID"]))
   if ("Custom_color" %in% names(input_df)) {
     are_custom_color <- input_df[, "Custom_color"]
   } else {
@@ -129,11 +131,14 @@ VolcanoFlashPlot <- function(input_df,
   }
 
   ## Prepare graphical parameters
-  use_margin <- c(4.25, 4, 3.5, 7.5)
-  if (show_only_genes) {
-    use_margin[[4]] <- 3.5
+  if (is.null(use_mai)) {
+    use_mai <- c(0.85, 0.8, 0.7, 1.5)
+    if (show_only_genes) {
+      use_mai[[4]] <- 0.7
+    }
   }
-  old_mar <- par(mar = use_margin)
+
+  old_mar <- par(mai = use_mai)
 
   ## Set up the plot region
   plot(1,
@@ -141,12 +146,14 @@ VolcanoFlashPlot <- function(input_df,
        ylim = range(c(0, y_value_vec[are_valid])),
        xlab = x_label,
        ylab = y_label,
-       las  = 1,
-       mgp  = c(2.8, 0.7, 0),
+       mgp  = use_mgp,
        tcl  = -0.45,
        type = "n",
-       bty  = "n"
+       bty  = "n",
+       axes = FALSE
        )
+  axis(1, mgp = use_mgp, lwd = par("lwd"))
+  axis(2, mgp = use_mgp, lwd = par("lwd"), las = 1)
 
   ## Draw indicator lines
   abline(h = 0, lty = "dotted", col = "grey50")
@@ -182,7 +189,6 @@ VolcanoFlashPlot <- function(input_df,
          )
   }
   box()
-
 
 
   ## Draw the points of the volcano/flashlight plot

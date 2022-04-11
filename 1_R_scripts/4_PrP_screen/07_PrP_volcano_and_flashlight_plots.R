@@ -16,6 +16,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "05_Volcano_and_flashligh
 
 r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
 output_dir <- file.path(project_dir, "4_output", "PrP")
+manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
 
 
 
@@ -25,11 +26,47 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 
 
+
+# Export plots for the manuscript -----------------------------------------
+
+old_controls_colors <- controls_colors
+controls_colors <- controls_colors[c(3, 1, 2)]
+
+controls_labels <- list(
+  "Gene" = c("Genes in ", "CRISPRa", "library"),
+  "NT"   = c("Non-targeting", "controls"),
+  "Pos"  = c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
+)
+
+manuscript_width <- 3.8
+manuscript_height <- 3
+manuscript_mai <- c(0.5, 0.5, 0.2, 1)
+
+pdf(file = file.path(manuscript_dir, "Figure 6F - volcano plot.pdf"),
+    width = manuscript_width, height = manuscript_height
+    )
+par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
+VolcanoFlashPlot(PrP_df, "Log2FC_rep1", "p_value_log2",
+                 label_points = FALSE, indicate_areas = TRUE,
+                 indicate_lines = TRUE,
+                 indicate_log2FCs = log2(2), indicate_p_values = 0.05,
+                 use_mai = manuscript_mai, use_mgp = c(2.4, 0.7, 0)
+                 )
+dev.off()
+
+controls_colors <- old_controls_colors
+
+
+
+
+
 # Differentiate between own and Tubingen NT controls ----------------------
 
 mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
 are_own_NT <- PrP_df[, "Target_flag"] %in% "Own NT control"
 are_Tubingen_NT <- PrP_df[, "Is_NT_ctrl"] & !(are_own_NT)
+
+are_NT_ctrl <- PrP_df[, "Is_NT_ctrl"]
 
 PrP_df[, "Is_NT_ctrl"] <- are_Tubingen_NT
 PrP_df[, "Custom_color"] <- are_own_NT
@@ -125,6 +162,9 @@ VolcanoFlashPlot(PrP_df, "Log2FC_Glo_rep1", "p_value_log2_Glo",
                  indicate_log2FCs = log2(2)
                  )
 dev.off()
+
+
+
 
 
 
