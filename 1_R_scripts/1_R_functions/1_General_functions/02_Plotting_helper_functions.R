@@ -111,14 +111,14 @@ DrawSideLegend <- function(labels_list,
                            border_colors = NULL,
                            use_pch = 16,
                            use_point_size = 1.2,
-                           lines_x_start = 0.75
+                           lines_x_start = 0.75,
+                           y_mid = 0.5
                            ) {
 
   ## Perform checks
   stopifnot(identical(length(labels_list), length(use_colors)))
 
   ## Prepare for drawing the legend
-  y_mid <- 0.5
   small_gap <- diff(grconvertY(c(0, 1.25), from = "char", to = "npc"))
   medium_gap <- small_gap * 1.25
   large_gap <- small_gap * 1.75
