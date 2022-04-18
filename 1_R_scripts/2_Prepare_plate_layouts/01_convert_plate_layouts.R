@@ -62,7 +62,7 @@ converted_96_mat_list <- lapply(long_96_mat_list, function(x) {
   return(result_mat)
 })
 
-stopifnot(identical(layout_96_mat_list[[1]], converted_96_mat_list[[1]]))
+stopifnot(identical(layout_96_mat_list, converted_96_mat_list))
 
 
 
