@@ -34,6 +34,9 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 PlotZPrimes(PrP_df, filter_NT = TRUE)
 PlotSSMDControls(PrP_df, filter_NT = TRUE)
 
+PlotZPrimes(PrP_df, reorder_plates = TRUE)
+PlotSSMDControls(PrP_df, reorder_plates = TRUE)
+
 
 
 # Export plots as PDF or PNG files ----------------------------------------

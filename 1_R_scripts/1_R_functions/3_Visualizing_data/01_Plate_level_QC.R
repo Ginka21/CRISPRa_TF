@@ -12,16 +12,27 @@ library("RColorBrewer")
 PlotPlateQualities <- function(rep1_vec,
                                rep2_vec,
                                y_limits_include = NULL,
-                               y_axis_label = "",
-                               quality_ranges = list(c(0.5, 1),
-                                                     c(0, 0.5),
-                                                     c(-Inf, 0)
-                                                     ),
-                               use_mai = c(0.7, 0.82, 0.5, 0.42),
-                               line_adjust = 0
+                               y_axis_label     = "",
+                               quality_ranges   = list(c(0.5, 1),
+                                                       c(0, 0.5),
+                                                       c(-Inf, 0)
+                                                       ),
+                               use_mai          = c(0.7, 0.82, 0.5, 0.42),
+                               line_adjust      = 0,
+                               reorder_plates   = FALSE
                                ) {
 
   stopifnot(length(rep1_vec) == length(rep2_vec))
+
+  plate_names <- as.character(as.roman(seq_along(rep1_vec)))
+  if (reorder_plates) {
+    average_qualities <- rowMeans(cbind(rep1_vec, rep2_vec))
+    plates_order <- order(average_qualities)
+    rep1_vec <- rep1_vec[plates_order]
+    rep2_vec <- rep2_vec[plates_order]
+    plate_names <- plate_names[plates_order]
+  }
+
   data_vec <- c(rep1_vec, rep2_vec)
 
   ## Prepare x axis positions
@@ -55,11 +66,11 @@ PlotPlateQualities <- function(rep1_vec,
   axis(2, las = 1, mgp = c(3, 0.75, 0), tcl = -0.45, lwd = par("lwd"))
   mtext(y_axis_label, side = 2, line = 2.8 + line_adjust, cex = par("cex"))
 
-  mtext(as.character(as.roman(seq_along(x_mids))),
-        at = x_mids,
+  mtext(plate_names,
+        at   = x_mids,
         side = 1,
         line = 0.3,
-        cex = 0.9 * par("cex")
+        cex  = 0.9 * par("cex")
         )
   mtext("Plate number", side = 1, line = 1.8 + line_adjust, cex = par("cex"))
 
