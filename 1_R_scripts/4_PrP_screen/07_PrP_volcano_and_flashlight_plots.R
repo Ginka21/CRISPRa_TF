@@ -33,13 +33,13 @@ old_controls_colors <- controls_colors
 controls_colors <- controls_colors[c(3, 1, 2)]
 
 controls_labels <- list(
-  "Gene" = c("Genes in ", "CRISPRa", "library"),
-  "NT"   = c("Non-targeting", "controls"),
-  "Pos"  = c("Positive", "controls", expression("(" * italic("PRNP") * " gene)"))
+  "Gene" = c("Genes in", "T.gonfio", "library"),
+  "NT"   = c("Non-", "targeting", "controls"),
+  "Pos"  = c("Positive", "controls", expression("(" * italic("PRNP")), "gene)")
 )
 
-manuscript_width <- 3.8
-manuscript_height <- 3
+manuscript_width <- 3.5
+manuscript_height <- 2.6
 manuscript_mai <- c(0.5, 0.5, 0.2, 1)
 
 pdf(file = file.path(manuscript_dir, "Figure 6F - volcano plot.pdf"),
@@ -50,12 +50,14 @@ VolcanoFlashPlot(PrP_df, "Log2FC_rep1", "p_value_log2",
                  label_points = FALSE, indicate_areas = TRUE,
                  indicate_lines = TRUE,
                  indicate_log2FCs = log2(2), indicate_p_values = 0.05,
-                 use_mai = manuscript_mai, use_mgp = c(2.4, 0.7, 0)
+                 use_mai = manuscript_mai, use_mgp = c(1.92, 0.55, 0),
+                 small_gap_size = 1.2, large_gap_multiplier = 1.5,
+                 point_x_start = 0.1, lines_x_start = 1
                  )
 dev.off()
 
-controls_colors <- old_controls_colors
 
+controls_colors <- old_controls_colors
 
 
 
@@ -122,7 +124,6 @@ VolcanoFlashPlot(PrP_df, "PercActivation_rep1", "SSMD_deltaNT",
 
 
 
-
 # Export individually customized plots ------------------------------------
 
 base_width <- 5.5
@@ -174,7 +175,6 @@ VolcanoFlashPlot(PrP_df, "Log2FC_Glo_rep1", "p_value_log2_Glo",
                  indicate_log2FCs = log2(2), tiny_labels = TRUE
                  )
 dev.off()
-
 
 
 

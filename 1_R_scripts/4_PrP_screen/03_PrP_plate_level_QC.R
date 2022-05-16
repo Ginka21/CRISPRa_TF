@@ -69,17 +69,25 @@ dev.off()
 
 # Export plots for the manuscript -----------------------------------------
 
-manuscript_width <- 3.1
-manuscript_height <- 1.95
-manuscript_mai <- c(0.4, 0.5, 0.1, 0.15)
+manuscript_width <- 2.2
+manuscript_height <- 1.2
+manuscript_mai <- c(0.4, 0.5, 0.05, 0.05)
 
 pdf(file = file.path(manuscript_dir, "Figure 6B - Z-prime.pdf"),
     width = manuscript_width, height = manuscript_height
     )
 par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
-PlotZPrimes(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
-            line_adjust = -0.3
-            )
+y_axis_vec <- seq(-0.25, 1, by = 0.25)
+y_axis_labs <- ifelse(y_axis_vec %in% c(0, 0.5, 1), format(round(y_axis_vec, digits = 1)), NA)
+y_axis_labs[y_axis_labs == "0.0"] <- "0"
+plates_in_order <- PlotZPrimes(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
+                               y_label_line = 2.05, roman_plates = FALSE, reorder_plates = TRUE,
+                               label_plates = FALSE,
+                               plate_labels_line = 0.1, x_label_line = 1.2,
+                               y_axis_ticks = y_axis_vec,
+                               y_axis_labels = y_axis_labs,
+                               point_cex = 0.6
+                               )
 dev.off()
 
 
@@ -88,7 +96,12 @@ pdf(file = file.path(manuscript_dir, "Figure 6C - controls SSMD.pdf"),
     )
 par(cex = 0.7, lwd = 0.8, mai = manuscript_mai)
 PlotSSMDControls(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
-                 line_adjust = -0.3, y_limits_include = c(0, 12)
+                 y_label_line = 2.1, y_limits_include = c(0, 12),
+                 roman_plates = FALSE, reorder_plates = TRUE,
+                 plates_in_order = plates_in_order,
+                 y_axis_label = "SSMD (controls)",
+                 plate_labels_line = 0.15, x_label_line = 1.4,
+                 point_cex = 0.6
                  )
 dev.off()
 

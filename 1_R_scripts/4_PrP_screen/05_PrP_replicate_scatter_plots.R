@@ -44,9 +44,9 @@ ReplicateScatter(PrP_df, "Log2FC_rep1", same_scale = FALSE)
 
 # Export plots for the manuscript -----------------------------------------
 
-manuscript_width <- 2.4
-manuscript_height <- 2.4
-manuscript_mai <- c(0.5, 0.5, 0.2, 0.2)
+manuscript_width <- 2.25
+manuscript_height <- 2.25
+manuscript_mai <- c(0.4, 0.55, 0.3, 0.15)
 
 input_df <- PrP_df
 are_gene <- !(is.na(input_df[, "Entrez_ID"]))
@@ -64,11 +64,10 @@ ScatterPlot(x_vec,
             y_vec,
             top_label = "",
             use_limits = axis_limits,
-            use_mgp = c(2.2, 0.55, 0), xlab_line = 2.12,
+            use_mgp = c(1.65, 0.55, 0), xlab_line = 1.85,
             point_size = 0.8
             )
 dev.off()
-
 
 
 
