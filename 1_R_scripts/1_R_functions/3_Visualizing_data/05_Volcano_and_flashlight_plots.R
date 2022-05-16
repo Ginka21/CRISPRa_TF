@@ -89,7 +89,8 @@ VolcanoFlashPlot <- function(input_df,
                              label_points      = FALSE,
                              tiny_labels       = FALSE,
                              use_mai           = NULL,
-                             use_mgp           = c(2.8, 0.55, 0)
+                             use_mgp           = c(2.8, 0.55, 0),
+                             ...
                              ) {
 
 
@@ -225,9 +226,7 @@ VolcanoFlashPlot <- function(input_df,
            )
 
     ## Draw a legend for the points
-    DrawSideLegend(labels_list = controls_labels,
-                   use_colors = controls_colors
-                   )
+    DrawSideLegend(labels_list = controls_labels, use_colors = controls_colors, ...)
   } else {
     are_custom_gene <- are_gene & are_custom_color
     if (any(are_custom_color)) {
