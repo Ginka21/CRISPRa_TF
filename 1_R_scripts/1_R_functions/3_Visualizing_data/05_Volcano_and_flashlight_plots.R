@@ -89,7 +89,7 @@ VolcanoFlashPlot <- function(input_df,
                              label_points      = FALSE,
                              tiny_labels       = FALSE,
                              use_mai           = NULL,
-                             use_mgp           = c(2.8, 0.7, 0)
+                             use_mgp           = c(2.8, 0.55, 0)
                              ) {
 
 
@@ -147,13 +147,13 @@ VolcanoFlashPlot <- function(input_df,
        xlab = x_label,
        ylab = y_label,
        mgp  = use_mgp,
-       tcl  = -0.45,
        type = "n",
        bty  = "n",
        axes = FALSE
        )
-  axis(1, mgp = use_mgp, lwd = par("lwd"))
-  axis(2, mgp = use_mgp, lwd = par("lwd"), las = 1)
+  use_tcl <- -0.35
+  axis(1, mgp = use_mgp, lwd = par("lwd"), tcl = use_tcl)
+  axis(2, mgp = use_mgp, lwd = par("lwd"), las = 1, tcl = use_tcl)
 
   ## Draw indicator lines
   abline(h = 0, lty = "dotted", col = "grey50")

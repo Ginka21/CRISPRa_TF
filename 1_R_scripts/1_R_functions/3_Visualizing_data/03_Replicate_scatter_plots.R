@@ -70,10 +70,10 @@ ScatterPlot <- function(x_vec,
 
   ## Draw and label axes
   axis(1, mgp = use_mgp, tcl = use_tcl, gap.axis = 0.5, lwd = par("lwd"))
-  mtext("Replicate 1", side = 1, line = xlab_line, cex = par("cex"))
+  mtext(FormatPlotMath("Replicate 1"), side = 1, line = xlab_line, cex = par("cex"))
   axis(2, las = 1, mgp = use_mgp, tcl = use_tcl, lwd = par("lwd"))
   if (label_y_axis) {
-    mtext("Replicate 2", side = 2, line = use_mgp[[1]], cex = par("cex"))
+    mtext(FormatPlotMath("Replicate 2"), side = 2, line = use_mgp[[1]], cex = par("cex"))
   }
 
   ## Draw the plot title

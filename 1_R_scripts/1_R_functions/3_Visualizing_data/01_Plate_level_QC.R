@@ -18,13 +18,19 @@ PlotPlateQualities <- function(rep1_vec,
                                                        c(-Inf, 0)
                                                        ),
                                use_mai          = c(0.7, 0.82, 0.5, 0.42),
-                               line_adjust      = 0,
-                               reorder_plates   = FALSE
+                               y_label_line     = 2.2,
+                               reorder_plates   = FALSE,
+                               roman_plates     = TRUE
                                ) {
 
   stopifnot(length(rep1_vec) == length(rep2_vec))
 
-  plate_names <- as.character(as.roman(seq_along(rep1_vec)))
+  plate_names <- seq_along(rep1_vec)
+  if (roman_plates) {
+    plate_names <- as.roman(plate_names)
+  }
+  plate_names <- as.character(plate_names)
+
   if (reorder_plates) {
     average_qualities <- rowMeans(cbind(rep1_vec, rep2_vec))
     plates_order <- order(average_qualities)
@@ -63,8 +69,8 @@ PlotPlateQualities <- function(rep1_vec,
        axes = FALSE,
        ann  = FALSE
        )
-  axis(2, las = 1, mgp = c(3, 0.75, 0), tcl = -0.45, lwd = par("lwd"))
-  mtext(y_axis_label, side = 2, line = 2.8 + line_adjust, cex = par("cex"))
+  axis(2, las = 1, mgp = c(3, 0.55, 0), tcl = -0.35, lwd = par("lwd"))
+  mtext(y_axis_label, side = 2, line = y_label_line, cex = par("cex"))
 
   mtext(plate_names,
         at   = x_mids,
@@ -72,7 +78,7 @@ PlotPlateQualities <- function(rep1_vec,
         line = 0.3,
         cex  = 0.9 * par("cex")
         )
-  mtext("Plate number", side = 1, line = 1.8 + line_adjust, cex = par("cex"))
+  mtext(FormatPlotMath("Plate number"), side = 1, line = 1.85, cex = par("cex"))
 
 
   ## Indicate specific y axis ranges with colors

@@ -44,8 +44,9 @@ ThreeHistograms <- function(input_df,
                             use_mai           = c(1.0, 0.92, 0.76, 1.5),
                             legend_x_start    = 0.75,
                             legend_y_mid      = 0.5,
-                            use_mgp           = c(2.7, 0.65, 0),
-                            xlab_line         = use_mgp[[1]]
+                            use_mgp           = c(2.7, 0.55, 0),
+                            xlab_line         = use_mgp[[1]],
+                            ...
                             ) {
 
   if (is.null(x_axis_label)) {
@@ -101,7 +102,7 @@ ThreeHistograms <- function(input_df,
     brewer.pal(5, "Reds")[[5]]   # positive control
   )
 
-  use_tcl <- -0.45
+  use_tcl <- -0.35
 
   ## Prepare the plot region
   old_mai <- par(mai = use_mai)
@@ -145,7 +146,8 @@ ThreeHistograms <- function(input_df,
                  border_colors  = border_colors,
                  use_point_size = 1.4,
                  lines_x_start  = legend_x_start,
-                 y_mid          = legend_y_mid
+                 y_mid          = legend_y_mid,
+                 ...
                  )
 
   par(old_mai)
