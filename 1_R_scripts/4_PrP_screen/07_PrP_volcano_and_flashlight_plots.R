@@ -50,15 +50,14 @@ VolcanoFlashPlot(PrP_df, "Log2FC_rep1", "p_value_log2",
                  label_points = FALSE, indicate_areas = TRUE,
                  indicate_lines = TRUE,
                  indicate_log2FCs = log2(2), indicate_p_values = 0.05,
-                 use_mai = manuscript_mai, use_mgp = c(1.92, 0.55, 0),
+                 use_mai = manuscript_mai,
+                 use_mgp = c(1.92, 0.5, 0), x_axis_mgp = c(1.725, 0.375, 0),
                  small_gap_size = 1.2, large_gap_multiplier = 1.5,
                  point_x_start = 0.1, lines_x_start = 1
                  )
 dev.off()
 
-
 controls_colors <- old_controls_colors
-
 
 
 

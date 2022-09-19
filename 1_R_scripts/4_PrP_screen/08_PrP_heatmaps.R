@@ -169,7 +169,7 @@ HeatmapForPlate(PrP_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 # Export heatmaps as PDF or PNG files -------------------------------------
 
-if (FALSE) {
+if (TRUE) {
   ExportAllHeatmaps(PrP_df)
 }
 

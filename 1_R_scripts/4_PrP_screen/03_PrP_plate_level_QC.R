@@ -101,8 +101,10 @@ PlotSSMDControls(PrP_df, filter_NT = TRUE, use_mai = manuscript_mai,
                  plates_in_order = plates_in_order,
                  y_axis_label = "SSMD (controls)",
                  plate_labels_line = 0.15, x_label_line = 1.4,
-                 point_cex = 0.6
+                 point_cex = 0.6, label_plates = FALSE
                  )
+mtext(c(1, 24), side = 1, line = 0.15, at = c(0.75, 12.25), cex = par("cex"))
+mtext(FormatPlotMath("Plate number"), side = 1, line = 1.15, cex = par("cex"))
 dev.off()
 
 

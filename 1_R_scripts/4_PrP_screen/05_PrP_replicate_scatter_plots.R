@@ -64,7 +64,7 @@ ScatterPlot(x_vec,
             y_vec,
             top_label = "",
             use_limits = axis_limits,
-            use_mgp = c(1.65, 0.55, 0), xlab_line = 1.85,
+            use_mgp = c(1.65, 0.55, 0), x_axis_mgp = c(1.725, 0.375, 0),
             point_size = 0.8
             )
 dev.off()
