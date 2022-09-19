@@ -108,20 +108,23 @@ AbbreviateDataAxis <- function(side = 2, mgp = 0.38, tcl = -0.3) {
 
 DrawSideLegend <- function(labels_list,
                            use_colors,
-                           border_colors = NULL,
-                           use_pch = 16,
-                           use_point_size = 1.2,
-                           lines_x_start = 0.75,
-                           y_mid = 0.5
+                           border_colors        = NULL,
+                           use_pch              = 16,
+                           use_point_size       = 1.2,
+                           lines_x_start        = 0.75,
+                           y_mid                = 0.5,
+                           small_gap_size       = 1.25,
+                           large_gap_multiplier = 1.75,
+                           point_x_start        = 0.15
                            ) {
 
   ## Perform checks
   stopifnot(identical(length(labels_list), length(use_colors)))
 
   ## Prepare for drawing the legend
-  small_gap <- diff(grconvertY(c(0, 1.25), from = "char", to = "npc"))
+  small_gap <- diff(grconvertY(c(0, small_gap_size), from = "char", to = "npc"))
   medium_gap <- small_gap * 1.25
-  large_gap <- small_gap * 1.75
+  large_gap <- small_gap * large_gap_multiplier
 
   if (all(lengths(labels_list) == 1)) {
     gaps_vec <- rep(medium_gap, length(labels_list))
@@ -139,7 +142,7 @@ DrawSideLegend <- function(labels_list,
   y_pos <- grconvertY(y = y_sequence, from = "npc", to = "user")
 
   x_text  <- 1 + diff(grconvertX(c(0, lines_x_start), from = "lines", to = "npc"))
-  x_point <- 1 + diff(grconvertX(c(0, lines_x_start + 0.15), from = "lines", to = "npc"))
+  x_point <- 1 + diff(grconvertX(c(0, lines_x_start + point_x_start), from = "lines", to = "npc"))
 
   ## Draw the legend
   text(x      = grconvertX(x = x_text, from = "npc", to = "user"),

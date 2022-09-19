@@ -11,17 +11,46 @@ library("RColorBrewer")
 
 PlotPlateQualities <- function(rep1_vec,
                                rep2_vec,
-                               y_limits_include = NULL,
-                               y_axis_label = "",
-                               quality_ranges = list(c(0.5, 1),
-                                                     c(0, 0.5),
-                                                     c(-Inf, 0)
-                                                     ),
-                               use_mai = c(0.7, 0.82, 0.5, 0.42),
-                               line_adjust = 0
+                               y_limits_include  = NULL,
+                               y_axis_label      = "",
+                               quality_ranges    = list(c(0.5, 1),
+                                                        c(0, 0.5),
+                                                        c(-Inf, 0)
+                                                        ),
+                               use_mai           = c(0.7, 0.82, 0.5, 0.42),
+                               y_label_line      = 2.2,
+                               reorder_plates    = FALSE,
+                               plates_in_order   = NULL,
+                               roman_plates      = TRUE,
+                               label_plates      = TRUE,
+                               plate_labels_line = 0.3,
+                               x_label_line      = 1.85,
+                               y_axis_ticks      = NULL,
+                               y_axis_labels     = NULL,
+                               point_cex         = 0.7
                                ) {
 
   stopifnot(length(rep1_vec) == length(rep2_vec))
+
+  all_plates <- seq_along(rep1_vec)
+
+  if (reorder_plates) {
+    if (is.null(plates_in_order)) {
+      average_qualities <- rowMeans(cbind(rep1_vec, rep2_vec))
+      plates_order <- order(average_qualities)
+    } else {
+      plates_order <- order(match(all_plates, plates_in_order))
+    }
+    rep1_vec <- rep1_vec[plates_order]
+    rep2_vec <- rep2_vec[plates_order]
+    all_plates <- all_plates[plates_order]
+  }
+
+  if (roman_plates) {
+    plate_names <- as.character(as.roman(all_plates))
+  } else {
+    plate_names <- as.character(all_plates)
+  }
   data_vec <- c(rep1_vec, rep2_vec)
 
   ## Prepare x axis positions
@@ -52,17 +81,26 @@ PlotPlateQualities <- function(rep1_vec,
        axes = FALSE,
        ann  = FALSE
        )
-  axis(2, las = 1, mgp = c(3, 0.75, 0), tcl = -0.45, lwd = par("lwd"))
-  mtext(y_axis_label, side = 2, line = 2.8 + line_adjust, cex = par("cex"))
+  if (is.null(y_axis_ticks)) {
+    y_axis_ticks <- axTicks(2)
+  }
+  if (is.null(y_axis_labels)) {
+    y_axis_labels = as.character(y_axis_ticks)
+  }
+  axis(2, at = y_axis_ticks, labels = y_axis_labels,
+       las = 1, mgp = c(3, 0.55, 0), tcl = -0.35, lwd = par("lwd")
+       )
+  mtext(y_axis_label, side = 2, line = y_label_line, cex = par("cex"))
 
-  mtext(as.character(as.roman(seq_along(x_mids))),
-        at = x_mids,
-        side = 1,
-        line = 0.3,
-        cex = 0.9 * par("cex")
-        )
-  mtext("Plate number", side = 1, line = 1.8 + line_adjust, cex = par("cex"))
-
+  if (label_plates) {
+    mtext(plate_names,
+          at   = x_mids,
+          side = 1,
+          line = plate_labels_line,
+          cex  = 0.9 * par("cex")
+          )
+    mtext(FormatPlotMath("Plate number"), side = 1, line = x_label_line, cex = par("cex"))
+  }
 
   ## Indicate specific y axis ranges with colors
   color_scheme <- c(colorRampPalette(brewer.pal(9, "Greens"))(100)[[26]],
@@ -105,12 +143,12 @@ PlotPlateQualities <- function(rep1_vec,
          y   = data_vec,
          pch = 21,
          bg  = "black",
-         cex = 0.7
+         cex = point_cex
          )
 
   par(old_mai)
 
-  return(invisible(NULL))
+  return(invisible(all_plates))
 }
 
 
@@ -133,11 +171,16 @@ PlotZPrimes <- function(input_df, filter_NT = FALSE, ...) {
 }
 
 
-PlotSSMDControls <- function(input_df, filter_NT = FALSE, y_limits_include = c(0, 7), ...) {
+PlotSSMDControls <- function(input_df,
+                             filter_NT = FALSE,
+                             y_limits_include = c(0, 7),
+                             y_axis_label = "SSMD (pos./neg. controls)",
+                             ...
+                             ) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls, filter_NT = filter_NT)
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
                      y_limits_include = y_limits_include,
-                     y_axis_label = "SSMD (pos./neg. controls)",
+                     y_axis_label = y_axis_label,
                      quality_ranges = list(c(5, 7), c(3, 5), c(-Inf, 3)),
                      ...
                      )

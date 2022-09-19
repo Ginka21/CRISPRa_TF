@@ -31,6 +31,9 @@ load(file.path(r_data_dir, "02_analyse_data.RData"))
 
 PlotZPrimes(GBA_df)
 PlotSSMDControls(GBA_df)
+PlotZPrimes(GBA_df, reorder_plates = TRUE)
+PlotSSMDControls(GBA_df, reorder_plates = TRUE)
+
 
 
 
