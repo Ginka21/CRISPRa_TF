@@ -45,7 +45,7 @@ ThreeHistograms <- function(input_df,
                             legend_x_start    = 0.75,
                             legend_y_mid      = 0.5,
                             use_mgp           = c(2.7, 0.55, 0),
-                            xlab_line         = use_mgp[[1]],
+                            x_axis_mgp        = use_mgp,
                             ...
                             ) {
 
@@ -117,8 +117,8 @@ ThreeHistograms <- function(input_df,
        mgp  = use_mgp,
        type = "n"
        )
-  axis(1, mgp = use_mgp, tcl = use_tcl, lwd = par("lwd"))
-  mtext(x_axis_label, side = 1, line = xlab_line, cex = par("cex"))
+  axis(1, mgp = x_axis_mgp, tcl = use_tcl, lwd = par("lwd"))
+  mtext(x_axis_label, side = 1, line = x_axis_mgp[[1]], cex = par("cex"))
   axis(2, las = 2, mgp = use_mgp, tcl = use_tcl, lwd = par("lwd"))
   if (use_column == "CellTiterGlo_foldNT") {
     abline(v = 1, lty = "dashed", col = "gray40")
