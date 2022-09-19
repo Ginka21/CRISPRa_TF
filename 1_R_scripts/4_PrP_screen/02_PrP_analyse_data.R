@@ -85,13 +85,13 @@ PrP_df[, "CellTiterGlo_raw"][are_plate7] <- new_Glo_vec
 
 # Normalize by non-targeting controls -------------------------------------
 
-PrP_df <- NormalizeWithNTControls(PrP_df, norm_method = "genes")
+PrP_df <- NormalizeWithNTControls(PrP_df, norm_method = "genes and own NT")
 
 
 
 # Calculate SSMD and derived statistics (p value, etc.) -------------------
 
-PrP_df <- RunSSMDStats(PrP_df, norm_method = "genes")
+PrP_df <- RunSSMDStats(PrP_df, norm_method = "genes and own NT")
 
 
 
