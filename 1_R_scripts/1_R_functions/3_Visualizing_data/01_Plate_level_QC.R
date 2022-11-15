@@ -11,6 +11,7 @@ library("RColorBrewer")
 
 PlotPlateQualities <- function(rep1_vec,
                                rep2_vec,
+                               all_plates        = NULL,
                                y_limits_include  = NULL,
                                y_axis_label      = "",
                                quality_ranges    = list(c(0.5, 1),
@@ -32,7 +33,9 @@ PlotPlateQualities <- function(rep1_vec,
 
   stopifnot(length(rep1_vec) == length(rep2_vec))
 
-  all_plates <- seq_along(rep1_vec)
+  if (is.null(all_plates)) {
+    all_plates <- seq_along(rep1_vec)
+  }
 
   if (reorder_plates) {
     if (is.null(plates_in_order)) {
@@ -164,7 +167,9 @@ GetQualityMetric <- function(input_df, UseFunction, filter_NT = FALSE, ...) {
 
 PlotZPrimes <- function(input_df, filter_NT = FALSE, ...) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_Z_Prime, filter_NT = filter_NT)
+  all_plates <- unique(as.integer(as.roman(input_df[, "Plate_number_384"])))
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
+                     all_plates = all_plates,
                      y_limits_include = c(0, 1, -0.2), y_axis_label = "Z' factor",
                      ...
                      )
@@ -178,7 +183,9 @@ PlotSSMDControls <- function(input_df,
                              ...
                              ) {
   z_primes_mat <- GetQualityMetric(input_df, Calculate_SSMD_ctrls, filter_NT = filter_NT)
+  all_plates <- unique(as.integer(as.roman(input_df[, "Plate_number_384"])))
   PlotPlateQualities(z_primes_mat[, 1], z_primes_mat[, 2],
+                     all_plates = all_plates,
                      y_limits_include = y_limits_include,
                      y_axis_label = y_axis_label,
                      quality_ranges = list(c(5, 7), c(3, 5), c(-Inf, 3)),
