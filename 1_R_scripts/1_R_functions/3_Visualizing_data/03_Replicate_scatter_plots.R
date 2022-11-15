@@ -167,7 +167,7 @@ ReplicateScatter <- function(input_df,
 
   ScatterPlot(input_df[are_gene, rep1_column],
               input_df[are_gene, rep2_column],
-              top_label = "Transcription factors",
+              top_label = "Genes",
               use_limits = axis_limits,
               ...
               )
@@ -200,9 +200,7 @@ ReplicateScatter <- function(input_df,
 
 
 
-ExportAllReplicateScatterPlots <- function(input_df) {
-
-  use_dir <- file.path(output_dir, "Figures", "Replicate scatter plots")
+ExportAllReplicateScatterPlots <- function(input_df, use_dir) {
 
   rep_columns <- grep("_rep", names(column_file_names), value = TRUE, fixed = TRUE)
 
