@@ -7,7 +7,7 @@ project_dir       <- "~/R_projects/CRISPRa_TF"
 input_dir         <- file.path(project_dir, "2_input")
 rdata_dir         <- file.path(project_dir, "3_R_objects")
 general_rdata_dir <- file.path(rdata_dir, "1_General")
-PrP_rdata_dir     <- file.path(rdata_dir, "3_PrP")
+PrP_rdata_dir     <- file.path(rdata_dir, "3_PrP", "TFa")
 raw_data_dir      <- file.path(input_dir, "PrP_data")
 
 
@@ -49,8 +49,8 @@ ReadInPrPData <- function(sub_folder, skip_lines) {
 
 # Read in data ------------------------------------------------------------
 
-FRET_df_list <- ReadInPrPData("TR-FRET", skip_lines = 38)
-Glo_df_list <- ReadInPrPData("CELL TITER GLO", skip_lines = 9)
+FRET_df_list <- ReadInPrPData("TR-FRET/TFa", skip_lines = 38)
+Glo_df_list <- ReadInPrPData("CELL TITER GLO/TFa", skip_lines = 9)
 
 
 

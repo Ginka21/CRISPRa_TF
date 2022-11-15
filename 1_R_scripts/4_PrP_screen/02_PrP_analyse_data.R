@@ -12,8 +12,8 @@ source(file.path(analysis_functions_dir, "02_Processing_data.R"))
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
-output_dir <- file.path(project_dir, "4_output", "PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
+output_dir <- file.path(project_dir, "4_output", "PrP", "Tables", "TFa")
 
 
 
@@ -148,29 +148,29 @@ mean_NT + (c(-1, 1) * 3 * sd_NT)
 # Export data -------------------------------------------------------------
 
 write.csv(PrP_df,
-          file = file.path(output_dir, "Tables", "PrP_complete.csv"),
+          file = file.path(output_dir, "PrP_complete.csv"),
           row.names = FALSE, quote = FALSE
           )
 
 exclude_columns <- c("Well_coords_384", grep("_96", names(PrP_df), fixed = TRUE, value = TRUE))
 export_columns <- setdiff(names(hits_df_list[["reordered_df"]]),  exclude_columns)
 write.csv(hits_df_list[["reordered_df"]][, export_columns],
-          file = file.path(output_dir, "Tables", "PrP_no_Glo_genes_and_NT_ordered.csv"),
+          file = file.path(output_dir, "PrP_no_Glo_genes_and_NT_ordered.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 
 write.csv(hits_df_list[["hits_df"]][, export_columns],
-          file = file.path(output_dir, "Tables", "PrP_no_Glo_hits_only.csv"),
+          file = file.path(output_dir, "PrP_no_Glo_hits_only.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 
 write.csv(Glo_hits_df_list[["reordered_df"]][, export_columns],
-          file = file.path(output_dir, "Tables", "PrP_Glo_normalized_genes_and_NT_ordered.csv"),
+          file = file.path(output_dir, "PrP_Glo_normalized_genes_and_NT_ordered.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 
 write.csv(Glo_hits_df_list[["hits_df"]][, export_columns],
-          file = file.path(output_dir, "Tables", "PrP_Glo_normalized_hits_only.csv"),
+          file = file.path(output_dir, "PrP_Glo_normalized_hits_only.csv"),
           row.names = FALSE, quote = FALSE, na = ""
           )
 

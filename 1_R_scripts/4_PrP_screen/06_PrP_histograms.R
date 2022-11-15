@@ -15,9 +15,9 @@ source(file.path(functions_dir, "3_Visualizing_data", "04_Histograms.R"))
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
 output_dir <- file.path(project_dir, "4_output", "PrP")
-manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
+manuscript_dir <- file.path(output_dir, "Figures", "TFa", "Manuscript", "2) Component plots")
 
 
 
@@ -104,7 +104,7 @@ plot_width <- 7
 plot_height <- 5
 
 
-pdf(file = file.path(output_dir, "Figures", "Histograms", "Histograms.pdf"),
+pdf(file = file.path(output_dir, "Figures", "TFa", "Histograms", "Histograms.pdf"),
     width = plot_width, height = plot_height
     )
 for (use_column in names(column_file_names)) {
@@ -117,7 +117,7 @@ dev.off()
 for (i in seq_along(column_file_names)) {
   use_column <- names(column_file_names)[[i]]
   file_name <- paste0("Histogram - ", i,  ") ", column_file_names[[i]], ".png")
-  png(filename = file.path(output_dir, "Figures", "Histograms", "PNGs", file_name),
+  png(filename = file.path(output_dir, "Figures", "TFa", "Histograms", "PNGs", file_name),
       width = plot_width, height = plot_height, units = "in", res = 600
       )
   ThreeHistograms(PrP_df, use_column)

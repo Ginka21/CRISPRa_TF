@@ -16,9 +16,9 @@ source(file.path(functions_dir, "3_Visualizing_data",  "01_Plate_level_QC.R"))
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
 output_dir <- file.path(project_dir, "4_output", "PrP")
-manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
+manuscript_dir <- file.path(output_dir, "Figures", "TFa", "Manuscript", "2) Component plots")
 
 
 
@@ -44,7 +44,7 @@ PlotSSMDControls(PrP_df, filter_NT = TRUE, reorder_plates = TRUE)
 plot_width <- 5.5
 plot_height <- 3.8
 
-pdf(file = file.path(output_dir, "Figures", "Quality metrics", "Quality metrics.pdf"),
+pdf(file = file.path(output_dir, "Figures/TFa", "Quality metrics", "Quality metrics.pdf"),
     width = plot_width, height = plot_height
     )
 PlotZPrimes(PrP_df, filter_NT = TRUE)
@@ -52,14 +52,14 @@ PlotSSMDControls(PrP_df, filter_NT = TRUE)
 dev.off()
 
 
-png(filename = file.path(output_dir, "Figures", "Quality metrics", "Z_prime.png"),
+png(filename = file.path(output_dir, "Figures/TFa", "Quality metrics", "Z_prime.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
 PlotZPrimes(PrP_df, filter_NT = TRUE)
 dev.off()
 
 
-png(filename = file.path(output_dir, "Figures", "Quality metrics", "SSMD.png"),
+png(filename = file.path(output_dir, "Figures/TFa", "Quality metrics", "SSMD.png"),
     width = plot_width, height = plot_height, units = "in", res = 600
     )
 PlotSSMDControls(PrP_df, filter_NT = TRUE)

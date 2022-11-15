@@ -15,9 +15,9 @@ source(file.path(functions_dir, "3_Visualizing_data",  "03_Replicate_scatter_plo
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
 output_dir <- file.path(project_dir, "4_output", "PrP")
-manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
+manuscript_dir <- file.path(output_dir, "Figures", "TFa", "Manuscript", "2) Component plots")
 
 
 
@@ -74,7 +74,11 @@ dev.off()
 
 # Export plots as PDF and PNG files ---------------------------------------
 
-ExportAllReplicateScatterPlots(PrP_df)
+ExportAllReplicateScatterPlots(PrP_df,
+                               file.path(output_dir, "Figures", "TFa",
+                                         "Replicate scatter plots"
+                                         )
+                               )
 
 
 

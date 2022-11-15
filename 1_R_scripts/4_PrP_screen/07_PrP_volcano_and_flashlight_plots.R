@@ -14,9 +14,9 @@ source(file.path(functions_dir, "3_Visualizing_data",  "05_Volcano_and_flashligh
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
 output_dir <- file.path(project_dir, "4_output", "PrP")
-manuscript_dir <- file.path(output_dir, "Figures", "Manuscript", "2) Component plots")
+manuscript_dir <- file.path(output_dir, "Figures", "TFa", "Manuscript", "2) Component plots")
 
 
 
@@ -128,7 +128,7 @@ VolcanoFlashPlot(PrP_df, "PercActivation_rep1", "SSMD_deltaNT",
 base_width <- 5.5
 base_height <- 5.1
 
-selected_volcanoes_dir <- file.path(output_dir, "Figures", "Volcano plots", "Selected plots")
+selected_volcanoes_dir <- file.path(output_dir, "Figures", "TFa", "Volcano plots", "Selected plots")
 
 
 png(file.path(selected_volcanoes_dir, "1) Volcano plot - cutoffs shown.png"),
@@ -180,7 +180,7 @@ dev.off()
 
 # Export all plots as PDF and PNG files -----------------------------------
 
-ExportAllVolcanoAndFlashlightPlots(PrP_df)
+ExportAllVolcanoAndFlashlightPlots(PrP_df, "Figures/TFa")
 
 
 

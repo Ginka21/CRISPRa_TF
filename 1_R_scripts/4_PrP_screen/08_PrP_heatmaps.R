@@ -18,7 +18,7 @@ source(file.path(functions_dir, "3_Visualizing_data",  "06_Heatmaps.R"))
 
 # Define folder path ------------------------------------------------------
 
-r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP")
+r_data_dir <- file.path(project_dir, "3_R_objects", "3_PrP", "TFa")
 output_dir <- file.path(project_dir, "4_output", "PrP")
 
 
@@ -169,8 +169,8 @@ HeatmapForPlate(PrP_df, 1, "Raw_log2_rep1", weighting_for_controls = FALSE)
 
 # Export heatmaps as PDF or PNG files -------------------------------------
 
-if (TRUE) {
-  ExportAllHeatmaps(PrP_df)
+if (FALSE) {
+  ExportAllHeatmaps(PrP_df, figures_folder = "Figures/TFa")
 }
 
 
