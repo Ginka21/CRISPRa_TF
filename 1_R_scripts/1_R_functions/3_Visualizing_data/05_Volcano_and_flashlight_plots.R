@@ -278,7 +278,7 @@ VolcanoFlashPlot <- function(input_df,
 
 
 
-ExportAllVolcanoAndFlashlightPlots <- function(input_df) {
+ExportAllVolcanoAndFlashlightPlots <- function(input_df, figures_folder = "Figures") {
 
   plot_types <- c("Volcano", "Dual flashlight (logFC)", "Dual flashlight (% activation)")
 
@@ -329,7 +329,7 @@ ExportAllVolcanoAndFlashlightPlots <- function(input_df) {
           use_width <- base_width + 0.8
         }
         if (use_device == "pdf") {
-          pdf(file = file.path(output_dir, "Figures", folder_name, PDF_name),
+          pdf(file = file.path(output_dir, figures_folder, folder_name, PDF_name),
               width = use_width, height = base_height
               )
         }
@@ -345,7 +345,7 @@ ExportAllVolcanoAndFlashlightPlots <- function(input_df) {
             } else {
               PNG_name <- paste0(PNG_name, " - with controls.png")
             }
-            png(filename = file.path(output_dir, "Figures", folder_name, "PNGs", PNG_name),
+            png(filename = file.path(output_dir, figures_folder, folder_name, "PNGs", PNG_name),
                 width = use_width, height = base_height, units = "in", res = 600
                 )
           }
