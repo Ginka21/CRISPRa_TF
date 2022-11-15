@@ -660,7 +660,7 @@ AveragedHeatmap <- function(input_df,
   } else {
     mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
     are_empty <- input_df[, "Well_number_384"] %in% c(mat_384[, c(1, 24)])
-    are_pos_ctrl <- input_df[, "Target_flag"] %in% "Pos. control"
+    are_pos_ctrl <- input_df[, "Is_pos_ctrl"]
     empty_layouts <- unique(split(are_empty, plates_vec))
     pos_layouts <- unique(split(are_pos_ctrl, plates_vec))
     if ((length(empty_layouts) == 1) && (length(pos_layouts) == 1)) {
@@ -807,14 +807,24 @@ HeatmapForPlate <- function(input_df,
 
 
 
-ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FALSE) {
+ExportAllHeatmaps <- function(input_df,
+                              export_PNGs = TRUE,
+                              only_schematics = FALSE,
+                              figures_folder = "Figures"
+                              ) {
 
   heatmap_width <- 8
   heatmap_height <- 6.5
 
+  all_plate_numbers <- unique(input_df[, "Plate_number_384"])
+
   message("Exporting plate schematics...")
   for (label_genes in c(TRUE, FALSE)) {
     for (color_by_96wp in c(TRUE, FALSE)) {
+
+      if (color_by_96wp && (!("Plate_number_96" %in% names(input_df)))) {
+        next
+      }
 
       if (label_genes) {
         label_string <- "Heatmap schematic - genes labelled"
@@ -828,21 +838,21 @@ ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FA
         PNG_folder_name <- paste0(PNG_folder_name, " - colored by source plate")
       }
 
-      pdf(file = file.path(output_dir, "Figures", "Heatmap schematic", paste0(label_string, ".pdf")),
+      pdf(file = file.path(output_dir, figures_folder, "Heatmap schematic", paste0(label_string, ".pdf")),
           width = heatmap_width, height = heatmap_height
           )
-      for (plate_number in 1:12) {
+      for (plate_number in all_plate_numbers) {
         PlateSchematic(input_df, plate_number, label_genes = label_genes,
                        color_by_source_plate = color_by_96wp
                        )
       }
       dev.off()
 
-      for (plate_number in 1:12) {
-        PNG_folder_path <- file.path(output_dir, "Figures", "Heatmap schematic", PNG_folder_name)
+      for (plate_number in all_plate_numbers) {
+        PNG_folder_path <- file.path(output_dir, figures_folder, "Heatmap schematic", PNG_folder_name)
         dir.create(PNG_folder_path, showWarnings = FALSE)
         file_name <- paste0(label_string, " - plate", plate_number, ".png")
-        png(filename = file.path(output_dir, "Figures", "Heatmap schematic", PNG_folder_name, file_name),
+        png(filename = file.path(output_dir, figures_folder, "Heatmap schematic", PNG_folder_name, file_name),
             width = heatmap_width, height = heatmap_height, units = "in", res = 600
             )
         PlateSchematic(input_df, plate_number, label_genes = label_genes,
@@ -904,7 +914,7 @@ ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FA
               file_name <- paste0("Heatmaps - ", i, ") ", column_file_names[[i]], ".pdf")
               column_subtext <- long_column_labels[[i]]
 
-              pdf(file = file.path(output_dir, "Figures", heatmaps_folder, sub_folder, file_name),
+              pdf(file = file.path(output_dir, figures_folder, heatmaps_folder, sub_folder, file_name),
                   width = heatmap_width, height = heatmap_height
                   )
               AveragedHeatmap(input_df, current_column,
@@ -922,7 +932,7 @@ ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FA
                               use_one_scale          = !(scaled_per_plate),
                               weighting_for_controls = condense_controls
                               )
-              for (plate_number in 1:12) {
+              for (plate_number in all_plate_numbers) {
                 if (has_replicates) {
                   rep_columns <- BothRepColumns(current_column)
                   for (rep_column in rep_columns) {
@@ -959,7 +969,7 @@ ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FA
               column_subtext <- long_column_labels[[i]]
 
               folder_name <- paste0(i, ") ", sub("_rep1", "", current_column, fixed = TRUE))
-              folder_path <- file.path(output_dir, "Figures", heatmaps_folder, "PNGs", sub_folder, folder_name)
+              folder_path <- file.path(output_dir, figures_folder, heatmaps_folder, "PNGs", sub_folder, folder_name)
               dir.create(folder_path, showWarnings = FALSE)
 
               file_name <- paste0("Heatmap - ", column_file_names[[i]],
@@ -995,7 +1005,7 @@ ExportAllHeatmaps <- function(input_df, export_PNGs = TRUE, only_schematics = FA
                               )
               dev.off()
 
-              for (plate_number in 1:12) {
+              for (plate_number in all_plate_numbers) {
                 if (has_replicates) {
                   rep_columns <- BothRepColumns(current_column)
                   for (j in 1:2) {

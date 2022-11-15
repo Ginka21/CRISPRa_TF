@@ -244,6 +244,9 @@ BeeBoxPlates <- function(input_df,
     stop("Please choose either 'show_subgroups' or 'split_NT' to be TRUE!")
   }
 
+  from_Tuebingen <- ("Target_flag" %in% names(input_df)) &&
+                    ("Tuebingen pos. control" %in% input_df[, "Target_flag"])
+
   if (is.null(plate_number)) {
     if (show_96wp) {
       use_title <- "All 96-well source plates"
@@ -275,11 +278,18 @@ BeeBoxPlates <- function(input_df,
 
   ## Assign each well to a group
   mat_384 <- matrix(seq_len(384), nrow = 16, ncol = 24, byrow = TRUE)
+  if (("Plasmid_ID" %in% names(input_df) &&
+      (any(input_df[, "Plasmid_ID"] %in% "Empty")))
+      ) {
+    are_empty <- input_df[, "Plasmid_ID"] %in% "Empty"
+  } else {
+    are_empty <- input_df[, "Well_number_384"] %in% mat_384[, c(1, 24)]
+  }
   groups_vec <- ifelse(input_df[, "Is_NT_ctrl"],
                        "NT control",
                        ifelse(input_df[, "Is_pos_ctrl"],
                               "Pos. control",
-                              ifelse(input_df[, "Well_number_384"] %in% mat_384[, c(1, 24)],
+                              ifelse(are_empty,
                                      "Empty well",
                                      ifelse(!(is.na(input_df[, "Entrez_ID"])),
                                             "Gene",
@@ -297,15 +307,18 @@ BeeBoxPlates <- function(input_df,
   if ("Is_problematic" %in% names(input_df)) {
     are_to_exclude <- are_to_exclude | input_df[, "Is_problematic"]
   }
-  if (max(input_df[, "CellTiterGlo_raw"]) > 10^7) {
-    glo_cutoff <- 10^6
-  } else {
-    glo_cutoff <- 20000
+  if ("CellTiterGlo_raw" %in% names(input_df)) {
+    if (max(input_df[, "CellTiterGlo_raw"]) > 10^7) {
+      glo_cutoff <- 10^6
+    } else {
+      glo_cutoff <- 20000
+    }
+    were_killed <- (as.integer(as.roman(input_df[, "Plate_number_384"])) >= 10) &
+                   (input_df[, "Well_number_384"] %in% mat_384[c(1, 16), ]) &
+                   (input_df[, "CellTiterGlo_raw"] < glo_cutoff)
+    are_to_exclude <- are_to_exclude | were_killed
   }
-  were_killed <- (as.integer(as.roman(input_df[, "Plate_number_384"])) >= 10) &
-                 (input_df[, "Well_number_384"] %in% mat_384[c(1, 16), ]) &
-                 (input_df[, "CellTiterGlo_raw"] < glo_cutoff)
-  are_to_exclude <- are_to_exclude | were_killed
+
   use_y_limits <- range(numeric_vec[!(are_to_exclude)])
 
 
@@ -384,7 +397,11 @@ BeeBoxPlates <- function(input_df,
 
   if (!(is.null(compare_group))) {
     wells_384_vec <- input_df[, "Well_number_384"][!(are_to_exclude)]
-    are_own_NT <- wells_384_vec %in% mat_384[, c(2, 22)]
+    if (from_Tuebingen) {
+      are_own_NT <- wells_384_vec %in% mat_384[, c(2, 22)]
+    } else {
+      are_own_NT <- input_df[, "Is_NT_ctrl"][!(are_to_exclude)]
+    }
     if (compare_group == "Genes and NT") {
       if (show_96wp) {
         stop("When the value of the 'compare_group' argument is 'Genes and NT'",
@@ -394,7 +411,7 @@ BeeBoxPlates <- function(input_df,
       are_this_group <- (groups_vec == "Gene") |
                         ((groups_vec == "NT control") & !(are_own_NT))
       plate_numbers_fac <- factor(input_df[, "Plate_number_384"][!(are_to_exclude)][are_this_group],
-                                  levels = as.character(as.roman(1:12))
+                                  levels = unique(input_df[, "Plate_number_384"])
                                   )
       these_groups_fac <- factor(groups_vec[are_this_group])
       plate_groups_fac <- interaction(plate_numbers_fac, these_groups_fac,
@@ -429,7 +446,7 @@ BeeBoxPlates <- function(input_df,
         group_labels_cex <- 0.9
         group_labels_line <- 0.5
         plate_groups_fac <- factor(input_df[, "Plate_number_384"][!(are_to_exclude)][are_this_group],
-                                   levels = as.character(as.roman(1:12))
+                                   levels = unique(input_df[, "Plate_number_384"])
                                    )
       }
       use_level_colors <- rep(group_colors[[compare_group]], nlevels(plate_groups_fac))
@@ -495,15 +512,22 @@ BeeBoxPlates <- function(input_df,
     ## Split the control wells into subgroups
     subgroups_fac <- rep(NA, length(groups_fac))
     are_NT <- groups_fac == "NT control"
-    subgroups_fac[are_NT] <- ifelse(well_numbers_vec[are_NT] %in% mat_384[, 2],
-                                    "L",
-                                    ifelse(well_numbers_vec[are_NT] %in% mat_384[, 22],
-                                           "R", if (show_96wp) " " else "Mid"
-                                           )
-                                    )
-
     are_pos <- groups_fac == "Pos. control"
-    subgroups_fac[are_pos] <- ifelse(well_numbers_vec[are_pos] %in% mat_384[, 4], "L", "R")
+    if (from_Tuebingen) {
+      subgroups_fac[are_NT] <- ifelse(well_numbers_vec[are_NT] %in% mat_384[, 2],
+                                      "L",
+                                      ifelse(well_numbers_vec[are_NT] %in% mat_384[, 22],
+                                             "R", if (show_96wp) " " else "Mid"
+                                             )
+                                      )
+      subgroups_fac[are_pos] <- ifelse(well_numbers_vec[are_pos] %in% mat_384[, 4], "L", "R")
+    } else {
+      subgroups_fac[are_NT] <- ifelse(well_numbers_vec[are_NT] %in% mat_384[, 1:12],
+                                      "L", "R"
+                                      )
+      subgroups_fac[are_pos] <- ifelse(well_numbers_vec[are_pos] %in% mat_384[, 1:12], "L", "R")
+    }
+
 
     ## Split the gene wells into subgroups
     if (show_96wp) {
@@ -623,6 +647,11 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
   compare_groups <- c(
     "Gene", "Own NT control", "Pos. control", "Genes and NT"
   )
+  from_Tuebingen <- ("Target_flag" %in% names(input_df)) &&
+                    ("Tuebingen pos. control" %in% input_df[, "Target_flag"])
+  if (!(from_Tuebingen)) {
+    compare_groups[[2]] <- "NT control"
+  }
 
   for (export_PDF in c(TRUE, FALSE)) {
 
@@ -639,6 +668,8 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
       figures_folder <- file.path(top_folder, "PNGs")
       dir.create(figures_folder, showWarnings = FALSE)
     }
+
+    has_96wp <- "Plate_number_96" %in% names(input_df)
 
     for (show_subgroups in c(FALSE, TRUE)) {
 
@@ -673,27 +704,30 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
             for (compare_group in compare_groups) {
               BeeBoxPlates(input_df, use_column, compare_group = compare_group)
             }
-            for (compare_group in c("Gene", "NT control")) {
-              BeeBoxPlates(input_df, use_column, compare_group = compare_group,
-                           show_96wp = TRUE
-                           )
+            if (has_96wp) {
+              for (compare_group in c("Gene", "NT control")) {
+                BeeBoxPlates(input_df, use_column, compare_group = compare_group,
+                             show_96wp = TRUE
+                             )
+              }
             }
-          } else {
+          } else if (from_Tuebingen) {
             BeeBoxPlates(input_df, use_column, split_NT = TRUE)
           }
-          for (plate_number in as.character(as.roman(1:12))) {
+          for (plate_number in unique(input_df[, "Plate_number_384"])) {
             BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
                          plate_number = plate_number
                          )
           }
-          BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
-                       show_96wp = TRUE
-                       )
-
-          for (i in 1:22) {
+          if (has_96wp) {
             BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
-                         plate_number = i, show_96wp = TRUE
+                         show_96wp = TRUE
                          )
+            for (i in 1:22) {
+              BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
+                           plate_number = i, show_96wp = TRUE
+                           )
+            }
           }
           dev.off()
         } else {
@@ -719,23 +753,28 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
               BeeBoxPlates(input_df, use_column, compare_group = compare_group)
               dev.off()
             }
-            for (i in 1:2) {
-              compare_group <- c("Gene", "NT control")[[i]]
-              png(filename = file.path(sub_sub_folder,
-                                       paste0(formatC(i + 1 + length(compare_groups), flag = "0", width = 2),
-                                              ") Box plot - ", tolower(compare_group),
-                                              " across 96wp.png"
-                                              )
-                                       ),
-                  width = use_width, height = use_height, units = "in", res = 600
-                  )
-              BeeBoxPlates(input_df, use_column, compare_group = compare_group,
-                           show_96wp = TRUE
-                           )
-              dev.off()
+            if (has_96wp) {
+              for (i in 1:2) {
+                compare_group <- c("Gene", "NT control")[[i]]
+                png(filename = file.path(sub_sub_folder,
+                                         paste0(formatC(i + 1 + length(compare_groups), flag = "0", width = 2),
+                                                ") Box plot - ", tolower(compare_group),
+                                                " across 96wp.png"
+                                                )
+                                         ),
+                    width = use_width, height = use_height, units = "in", res = 600
+                    )
+                BeeBoxPlates(input_df, use_column, compare_group = compare_group,
+                             show_96wp = TRUE
+                             )
+                dev.off()
+              }
+              current_i <- 4 + length(compare_groups)
+            } else {
+              current_i <- 2 + length(compare_groups)
             }
-            current_i <- 4 + length(compare_groups)
-          } else {
+
+          } else if (has_96wp) {
             png(filename = file.path(sub_sub_folder,
                                      "02) Box plots - NT controls split.png"
                                      ),
@@ -746,10 +785,13 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
                          )
             dev.off()
             current_i <- 3
+          } else {
+            current_i <- 2
           }
 
-          for (i in current_i:(current_i + 12 - 1)) {
-            roman_number <- as.character(as.roman(i - current_i + 1))
+          plate_numbers_384 <- unique(input_df[, "Plate_number_384"])
+          for (i in current_i:(current_i + length(plate_numbers_384) - 1)) {
+            roman_number <- plate_numbers_384[[i - current_i + 1]]
             png(filename = file.path(sub_sub_folder,
                                      paste0(formatC(i, flag = "0", width = 2),
                                             ") Box plot - plate ", roman_number,
@@ -763,29 +805,31 @@ ExportAllBoxPlots <- function(input_df, top_folder) {
                          )
             dev.off()
           }
-          png(filename = file.path(sub_sub_folder,
-                                   paste0(current_i + 12, ") Box plot - all 96-well plates.png")
-                                   ),
-              width = use_width, height = use_height, units = "in", res = 600
-              )
-          BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
-                       show_96wp = TRUE
-                       )
-          dev.off()
-          for (i in (current_i + 13):(current_i + 12 + 22)) {
-            plate_number <- i - (current_i + 12)
+          if (has_96wp) {
             png(filename = file.path(sub_sub_folder,
-                                     paste0(formatC(i, flag = "0", width = 2),
-                                            ") Box plot - plate ", plate_number,
-                                            ".png"
-                                            )
+                                     paste0(current_i + 12, ") Box plot - all 96-well plates.png")
                                      ),
                 width = use_width, height = use_height, units = "in", res = 600
                 )
             BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
-                         plate_number = plate_number, show_96wp = TRUE
+                         show_96wp = TRUE
                          )
             dev.off()
+            for (i in (current_i + 13):(current_i + 12 + 22)) {
+              plate_number <- i - (current_i + 12)
+              png(filename = file.path(sub_sub_folder,
+                                       paste0(formatC(i, flag = "0", width = 2),
+                                              ") Box plot - plate ", plate_number,
+                                              ".png"
+                                              )
+                                       ),
+                  width = use_width, height = use_height, units = "in", res = 600
+                  )
+              BeeBoxPlates(input_df, use_column, show_subgroups = show_subgroups,
+                           plate_number = plate_number, show_96wp = TRUE
+                           )
+              dev.off()
+            }
           }
         }
       }
